@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { ChevronLeft, PlayCircle, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
@@ -7,6 +7,18 @@ import { parseTime, formatTime, calcMatchStats } from '../utils.js';
 // VISTA B: DETALL D'UN PARTIT
 // ==========================================
 export default function MatchDetail({ match, onBack }) {
+
+  // Minut d'inici del vídeo (en segons) — canvia quan es clica un gol
+  const [videoStart, setVideoStart] = useState(0);
+
+  // Funció per saltar al minut del gol
+  const jumpToGoal = (timeStr) => {
+    if (!match.youtubeId) return;
+    const secs = Math.max(0, parseTime(timeStr) - 3); // 3 segons abans del gol
+    setVideoStart(secs);
+    // Scroll suau cap al vídeo
+    document.getElementById('match-video')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const hasSubstitutions = match.events.substitutions.length > 1;
 
@@ -79,7 +91,7 @@ export default function MatchDetail({ match, onBack }) {
 
       {/* === VÍDEO (YouTube o Vimeo) === */}
       {hasVideo && (
-        <div className="bg-[#1E1E1E] rounded-xl p-6 border border-white/5 shadow-xl">
+        <div id="match-video" className="bg-[#1E1E1E] rounded-xl p-6 border border-white/5 shadow-xl">
           <h3 className="text-lg font-bold text-[#E5C07B] mb-4 flex items-center gap-2">
             <PlayCircle className="w-5 h-5" />
             {hasVimeo ? 'Vídeo del Partit (Resum de Gols)' : 'Vídeo del Partit'}
@@ -88,7 +100,7 @@ export default function MatchDetail({ match, onBack }) {
             {hasYoutube && (
               <iframe
                 width="100%" height="100%"
-                src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0`}
+                src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart > 0 ? 1 : 0}`}
                 title={`${DATABASE.teamName} vs ${match.opponent}`}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -189,6 +201,16 @@ export default function MatchDetail({ match, onBack }) {
                     <span className={`font-bold text-xs ${isFavor ? 'text-emerald-400' : 'text-[#C0392B]'}`}>
                       {isFavor ? '⭐ GOL A FAVOR' : '❌ GOL EN CONTRA'}
                     </span>
+                    {match.youtubeId && (
+                      <button
+                        onClick={() => jumpToGoal(goal.time)}
+                        className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-all
+                          bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/30"
+                        title="Veure al vídeo"
+                      >
+                        ▶ {goal.time}
+                      </button>
+                    )}
                   </div>
 
                   {isFavor ? (
