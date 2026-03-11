@@ -23,8 +23,8 @@ export const formatDate = (dateStr) => {
 };
 
 /**
- * Calcula els intervals (stints) de joc de cada jugador a partir del array de substitucions.
- * Retorna: { stints: [{player, start, end}], totals: {player: segundos}, finalTime: number }
+ * Calcula els intervals (stints) de joc de cada jugador.
+ * Accepta partits sense substitucions (retorna buit).
  */
 export const calcMatchStats = (match) => {
   let active = {};
@@ -32,6 +32,12 @@ export const calcMatchStats = (match) => {
   let totals = {};
 
   const subs = match.events.substitutions;
+
+  // Si no hi ha substitucions suficients, retornem buit
+  if (!subs || subs.length < 2) {
+    return { stints: [], playerStats: [], finalTime: 0, totals: {} };
+  }
+
   const finalTime = parseTime(subs[subs.length - 1].time);
 
   subs.forEach(sub => {
@@ -65,26 +71,28 @@ export const calcMatchStats = (match) => {
 };
 
 /**
- * Calcula les estadístiques globals de tots els partits:
- * gols, assistències i minuts per jugador.
+ * Calcula les estadístiques globals de tots els partits.
+ * Compatible amb roster d'strings i roster d'objectes {name, ...}
  */
 export const calcGlobalStats = (database) => {
   const goals   = {};
-  const assists  = {};
-  const minutes  = {};
+  const assists = {};
+  const minutes = {};
 
-  database.roster.forEach(p => { goals[p] = 0; assists[p] = 0; minutes[p] = 0; });
+  // Suport per roster de strings o d'objectes
+  const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
+  names.forEach(p => { goals[p] = 0; assists[p] = 0; minutes[p] = 0; });
 
   database.matches.forEach(match => {
     // Gols i assistències
     match.events.goals.forEach(goal => {
       if (goal.type === 'favor') {
-        if (goal.scorer  && goals[goal.scorer]   !== undefined) goals[goal.scorer]++;
-        if (goal.assist  && assists[goal.assist] !== undefined) assists[goal.assist]++;
+        if (goal.scorer && goals[goal.scorer] !== undefined) goals[goal.scorer]++;
+        if (goal.assist && assists[goal.assist] !== undefined) assists[goal.assist]++;
       }
     });
 
-    // Minuts jugats
+    // Minuts jugats (només si hi ha substitucions)
     const { totals } = calcMatchStats(match);
     Object.entries(totals).forEach(([p, secs]) => {
       if (minutes[p] !== undefined) minutes[p] += secs;
