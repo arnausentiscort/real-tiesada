@@ -1,14 +1,24 @@
 // ==========================================
 // BASE DE DADES ESTÀTICA — Real Tiesada FC
-// Afegiu nous partits al array "matches"
 // ==========================================
 
 export const DATABASE = {
   teamName: "Real Tiesada",
+
+  // Plantilla amb foto, dorsal i posició
   roster: [
-    "Arnau Sentis", "Roger Miro", "Joan Medina", "Pau Ibañez", "Roi Seoane",
-    "Oriol Tomas", "Paco Montero", "Andreu Cases", "Chengzhi Li", "Ivan Mico"
+    { name: "Arnau Sentis",  number: 22, position: "Migcampista", photo: "players/arnau.png",      photoCel: "players/arnau_cel.png" },
+    { name: "Roger Miro",    number: 9,  position: "Davanter",    photo: "players/roger.png",      photoCel: "players/roger_cel.png" },
+    { name: "Joan Medina",   number: 1,  position: "Porter",      photo: null,                     photoCel: null },
+    { name: "Pau Ibañez",    number: 7,  position: "Defensa",     photo: null,                     photoCel: null },
+    { name: "Roi Seoane",    number: 5,  position: "Defensa",     photo: null,                     photoCel: null },
+    { name: "Oriol Tomas",   number: 21, position: "Migcampista", photo: "players/oriol.png",      photoCel: "players/oriol_cel.png" },
+    { name: "Paco Montero",  number: 10, position: "Davanter",    photo: "players/paco.png",       photoCel: "players/paco_cel.png" },
+    { name: "Andreu Cases",  number: 8,  position: "Migcampista", photo: null,                     photoCel: null },
+    { name: "Chengzhi Li",   number: 11, position: "Davanter",    photo: null,                     photoCel: null },
+    { name: "Ivan Mico",     number: 4,  position: "Defensa",     photo: null,                     photoCel: null },
   ],
+
   matches: [
 
     // ── JORNADA 1 — Vikings ──────────────────────────────────────────
@@ -24,10 +34,10 @@ export const DATABASE = {
       events: {
         substitutions: [],
         goals: [
-          { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,          goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"] },
+          { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"] },
           { time: "17:00", type: "favor",  scorer: "Joan Medina",  assist: "Marc Farreras", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Joan Medina"] },
-          { time: "20:00", type: "favor",  scorer: "Roger Miro",   assist: "Joan Medina", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Pau Ibañez"] },
-          { time: "31:00", type: "favor",  scorer: "Arnau Sentis", assist: "Chengzhi Li", goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Roger Miro", "Arnau Sentis"] },
+          { time: "20:00", type: "favor",  scorer: "Roger Miro",   assist: "Joan Medina",   goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Pau Ibañez"] },
+          { time: "31:00", type: "favor",  scorer: "Arnau Sentis", assist: "Chengzhi Li",   goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Roger Miro", "Arnau Sentis"] },
           { time: "08:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Paco Montero", "Oriol Tomas", "Ivan Mico", "Andreu Cases"] },
           { time: "18:00", type: "contra", goalkeeper: "Pau Ibañez",  onPitch: ["Joan Medina", "Ivan Mico", "Roger Miro"] },
           { time: "33:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Pau Ibañez", "Roi Seoane", "Roger Miro"] },
@@ -113,6 +123,9 @@ export const DATABASE = {
         ]
       }
     }
-
   ]
 };
+
+// Helper: retorna l'objecte jugador pel nom
+export const getPlayer = (name) =>
+  DATABASE.roster.find(p => p.name === name) || { name, number: null, position: null, photo: null, photoCel: null };
