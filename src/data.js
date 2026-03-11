@@ -34,6 +34,9 @@ export const DATABASE = {
       idealMinutesPerPlayer: 16.0,
       events: {
         substitutions: [],
+        cards: [
+          { time: "36:00", color: "yellow", player: "Oriol Tomas" }
+        ],
         goals: [
           { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"] },
           { time: "17:00", type: "favor",  scorer: "Joan Medina",  assist: "Marc Farreras", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Joan Medina"] },
