@@ -10,6 +10,62 @@ export const DATABASE = {
     "Oriol Tomas", "Paco Montero", "Andreu Cases", "Chengzhi Li", "Ivan Mico"
   ],
   matches: [
+
+    // ── JORNADA 1 — Vikings ──────────────────────────────────────────
+    {
+      id: "j1-vikings",
+      jornada: "Jornada 1",
+      opponent: "Vikings",
+      result: "4 - 5",
+      date: "23 Feb 2026",
+      vimeoId: "1167919011",
+      youtubeId: null,
+      idealMinutesPerPlayer: 16.0,
+      events: {
+        substitutions: [],
+        goals: [
+          { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,          goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"] },
+          { time: "17:00", type: "favor",  scorer: "Joan Medina",  assist: "Marc Farreras", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Joan Medina"] },
+          { time: "20:00", type: "favor",  scorer: "Roger Miro",   assist: "Joan Medina", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Pau Ibañez"] },
+          { time: "31:00", type: "favor",  scorer: "Arnau Sentis", assist: "Chengzhi Li", goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Roger Miro", "Arnau Sentis"] },
+          { time: "08:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Paco Montero", "Oriol Tomas", "Ivan Mico", "Andreu Cases"] },
+          { time: "18:00", type: "contra", goalkeeper: "Pau Ibañez",  onPitch: ["Joan Medina", "Ivan Mico", "Roger Miro"] },
+          { time: "33:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Pau Ibañez", "Roi Seoane", "Roger Miro"] },
+          { time: "35:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Joan Medina", "Roi Seoane", "Pau Ibañez"] },
+          { time: "37:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Pau Ibañez", "Andreu Cases", "Ivan Mico"] }
+        ]
+      }
+    },
+
+    // ── JORNADA 2 — Ensaimada ────────────────────────────────────────
+    {
+      id: "j2-ensaimada",
+      jornada: "Jornada 2",
+      opponent: "Ensaimada",
+      result: "2 - 9",
+      date: "02 Mar 2026",
+      youtubeId: null,
+      vimeoId: null,
+      idealMinutesPerPlayer: 16.0,
+      events: {
+        substitutions: [],
+        goals: [
+          { time: "17:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null },
+          { time: "31:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null },
+          { time: "03:00", type: "contra", goalkeeper: null },
+          { time: "05:00", type: "contra", goalkeeper: null },
+          { time: "14:00", type: "contra", goalkeeper: null },
+          { time: "18:00", type: "contra", goalkeeper: null },
+          { time: "22:00", type: "contra", goalkeeper: null },
+          { time: "25:00", type: "contra", goalkeeper: null },
+          { time: "26:00", type: "contra", goalkeeper: null },
+          { time: "29:00", type: "contra", goalkeeper: null },
+          { time: "30:00", type: "contra", goalkeeper: null }
+        ]
+      }
+    },
+
+    // ── JORNADA 3 — Uruks ────────────────────────────────────────────
     {
       id: "j3-uruks",
       jornada: "Jornada 3",
@@ -17,6 +73,7 @@ export const DATABASE = {
       result: "2 - 5",
       date: "03 Nov 2023",
       youtubeId: "X9w3f1w47YA",
+      vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       events: {
         substitutions: [
@@ -56,6 +113,6 @@ export const DATABASE = {
         ]
       }
     }
-    // Afegiu aquí nous partits seguint la mateixa estructura...
+
   ]
 };
