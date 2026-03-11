@@ -15,82 +15,84 @@ function PlayerCard({ player, goals, assists, minutes }) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
-      <div className="bg-[#1a1a1a] border border-white/8 rounded-2xl overflow-hidden transition-all duration-300
-        hover:border-[#E5C07B]/50 hover:shadow-xl hover:shadow-[#E5C07B]/8 hover:-translate-y-1">
+      <div className="border border-white/8 rounded-2xl overflow-hidden transition-all duration-300
+        hover:border-[#E5C07B]/50 hover:shadow-xl hover:shadow-[#E5C07B]/10 hover:-translate-y-1"
+        style={{ background: '#000' }}>
 
-        {/* Zona de foto — altura fixa */}
-        <div className="relative bg-gradient-to-b from-[#1E1E1E] to-[#0f0f0f] overflow-hidden"
-          style={{ height: '220px' }}>
+        {/* Zona foto — fons negre igual que la foto */}
+        <div className="relative overflow-hidden" style={{ height: '220px', background: '#000' }}>
 
           {/* Número gran de fons */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-            <span className="text-[130px] font-black text-white/[0.04] leading-none select-none">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[110px] font-black leading-none select-none"
+              style={{ color: 'rgba(229,192,123,0.04)' }}>
               {player.number}
             </span>
           </div>
 
-          {/* Franja granat de baix */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#C0392B]/20 to-transparent pointer-events-none" />
-
-          {/* Foto o placeholder */}
+          {/* Foto */}
           {photoSrc ? (
             <img
               src={`${BASE}${photoSrc}`}
               alt={player.name}
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-500 group-hover:scale-105"
-              style={{ height: '210px', width: 'auto', objectFit: 'contain', objectPosition: 'bottom' }}
+              className="absolute inset-0 w-full h-full transition-all duration-500 group-hover:scale-105"
+              style={{ objectFit: 'cover', objectPosition: 'top' }}
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="w-20 h-20 rounded-full bg-[#C0392B]/15 border-2 border-[#C0392B]/25 flex items-center justify-center">
-                <span className="text-2xl font-black text-[#E5C07B]/40">
-                  {player.shirtName?.slice(0,2) || player.name.split(' ').map(n=>n[0]).join('')}
+              <div className="w-20 h-20 rounded-full border-2 border-[#C0392B]/30 flex items-center justify-center"
+                style={{ background: 'rgba(192,57,43,0.1)' }}>
+                <span className="text-2xl font-black" style={{ color: 'rgba(229,192,123,0.4)' }}>
+                  {player.shirtName?.slice(0, 2) || player.name.split(' ').map(n => n[0]).join('')}
                 </span>
               </div>
               <span className="text-xs text-gray-600">Sense foto</span>
             </div>
           )}
 
+          {/* Gradient baix per suavitzar transició a la info */}
+          <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+            style={{ background: 'linear-gradient(to top, #000, transparent)' }} />
+
           {/* Badge dorsal */}
-          <div className="absolute top-2 left-2 z-20 bg-[#C0392B] text-white text-xs font-black
-            px-2 py-1 rounded-lg border border-[#E5C07B]/30 shadow-lg">
+          <div className="absolute top-2 left-2 z-20 text-white text-xs font-black px-2 py-1 rounded-lg shadow-lg"
+            style={{ background: '#C0392B', border: '1px solid rgba(229,192,123,0.3)' }}>
             {player.number}
           </div>
 
           {/* Indicador celebració */}
           {hasPhotoCel && (
             <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity
-              text-xs bg-black/70 text-[#E5C07B] px-2 py-0.5 rounded-full border border-[#E5C07B]/20">
+              text-xs px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(0,0,0,0.7)', color: '#E5C07B', border: '1px solid rgba(229,192,123,0.2)' }}>
               ⭐
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="p-3">
-          {/* Nom del dorsal (gran) */}
-          <div className="text-[#E5C07B] font-black text-sm tracking-wider truncate">
+        <div className="p-3" style={{ background: '#111' }}>
+          <div className="font-black text-sm tracking-wider truncate" style={{ color: '#E5C07B' }}>
             {player.shirtName || player.name.toUpperCase()}
           </div>
-          {/* Nom complet (petit) */}
-          <div className="text-gray-500 text-xs truncate mt-0.5">{player.name}</div>
-          <div className="text-gray-600 text-xs">{player.position}</div>
+          <div className="text-xs truncate mt-0.5" style={{ color: '#555' }}>{player.name}</div>
+          <div className="text-xs" style={{ color: '#444' }}>{player.position}</div>
 
           {/* Stats */}
-          <div className="flex gap-2 mt-3 pt-3 border-t border-white/5">
+          <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="flex-1 text-center">
-              <div className="text-[#E5C07B] font-black text-base leading-none">{goals}</div>
-              <div className="text-gray-600 text-[10px] mt-0.5">⚽</div>
+              <div className="font-black text-base leading-none" style={{ color: '#E5C07B' }}>{goals}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: '#444' }}>⚽</div>
             </div>
-            <div className="w-px bg-white/5" />
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }} />
             <div className="flex-1 text-center">
-              <div className="text-[#E5C07B] font-black text-base leading-none">{assists}</div>
-              <div className="text-gray-600 text-[10px] mt-0.5">👟</div>
+              <div className="font-black text-base leading-none" style={{ color: '#E5C07B' }}>{assists}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: '#444' }}>👟</div>
             </div>
-            <div className="w-px bg-white/5" />
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }} />
             <div className="flex-1 text-center">
-              <div className="text-[#E5C07B] font-black text-base leading-none">{minutes}</div>
-              <div className="text-gray-600 text-[10px] mt-0.5">min</div>
+              <div className="font-black text-base leading-none" style={{ color: '#E5C07B' }}>{minutes}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: '#444' }}>min</div>
             </div>
           </div>
         </div>
@@ -110,7 +112,6 @@ export default function Squad() {
     return e ? fmtMin(e[1]) : "0'";
   };
 
-  // Ordena per dorsal
   const sorted = [...DATABASE.roster].sort((a, b) => a.number - b.number);
 
   return (
