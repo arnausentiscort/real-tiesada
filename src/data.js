@@ -7,16 +7,17 @@ export const DATABASE = {
 
   // Plantilla amb foto, dorsal i posició
   roster: [
-    { name: "Arnau Sentis",  number: 22, position: "Migcampista", photo: "players/arnau.png",      photoCel: "players/arnau_cel.png" },
-    { name: "Roger Miro",    number: 9,  position: "Davanter",    photo: "players/roger.png",      photoCel: "players/roger_cel.png" },
-    { name: "Joan Medina",   number: 1,  position: "Porter",      photo: null,                     photoCel: null },
-    { name: "Pau Ibañez",    number: 7,  position: "Defensa",     photo: null,                     photoCel: null },
-    { name: "Roi Seoane",    number: 5,  position: "Defensa",     photo: null,                     photoCel: null },
-    { name: "Oriol Tomas",   number: 21, position: "Migcampista", photo: "players/oriol.png",      photoCel: "players/oriol_cel.png" },
-    { name: "Paco Montero",  number: 10, position: "Davanter",    photo: "players/paco.png",       photoCel: "players/paco_cel.png" },
-    { name: "Andreu Cases",  number: 8,  position: "Migcampista", photo: null,                     photoCel: null },
-    { name: "Chengzhi Li",   number: 11, position: "Davanter",    photo: null,                     photoCel: null },
-    { name: "Ivan Mico",     number: 4,  position: "Defensa",     photo: null,                     photoCel: null },
+    { name: "Arnau Sentis",  number: 8,  shirtName: "SENTIS",      position: "Migcampista", photo: "players/arnau.png",  photoCel: "players/arnau_cel.png" },
+    { name: "Roger Miro",    number: 9,  shirtName: "MIRÓ",        position: "Davanter",    photo: "players/roger.png",  photoCel: "players/roger_cel.png" },
+    { name: "Joan Medina",   number: 11, shirtName: "MEDINA",      position: "Porter",      photo: null,                 photoCel: null },
+    { name: "Pau Ibañez",    number: 10, shirtName: "IBÁÑEZ",      position: "Defensa",     photo: null,                 photoCel: null },
+    { name: "Roi Seoane",    number: 24, shirtName: "ROI",         position: "Defensa",     photo: null,                 photoCel: null },
+    { name: "Oriol Tomas",   number: 21, shirtName: "ORIOL TOMAS", position: "Migcampista", photo: "players/oriol.png",  photoCel: "players/oriol_cel.png" },
+    { name: "Paco Montero",  number: 22, shirtName: "GABARRI",     position: "Davanter",    photo: "players/paco.png",   photoCel: "players/paco_cel.png" },
+    { name: "Andreu Cases",  number: 80, shirtName: "TELICO",      position: "Migcampista", photo: null,                 photoCel: null },
+    { name: "Chengzhi Li",   number: 12, shirtName: "CHENGZHI LI", position: "Davanter",    photo: null,                 photoCel: null },
+    { name: "Ivan Mico",     number: 4,  shirtName: "QUATRE",      position: "Defensa",     photo: null,                 photoCel: null },
+    { name: "Marc Farreras", number: 77, shirtName: "FARRERAS",    position: "Davanter",    photo: null,                 photoCel: null },
   ],
 
   matches: [
