@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { DATABASE } from '../data.js';
+
+function parseTime(t) {
+  if (!t) return 0;
+  const [m, s] = t.split(':').map(Number);
+  return m * 60 + (s || 0);
+}
+
+function getVideoLink(matchId, minute) {
+  const match = DATABASE.matches.find(m => m.id === matchId);
+  if (!match || !minute) return null;
+  const secs = Math.max(0, parseTime(minute) - 4);
+  if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${secs}s`;
+  if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${secs}s`;
+  return null;
+}
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -15,6 +30,7 @@ const FOTOS = [
     url:        'gallery/j3-oriol-pi-1.jpg',
     photoHover: 'gallery/j3-oriol-pi-2.jpg',
     caption:    "L'Oriol fa el pi 🤸 — Jornada 3 vs Uruks",
+    minute:     '22:00',
   },
 ];
 
@@ -22,6 +38,7 @@ const FOTOS = [
 function PhotoCard({ foto, idx, onClick }) {
   const [hover, setHover] = useState(false);
   const hasMotion = !!foto.photoHover;
+  const videoUrl  = getVideoLink(foto.matchId, foto.minute);
 
   return (
     <div
@@ -71,7 +88,25 @@ function PhotoCard({ foto, idx, onClick }) {
       {/* Caption */}
       <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
         <p className="text-xs text-white font-medium drop-shadow leading-snug">{foto.caption}</p>
+        {foto.minute && (
+          <p className="text-[10px] text-white/50 mt-0.5">min {foto.minute}</p>
+        )}
       </div>
+
+      {/* Botó vídeo */}
+      {videoUrl && (
+        <a
+          href={videoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => e.stopPropagation()}
+          className={`absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold
+            border transition-all duration-300
+            ${hover ? 'opacity-100 bg-black/70 border-[#E5C07B]/50 text-[#E5C07B]' : 'opacity-0'}`}>
+          <Play className="w-3 h-3 fill-current" />
+          Veure al vídeo
+        </a>
+      )}
     </div>
   );
 }

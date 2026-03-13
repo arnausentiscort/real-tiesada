@@ -38,10 +38,14 @@ export const DATABASE = {
           { time: "36:00", color: "yellow", player: "Oriol Tomas" }
         ],
         goals: [
-          { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"] },
-          { time: "17:00", type: "favor",  scorer: "Joan Medina",  assist: "Marc Farreras", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Joan Medina"] },
-          { time: "20:00", type: "favor",  scorer: "Roger Miro",   assist: "Joan Medina",   goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Pau Ibañez"] },
-          { time: "31:00", type: "favor",  scorer: "Arnau Sentis", assist: "Chengzhi Li",   goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Roger Miro", "Arnau Sentis"] },
+          { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"],
+            zone: "mig5E",   shotPos: { x: 319, y: 100 }, assistPos: null,          goalPos: { x: 225, y: 193 } },
+          { time: "17:00", type: "favor",  scorer: "Joan Medina",  assist: "Marc Farreras", goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Joan Medina"],
+            zone: "mig6E",   shotPos: { x: 385, y: 100 }, assistPos: { x: 319, y: 125 }, goalPos: { x: 125, y: 193 } },
+          { time: "20:00", type: "favor",  scorer: "Roger Miro",   assist: "Joan Medina",   goalkeeper: "Pau Ibañez",  onPitch: ["Roger Miro", "Ivan Mico", "Pau Ibañez"],
+            zone: "mig5",    shotPos: { x: 299, y: 100 }, assistPos: { x: 233, y: 55  }, goalPos: { x: 175, y: 193 } },
+          { time: "31:00", type: "favor",  scorer: "Arnau Sentis", assist: "Chengzhi Li",   goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Roger Miro", "Arnau Sentis"],
+            zone: "B6",      shotPos: { x: 366, y: 75  }, assistPos: { x: 319, y: 75  }, goalPos: { x: 175, y: 193 } },
           { time: "08:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Paco Montero", "Oriol Tomas", "Ivan Mico", "Andreu Cases"] },
           { time: "18:00", type: "contra", goalkeeper: "Pau Ibañez",  onPitch: ["Joan Medina", "Ivan Mico", "Roger Miro"] },
           { time: "33:00", type: "contra", goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Pau Ibañez", "Roi Seoane", "Roger Miro"] },
@@ -64,8 +68,10 @@ export const DATABASE = {
       events: {
         substitutions: [],
         goals: [
-          { time: "17:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null },
-          { time: "31:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null },
+          { time: "17:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null,
+            zone: "B6S",   shotPos: { x: 366, y: 95  }, assistPos: null,          goalPos: { x: 125, y: 193 } },
+          { time: "31:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null,
+            zone: "B4E",   shotPos: { x: 253, y: 75  }, assistPos: null,          goalPos: { x: 225, y: 83  } },
           { time: "03:00", type: "contra", goalkeeper: null },
           { time: "05:00", type: "contra", goalkeeper: null },
           { time: "14:00", type: "contra", goalkeeper: null },
@@ -117,9 +123,11 @@ export const DATABASE = {
           { time: "39:13", onPitch: [] }
         ],
         goals: [
-          { time: "06:04", type: "favor",  scorer: "Chengzhi Li",  assist: "Andreu Cases", goalkeeper: "Joan Medina" },
+          { time: "06:04", type: "favor",  scorer: "Chengzhi Li",  assist: "Andreu Cases", goalkeeper: "Joan Medina",
+            zone: "B5SE",  shotPos: { x: 314, y: 90  }, assistPos: { x: 284, y: 10  }, goalPos: { x: 75,  y: 193 } },
           { time: "15:11", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Error de transició lenta" },
-          { time: "22:50", type: "favor",  scorer: "Oriol Tomas",   assist: "Roger Miro",   goalkeeper: "Rival" },
+          { time: "22:50", type: "favor",  scorer: "Oriol Tomas",   assist: "Roger Miro",   goalkeeper: "Rival",
+            zone: "C6S",   shotPos: { x: 366, y: 145 }, assistPos: { x: 33,  y: 95  }, goalPos: { x: 175, y: 193 } },
           { time: "24:02", type: "contra", goalkeeper: "Roger Miro",  notes: "S'adorm com a porter" },
           { time: "26:04", type: "contra", goalkeeper: "Joan Medina", notes: "Ens driblen a tots" },
           { time: "34:26", type: "contra", goalkeeper: "Joan Medina", notes: "Rebot afortunat" },
