@@ -27,7 +27,7 @@ export const DATABASE_S1 = {
       jornada: "Jornada 1",
       opponent: "Real Magic Balompié",
       date: "2024",
-      result: "3-?",
+      result: "3-8",
       youtubeId: null,
       vimeoId: null,
       playerStats: {
@@ -188,7 +188,7 @@ export const DATABASE_S1 = {
       jornada: "Jornada 8",
       opponent: "Racing de Saberbeber",
       date: "2024",
-      result: "?-?",
+      result: "5-9",
       youtubeId: null,
       vimeoId: null,
       playerStats: {
