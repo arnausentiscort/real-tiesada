@@ -180,6 +180,51 @@ export default function MatchDetail({ match, onBack }) {
           </div>
         )}
 
+        {/* === HIGHLIGHTS === */}
+        {match.events?.highlights?.length > 0 && (
+          <div className="bg-[#1E1E1E] rounded-xl p-6 border border-[#E5C07B]/15 shadow-xl">
+            <h3 className="text-lg font-bold text-[#E5C07B] mb-4 flex items-center gap-2">
+              ✨ Moments Destacats
+            </h3>
+            <div className="space-y-4">
+              {match.events.highlights.map((h, idx) => (
+                <div key={idx} className="flex gap-4 items-start group">
+                  {/* Foto si en té */}
+                  {h.photo && (
+                    <div className="w-24 h-16 rounded-lg overflow-hidden border border-white/10 shrink-0 group-hover:border-[#E5C07B]/40 transition-colors">
+                      <img src={`${BASE}${h.photo}`} alt={h.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-mono bg-[#121212] px-2 py-0.5 rounded text-xs border border-white/10 shrink-0">
+                        {h.time}
+                      </span>
+                      <span className="text-lg leading-none">{h.emoji}</span>
+                      <span className="font-black text-white text-sm">{h.title}</span>
+                      {/* Botó saltar al vídeo */}
+                      {match.youtubeId && (
+                        <button
+                          onClick={() => jumpToGoal(h.time)}
+                          className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full
+                            bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/30 transition-all shrink-0"
+                        >
+                          ▶ {h.time}
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400">{h.description}</p>
+                    {h.player && (
+                      <div className="mt-1 text-xs text-[#E5C07B]/60">👤 {h.player}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* === LOG DE GOLS === */}
         <div className="bg-[#1E1E1E] rounded-xl p-6 border border-white/5 shadow-xl flex flex-col">
           <h3 className="text-lg font-bold text-[#E5C07B] mb-5 flex items-center gap-2">
@@ -263,7 +308,7 @@ export default function MatchDetail({ match, onBack }) {
               })}
             </div>
 
-            {/* Icones de gols */}
+            {/* Icones de gols + highlights */}
             <div className="relative h-8 ml-32 mb-1">
               {goalsSorted.map((goal, idx) => {
                 const left = (parseTime(goal.time) / matchStats.finalTime) * 100;
@@ -276,6 +321,19 @@ export default function MatchDetail({ match, onBack }) {
                     <div className="opacity-0 group-hover:opacity-100 absolute top-7 w-28 bg-[#0a0a0a] text-xs p-2 rounded z-50 border border-white/10 transition-opacity text-center pointer-events-none whitespace-nowrap">
                       {goal.time} — {goal.type === 'favor' ? '⭐ Favor' : '❌ Contra'}
                       {goal.scorer && <div className="text-[#E5C07B]">{goal.scorer}</div>}
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Highlights sobre el timeline */}
+              {(match.events?.highlights || []).map((h, idx) => {
+                const left = (parseTime(h.time) / matchStats.finalTime) * 100;
+                return (
+                  <div key={`h-${idx}`} className="absolute top-0 -translate-x-1/2 flex flex-col items-center group cursor-default" style={{ left: `${left}%` }}>
+                    <span className="text-lg leading-none drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.4))' }}>{h.emoji}</span>
+                    <div className="opacity-0 group-hover:opacity-100 absolute top-7 w-36 bg-[#0a0a0a] text-xs p-2 rounded z-50 border border-[#E5C07B]/20 transition-opacity text-center pointer-events-none">
+                      <div className="font-bold text-[#E5C07B] mb-0.5">{h.title}</div>
+                      <div className="text-gray-500">{h.time} · {h.player}</div>
                     </div>
                   </div>
                 );

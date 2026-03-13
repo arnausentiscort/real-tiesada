@@ -215,7 +215,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
         <div className="absolute inset-0 opacity-5 pointer-events-none"
           style={{ backgroundImage: 'repeating-linear-gradient(45deg,#E5C07B 0,#E5C07B 1px,transparent 0,transparent 50%)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
-          <div className="text-xs text-[#E5C07B]/60 uppercase tracking-[0.3em] mb-2">Futbol Sala · Temporada 25/26</div>
+          <div className="text-xs text-[#E5C07B]/60 uppercase tracking-[0.3em] mb-2">Futbol Sala · Split 2 · 25/26</div>
           <h2 className="text-4xl font-black text-white mb-1">Estadístiques</h2>
           <p className="text-gray-500">{DATABASE.matches.length} partits jugats</p>
         </div>

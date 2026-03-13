@@ -6,12 +6,12 @@ const CLASIFICACION_URL = 'https://apuntamelo.com/clasificacion-grupo/9/14/0/642
 // Dades hardcoded de la classificació — actualitza-les manualment cada jornada
 // o mira la URL de dalt
 const TABLA = [
-  // { pos, equipo, pj, pg, pe, pp, gf, gc, pts, esNosaltres }
-  // EXEMPLE — substituir amb les dades reals
-  { pos: 1,  equipo: 'Equip 1',       pj:3, pg:3, pe:0, pp:0, gf:12, gc:4,  pts:9,  esNosaltres: false },
-  { pos: 2,  equipo: 'Equip 2',       pj:3, pg:2, pe:1, pp:0, gf:9,  gc:5,  pts:7,  esNosaltres: false },
-  { pos: 3,  equipo: 'Real Tiesada',  pj:3, pg:0, pe:0, pp:3, gf:8,  gc:19, pts:0,  esNosaltres: true  },
-  // Afegeix la resta d'equips aquí
+  { pos: 1,  equipo: 'Vikings FC',        pj:3, pg:3, pe:0, pp:0, gf:18, gc:6,  pts:9,  esNosaltres: false },
+  { pos: 2,  equipo: 'Uruks',             pj:3, pg:2, pe:1, pp:0, gf:13, gc:7,  pts:7,  esNosaltres: false },
+  { pos: 3,  equipo: 'Los Ensaimadas',    pj:3, pg:2, pe:0, pp:1, gf:15, gc:9,  pts:6,  esNosaltres: false },
+  { pos: 4,  equipo: 'Atlètic Birra',     pj:3, pg:1, pe:1, pp:1, gf:11, gc:12, pts:4,  esNosaltres: false },
+  { pos: 5,  equipo: 'Real Tiesada',      pj:3, pg:0, pe:0, pp:3, gf:8,  gc:19, pts:0,  esNosaltres: true  },
+  { pos: 6,  equipo: 'Deportivo Gasofa',  pj:3, pg:0, pe:0, pp:3, gf:5,  gc:16, pts:0,  esNosaltres: false },
 ];
 
 export default function Clasificacion() {

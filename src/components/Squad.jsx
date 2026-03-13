@@ -144,7 +144,10 @@ export default function Squad() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      </div>
+
+      {/* Mòbil: carousel horitzontal / Desktop: grid */}
+      <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {sorted.map(player => (
           <PlayerCard
             key={player.name}
@@ -154,6 +157,26 @@ export default function Squad() {
             minutes={getMinutes(player.name)}
           />
         ))}
+      </div>
+
+      {/* Mòbil: slider */}
+      <div className="sm:hidden">
+        <div
+          className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {sorted.map(player => (
+            <div key={player.name} className="snap-start shrink-0" style={{ width: '75vw', maxWidth: '260px' }}>
+              <PlayerCard
+                player={player}
+                goals={getGoals(player.name)}
+                assists={getAssists(player.name)}
+                minutes={getMinutes(player.name)}
+              />
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-700 mt-1">← Llisca per veure tots els jugadors →</p>
       </div>
     </div>
   );

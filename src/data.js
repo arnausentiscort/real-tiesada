@@ -124,6 +124,9 @@ export const DATABASE = {
           { time: "26:04", type: "contra", goalkeeper: "Joan Medina", notes: "Ens driblen a tots" },
           { time: "34:26", type: "contra", goalkeeper: "Joan Medina", notes: "Rebot afortunat" },
           { time: "38:33", type: "contra", goalkeeper: "Joan Medina", notes: "La perd Paco" }
+        ],
+        highlights: [
+          { time: "22:00", player: "Oriol Tomas", type: "moment", emoji: "🤸", title: "El Pi de l'Oriol", description: "L'Oriol fa una entrada acrobàtica espectacular al terra que deixa tothom al·lucinat", photo: "gallery/j3-oriol-pi.jpg" },
         ]
       }
     }
