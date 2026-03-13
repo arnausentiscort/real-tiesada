@@ -1,11 +1,11 @@
 // =============================================
-// SPLIT 1 — Futbol 8 — Temporada 2024-25
+// SPLIT 1 — Futbol Sala — Temporada 2024-25
 // =============================================
 
 export const DATABASE_S1 = {
   teamName: "Real Tiesada",
   season: "2024-25",
-  sport: "Futbol 8",
+  sport: "Futbol Sala",
 
   // Plantilla — mateixos jugadors que el split actual, adaptats
   roster: [

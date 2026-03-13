@@ -4,6 +4,105 @@ import { DATABASE_S1 } from '../data_s1.js';
 
 const BASE = import.meta.env.BASE_URL;
 
+// ── Targeta jugador Split 1 ──────────────────────────────────────
+function PlayerCardS1({ player, stats, idx }) {
+  const [hover, setHover] = React.useState(false);
+  const hasPhotoCel = !!player.photoCel;
+
+  return (
+    <div
+      className="relative cursor-default select-none group"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        opacity: 0,
+        animation: `fadeIn 0.4s ${idx * 60}ms ease-out both`,
+      }}
+    >
+      <div className="rounded-2xl overflow-hidden border border-white/8 hover:border-[#E5C07B]/40
+        hover:-translate-y-1 hover:shadow-xl hover:shadow-[#E5C07B]/10 transition-all duration-300"
+        style={{ background: '#000' }}>
+
+        {/* Foto */}
+        <div className="relative overflow-hidden" style={{ height: '200px', background: '#111' }}>
+          {/* Número de fons */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-[100px] font-black leading-none select-none"
+              style={{ color: 'rgba(229,192,123,0.04)' }}>
+              {player.shirtName?.[0] || player.name[0]}
+            </span>
+          </div>
+
+          {/* Foto normal */}
+          {player.photo && (
+            <img src={`${BASE}${player.photo}`} alt={player.name}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: 'cover', objectPosition: 'top',
+                opacity: hover && hasPhotoCel ? 0 : 1,
+                transform: hover && hasPhotoCel ? 'scale(1.08)' : 'scale(1.0)',
+                transition: 'opacity 0.4s ease, transform 0.5s ease',
+              }}
+            />
+          )}
+          {/* Foto celebració */}
+          {hasPhotoCel && (
+            <img src={`${BASE}${player.photoCel}`} alt={`${player.name} cel·lebració`}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: 'cover', objectPosition: 'top',
+                opacity: hover ? 1 : 0,
+                transform: hover ? 'scale(1.05)' : 'scale(1.12)',
+                transition: 'opacity 0.4s ease, transform 0.5s ease',
+              }}
+            />
+          )}
+          {/* Placeholder */}
+          {!player.photo && !hasPhotoCel && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <div className="w-16 h-16 rounded-full border-2 border-[#C0392B]/30 flex items-center justify-center"
+                style={{ background: 'rgba(192,57,43,0.1)' }}>
+                <span className="text-xl font-black" style={{ color: 'rgba(229,192,123,0.4)' }}>
+                  {player.name.slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-xs text-gray-600">Sense foto</span>
+            </div>
+          )}
+
+          {/* Gradient baix */}
+          <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+            style={{ background: 'linear-gradient(to top, #000, transparent)' }} />
+
+          {/* Indicador celebració */}
+          {hasPhotoCel && (
+            <div className={`absolute top-2 right-2 z-20 text-xs px-2 py-0.5 rounded-full transition-opacity duration-300
+              ${hover ? 'opacity-100' : 'opacity-0'}`}
+              style={{ background: 'rgba(0,0,0,0.7)', color: '#E5C07B', border: '1px solid rgba(229,192,123,0.3)' }}>
+              ⭐
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="p-3" style={{ background: '#111' }}>
+          <div className="font-black text-sm tracking-wider truncate mb-0.5" style={{ color: '#E5C07B' }}>
+            {player.shirtName}
+          </div>
+          <div className="text-xs text-gray-500 truncate mb-2">{player.position}</div>
+          {stats && stats.partits > 0 && (
+            <div className="flex gap-2 text-xs">
+              <span className="text-emerald-400 font-bold">{stats.gols}⚽</span>
+              <span className="text-blue-400">{stats.assists}👟</span>
+              {stats.mvpWins > 0 && <span className="text-[#E5C07B]">{stats.mvpWins}👑</span>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function calcTotals() {
   const totals = {};
   DATABASE_S1.roster.forEach(p => {
@@ -209,21 +308,22 @@ export default function Split1Dashboard() {
   };
 
   const tabs = [
-    { id: 'resum',   label: '📊 Resum' },
-    { id: 'mvp',     label: '👑 MVP' },
-    { id: 'partits', label: '🏟 Partits' },
+    { id: 'resum',    label: '📊 Resum' },
+    { id: 'mvp',      label: '👑 MVP' },
+    { id: 'partits',  label: '🏟 Partits' },
+    { id: 'plantilla', label: '👥 Plantilla' },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
       <header>
         <div className="flex items-center gap-3 mb-1">
-          <h2 className="text-3xl font-bold text-white">Temporada 2024-25</h2>
+          <h2 className="text-3xl font-bold text-white">Split 1</h2>
           <span className="text-xs bg-[#C0392B]/20 text-[#C0392B] border border-[#C0392B]/30 px-2 py-1 rounded-full font-bold">
-            ⚽ Futbol 8
+            ⚽ Futbol Sala · 24/25
           </span>
         </div>
-        <p className="text-gray-500 text-sm">{DATABASE_S1.matches.length} partits · Split anterior</p>
+        <p className="text-gray-500 text-sm">{DATABASE_S1.matches.length} partits · Temporada anterior</p>
       </header>
 
       <div className="flex gap-1 bg-[#1a1a1a] p-1 rounded-xl border border-white/5 w-fit">
@@ -440,6 +540,25 @@ export default function Split1Dashboard() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* ── PLANTILLA ── */}
+      {activeTab === 'plantilla' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+            {roster.map((player, idx) => (
+              <PlayerCardS1
+                key={player.name}
+                player={player}
+                stats={totals[player.name]}
+                idx={idx}
+              />
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-600">
+            {roster.length} jugadors · Passa el cursor per veure la foto de celebració 🎉
+          </p>
         </div>
       )}
     </div>

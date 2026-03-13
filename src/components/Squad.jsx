@@ -30,15 +30,36 @@ function PlayerCard({ player, goals, assists, minutes }) {
             </span>
           </div>
 
-          {/* Foto */}
-          {photoSrc ? (
+          {/* Foto normal */}
+          {player.photo && (
             <img
-              src={`${BASE}${photoSrc}`}
+              src={`${BASE}${player.photo}`}
               alt={player.name}
-              className="absolute inset-0 w-full h-full transition-all duration-500 group-hover:scale-105"
-              style={{ objectFit: 'cover', objectPosition: 'top' }}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: 'cover', objectPosition: 'top',
+                opacity: hover && hasPhotoCel ? 0 : 1,
+                transform: hover && hasPhotoCel ? 'scale(1.08)' : 'scale(1.0)',
+                transition: 'opacity 0.4s ease, transform 0.5s ease',
+              }}
             />
-          ) : (
+          )}
+          {/* Foto celebració — cross-fade */}
+          {hasPhotoCel && (
+            <img
+              src={`${BASE}${player.photoCel}`}
+              alt={`${player.name} celebració`}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: 'cover', objectPosition: 'top',
+                opacity: hover ? 1 : 0,
+                transform: hover ? 'scale(1.05)' : 'scale(1.12)',
+                transition: 'opacity 0.4s ease, transform 0.5s ease',
+              }}
+            />
+          )}
+          {/* Placeholder sense foto */}
+          {!player.photo && !hasPhotoCel && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="w-20 h-20 rounded-full border-2 border-[#C0392B]/30 flex items-center justify-center"
                 style={{ background: 'rgba(192,57,43,0.1)' }}>

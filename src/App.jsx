@@ -43,7 +43,7 @@ function SeasonToggle({ season, onChange }) {
             : 'text-gray-500 hover:text-white'
         }`}
       >
-        24/25 · Futbol 8
+        Split 1
       </button>
     </div>
   );
@@ -83,7 +83,7 @@ export default function App() {
                 {DATABASE.teamName}
               </div>
               <div className="text-xs text-gray-600 tracking-wider">
-                {season === 'current' ? 'Fútbol Sala · 25/26' : 'Futbol 8 · 24/25'}
+                {season === 'current' ? 'Temporada Actual' : 'Split 1'}
               </div>
             </div>
           </button>
