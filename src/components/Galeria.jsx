@@ -16,11 +16,6 @@ const FOTOS = [
     photoHover: 'gallery/j3-oriol-pi-2.jpg',
     caption:    "L'Oriol fa el pi 🤸 — Jornada 3 vs Uruks",
   },
-  {
-    matchId: 'j3',
-    url:     'gallery/j3-oriol-pi-2.jpg',
-    caption: "El resultat del pi 😂 — Jornada 3 vs Uruks",
-  },
 ];
 
 // ── Targeta de foto amb efecte hover ─────────────────────────────
@@ -163,14 +158,6 @@ export default function Galeria() {
           <p className="text-gray-500">Sense fotos per aquesta jornada</p>
         </div>
       )}
-
-      {/* Com afegir fotos */}
-      <div className="bg-[#1a1a1a] rounded-xl border border-white/5 p-4 text-xs text-gray-600">
-        <p className="font-bold text-gray-500 mb-2">📌 Com afegir fotos noves:</p>
-        <p>1. Posa el fitxer a <code className="text-[#E5C07B]">public/gallery/nom-foto.jpg</code></p>
-        <p>2. Afegeix una entrada a l'array <code className="text-[#E5C07B]">FOTOS</code> de <code className="text-gray-400">src/components/Galeria.jsx</code></p>
-        <p>3. Si afegeixes <code className="text-[#E5C07B]">photoHover</code>, en passar el ratolí canvia a la segona foto (efecte moviment)</p>
-      </div>
 
       {/* Lightbox */}
       {lightbox !== null && (
