@@ -6,6 +6,8 @@ import { parseTime, formatTime, calcMatchStats } from '../utils.js';
 // ==========================================
 // VISTA B: DETALL D'UN PARTIT
 // ==========================================
+const BASE = import.meta.env.BASE_URL;
+
 export default function MatchDetail({ match, onBack }) {
 
   // Minut d'inici del vídeo (en segons) — canvia quan es clica un gol
@@ -292,27 +294,44 @@ export default function MatchDetail({ match, onBack }) {
                 );
               })}
 
-              {DATABASE.roster.map(player => {
-                const playerStints = matchStats.stints.filter(s => s.player === player);
-                if (playerStints.length === 0) return null;
+              {/* Jugadors que han jugat — extraiem noms únics dels stints */}
+              {[...new Set(matchStats.stints.map(s => s.player))].map(playerName => {
+                const playerStints = matchStats.stints.filter(s => s.player === playerName);
                 const totalSecs = playerStints.reduce((acc, s) => acc + (s.end - s.start), 0);
+                const playerObj = DATABASE.roster.find(p => p.name === playerName);
                 return (
-                  <div key={player} className="flex items-center gap-3 h-7 relative z-10 hover:bg-white/5 rounded px-1">
-                    <span className="w-28 text-xs text-right truncate text-gray-400">{player}</span>
+                  <div key={playerName} className="flex items-center gap-2 h-8 relative z-10 hover:bg-white/5 rounded-lg px-1 group">
+                    {/* Mini avatar */}
+                    {playerObj?.photo ? (
+                      <div className="w-6 h-6 rounded-full overflow-hidden border border-white/20 shrink-0">
+                        <img src={`${BASE}${playerObj.photo}`} alt={playerName} className="w-full h-full object-cover object-top" />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-[#C0392B]/20 border border-white/10 flex items-center justify-center shrink-0">
+                        <span className="text-[9px] font-black text-[#E5C07B]/60">{playerName[0]}</span>
+                      </div>
+                    )}
+                    <span className="w-20 text-xs text-right truncate text-gray-400 group-hover:text-white transition-colors shrink-0">
+                      {playerObj?.shirtName || playerName}
+                    </span>
                     <div className="flex-1 h-full relative">
                       {playerStints.map((stint, idx) => {
                         const left  = (stint.start / matchStats.finalTime) * 100;
                         const width = ((stint.end - stint.start) / matchStats.finalTime) * 100;
                         return (
                           <div key={idx}
-                            className="absolute top-1 bottom-1 bg-[#C0392B] rounded-sm border border-[#E5C07B]/30 hover:bg-[#E5C07B] transition-colors cursor-default"
-                            style={{ left: `${left}%`, width: `${Math.max(width, 0.5)}%` }}
-                            title={`${player}: ${formatTime(stint.start)} → ${formatTime(stint.end)}`}
+                            className="absolute top-1 bottom-1 rounded border border-[#E5C07B]/20 hover:border-[#E5C07B]/60 hover:brightness-125 transition-all cursor-default"
+                            style={{
+                              left: `${left}%`,
+                              width: `${Math.max(width, 0.8)}%`,
+                              background: 'linear-gradient(90deg, #7b1c12, #C0392B)',
+                            }}
+                            title={`${playerName}: ${formatTime(stint.start)} → ${formatTime(stint.end)} (${formatTime(stint.end - stint.start)})`}
                           />
                         );
                       })}
                     </div>
-                    <span className="w-10 text-xs font-mono text-gray-500 text-right">{formatTime(totalSecs)}</span>
+                    <span className="w-12 text-xs font-mono text-[#E5C07B]/60 text-right shrink-0">{formatTime(totalSecs)}</span>
                   </div>
                 );
               })}
