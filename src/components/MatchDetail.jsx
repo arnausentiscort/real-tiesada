@@ -67,32 +67,27 @@ function GoalCard({ item, onJump }) {
   return (
     <div className="relative rounded-2xl overflow-hidden border"
       style={{ background: cfg.bg, borderColor: cfg.border }}>
-      {/* Franja lateral de color */}
       <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: cfg.accent }}/>
       <div className="pl-4 pr-4 py-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            {/* Timestamp */}
             <span className="font-mono text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10 text-gray-300">
               {item.time}
             </span>
-            {/* Marcador */}
             <span className="font-black font-mono text-xl" style={{ color: cfg.accent }}>
               {item.score}
             </span>
-            {/* Label */}
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: cfg.accent }}>
               {isFavor ? '⚽ GOL A FAVOR' : '❌ EN CONTRA'}
             </span>
           </div>
-          {/* Botó vídeo */}
-          {item.videoUrl && (
-            <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
-              onClick={e => { e.stopPropagation(); if (onJump) onJump(item.time); }}
+          {/* Botó → salta al vídeo de dalt */}
+          {item.videoUrl && onJump && (
+            <button onClick={() => onJump(item.time)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
                 bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-500">
               ▶ Veure
-            </a>
+            </button>
           )}
         </div>
         {isFavor ? (
@@ -109,7 +104,7 @@ function GoalCard({ item, onJump }) {
 }
 
 // ── Targeta de moment (clip/viral) ────────────────────────────────
-function MomentCard({ item }) {
+function MomentCard({ item, onJump }) {
   const [hovered, setHovered] = useState(false);
   const cfg = TYPE_CFG[item.kind];
   const hasPhoto = !!item.photo;
@@ -117,7 +112,6 @@ function MomentCard({ item }) {
   return (
     <div className="rounded-xl overflow-hidden border"
       style={{ background: cfg.bg, borderColor: cfg.border }}>
-      {/* Foto gran si en té */}
       {hasPhoto && (
         <div className="relative overflow-hidden cursor-pointer"
           style={{ aspectRatio:'16/9' }}
@@ -133,13 +127,13 @@ function MomentCard({ item }) {
               {hovered ? '▶ acció' : '🎬 hover'}
             </div>
           )}
-          {item.videoUrl && (
-            <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
+          {/* Botó vídeo → salta al player de dalt */}
+          {item.videoUrl && onJump && (
+            <button onClick={() => onJump(item.time)}
               className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold
                 bg-red-600/80 hover:bg-red-600 text-white border border-red-500/50 transition-all">
               ▶ Vídeo
-            </a>
+            </button>
           )}
           <div className="absolute bottom-3 left-3">
             <span className="font-mono text-xs bg-black/60 px-2 py-0.5 rounded text-gray-300">{item.time}</span>
@@ -167,12 +161,12 @@ function MomentCard({ item }) {
             })}
           </div>
         )}
-        {!hasPhoto && item.videoUrl && (
-          <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
+        {!hasPhoto && item.videoUrl && onJump && (
+          <button onClick={() => onJump(item.time)}
             className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-lg text-xs font-bold
               bg-red-600/15 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white transition-all">
             ▶ Veure al vídeo
-          </a>
+          </button>
         )}
       </div>
     </div>
@@ -180,21 +174,21 @@ function MomentCard({ item }) {
 }
 
 // ── Línia compacta (bona/dolenta/tactica) ─────────────────────────
-function CompactLine({ item }) {
+function CompactLine({ item, onJump }) {
   const cfg = TYPE_CFG[item.kind];
   return (
-    <div className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-white/3 transition-colors group">
+    <div className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-white/3 transition-colors group cursor-pointer"
+      onClick={() => item.videoUrl && onJump && onJump(item.time)}>
       <span className="font-mono text-[10px] text-gray-600 w-8 shrink-0 pt-0.5 group-hover:text-gray-400">{item.time}</span>
       <span className="text-sm shrink-0">{cfg.icon}</span>
       <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-200 transition-colors flex-1">{item.text}</p>
       {item.videoUrl && (
-        <a href={item.videoUrl} target="_blank" rel="noopener noreferrer"
-          className="shrink-0 w-6 h-6 rounded-full bg-red-600/10 flex items-center justify-center
-            opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all">
+        <div className="shrink-0 w-6 h-6 rounded-full bg-red-600/10 flex items-center justify-center
+          opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="text-red-400">
             <polygon points="1,0 8,4 1,8"/>
           </svg>
-        </a>
+        </div>
       )}
     </div>
   );
@@ -306,9 +300,9 @@ export default function MatchDetail({ match, onBack }) {
           <div className="p-3 space-y-2">
             {cronica.map((item, idx) => {
               const size = TYPE_CFG[item.kind]?.size || 'small';
-              if (size === 'big') return <GoalCard key={idx} item={item} onJump={jumpToGoal}/>;
-              if (size === 'medium') return <MomentCard key={idx} item={item}/>;
-              return <CompactLine key={idx} item={item}/>;
+              if (size === 'big')    return <GoalCard    key={idx} item={item} onJump={jumpToGoal}/>;
+              if (size === 'medium') return <MomentCard  key={idx} item={item} onJump={jumpToGoal}/>;
+              return                        <CompactLine key={idx} item={item} onJump={jumpToGoal}/>;
             })}
           </div>
         </div>

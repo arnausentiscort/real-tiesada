@@ -202,9 +202,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
       {activeTab === 'resum' && (
         <div className="space-y-6">
 
-          {/* Golejadors + Assists en dues columnes — targetes horitzontals */}
+          {/* 1. Golejadors + Assists — targetes grans amb foto */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
             {stats.topScorers.length > 0 && (
               <section>
                 <h3 className="text-base font-black text-white mb-3 flex items-center gap-2">
@@ -217,7 +216,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 </div>
               </section>
             )}
-
             {stats.topAssists.length > 0 && (
               <section>
                 <h3 className="text-base font-black text-white mb-3 flex items-center gap-2">
@@ -232,71 +230,45 @@ export default function GlobalDashboard({ onSelectMatch }) {
             )}
           </div>
 
-          {/* Barres stats en grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {/* 2. Barres: totes iguals, gols favor/contra destacats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {stats.goalsConceded.length > 0 && (
-              <Card title="Gols Encaixats (Porter)" icon={<Shield className="w-4 h-4 text-[#E5C07B]"/>}>
-                <div className="space-y-2">
-                  {stats.goalsConceded.map(([name, count], i) => (
-                    <StatRow key={name} name={name} value={count}
-                      max={Math.max(...stats.goalsConceded.map(([,v]) => v), 1)}
-                      color="#C0392B" delay={i*60}/>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            <Card title="Gols a Favor al Camp" icon={<TrendingUp className="w-4 h-4 text-[#E5C07B]"/>}>
-              <div className="space-y-2">
+            {/* Gols a Favor — destacat verd */}
+            <Card title="⚽ Gols a Favor per Jugador" icon={<TrendingUp className="w-4 h-4 text-[#E5C07B]"/>}
+              className="border-emerald-500/15">
+              <div className="space-y-3">
                 {stats.goalsFor.filter(([,v]) => v>0).map(([name, count], i) => (
                   <StatRow key={name} name={name} value={count} max={maxGF} color="#27AE60" delay={i*60}/>
                 ))}
               </div>
             </Card>
 
-            <Card title="Gols en Contra al Camp" icon={<Shield className="w-4 h-4 text-[#E5C07B]"/>}>
-              <div className="space-y-2">
+            {/* Gols en Contra — destacat vermell */}
+            <Card title="❌ Gols en Contra per Jugador" icon={<Shield className="w-4 h-4 text-[#E5C07B]"/>}
+              className="border-[#C0392B]/15">
+              <div className="space-y-3">
                 {stats.goalsAgainst.filter(([,v]) => v>0).map(([name, count], i) => (
                   <StatRow key={name} name={name} value={count} max={maxGA} color="#C0392B" delay={i*60}/>
                 ))}
               </div>
             </Card>
 
-            {stats.yellowCards.length > 0 && (
-              <Card title="Targetes Grogues" icon={<span className="text-sm">🟨</span>}>
-                {stats.yellowCards.map(([name, count]) => {
-                  const player = DATABASE.roster.find(p => p.name === name);
-                  return (
-                    <div key={name} className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-2.5 mb-2">
-                      {player?.photo && (
-                        <div className="w-8 h-8 rounded-full overflow-hidden border border-yellow-500/20 shrink-0">
-                          <img src={`${BASE}${player.photo}`} alt={name}
-                            className="w-full h-full object-cover" style={{ objectPosition:'center 15%' }}/>
-                        </div>
-                      )}
-                      <span className="flex-1 text-sm font-bold text-yellow-200">{name}</span>
-                      <span className="text-2xl font-black text-yellow-400">{count} 🟨</span>
-                    </div>
-                  );
-                })}
-              </Card>
-            )}
-
-            <Card title="⚽ Favor vs ❌ Contra" icon={<Users className="w-4 h-4 text-[#E5C07B]"/>} className="md:col-span-2">
-              <div className="space-y-2">
+            {/* Favor vs Contra — comparativa */}
+            <Card title="Favor vs Contra per Jugador" icon={<Users className="w-4 h-4 text-[#E5C07B]"/>}
+              className="md:col-span-2">
+              <div className="space-y-3">
                 {DATABASE.roster.map(p => p.name).map(name => {
                   const gf = stats.goalsFor.find(([n]) => n===name)?.[1] ?? 0;
                   const ga = stats.goalsAgainst.find(([n]) => n===name)?.[1] ?? 0;
                   if (gf===0 && ga===0) return null;
-                  const maxV = Math.max(gf,ga,1);
+                  const maxV = Math.max(gf, ga, 1);
                   const player = DATABASE.roster.find(p => p.name===name);
                   return (
                     <div key={name} className="flex items-center gap-2 group">
                       {player?.photo ? (
                         <div className="w-7 h-7 rounded-full overflow-hidden border border-white/10 shrink-0">
                           <img src={`${BASE}${player.photo}`} alt={name}
-                            className="w-full h-full object-cover" style={{ objectPosition:'center 15%' }}/>
+                            className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
                         </div>
                       ) : (
                         <div className="w-7 h-7 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
@@ -305,15 +277,13 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       )}
                       <span className="text-xs text-gray-400 w-16 truncate shrink-0">{name.split(' ')[0]}</span>
                       <div className="flex-1 flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1">
-                          <div className="flex-1 h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500/60 rounded-full" style={{ width:`${(gf/maxV)*100}%` }}/>
-                          </div>
+                        <div className="h-2.5 bg-[#0d0d0d] rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500/70 rounded-full transition-all duration-700"
+                            style={{width:`${(gf/maxV)*100}%`}}/>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <div className="flex-1 h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#C0392B]/60 rounded-full" style={{ width:`${(ga/maxV)*100}%` }}/>
-                          </div>
+                        <div className="h-2.5 bg-[#0d0d0d] rounded-full overflow-hidden">
+                          <div className="h-full bg-[#C0392B]/70 rounded-full transition-all duration-700"
+                            style={{width:`${(ga/maxV)*100}%`}}/>
                         </div>
                       </div>
                       <span className="text-xs font-mono w-8 text-right shrink-0">
@@ -326,7 +296,62 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 }).filter(Boolean)}
               </div>
             </Card>
+
+            {/* Targetes grogues */}
+            {stats.yellowCards.length > 0 && (
+              <Card title="Targetes Grogues" icon={<span className="text-sm">🟨</span>}>
+                {stats.yellowCards.map(([name, count]) => {
+                  const player = DATABASE.roster.find(p => p.name === name);
+                  return (
+                    <div key={name} className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-3 mb-2">
+                      {player?.photo && (
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-yellow-500/20 shrink-0">
+                          <img src={`${BASE}${player.photo}`} alt={name}
+                            className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                        </div>
+                      )}
+                      <span className="flex-1 text-sm font-bold text-yellow-200">{name}</span>
+                      <span className="text-2xl font-black text-yellow-400">{count} 🟨</span>
+                    </div>
+                  );
+                })}
+              </Card>
+            )}
           </div>
+
+          {/* 3. Stats de porter — al final */}
+          <div>
+            <h3 className="text-base font-black text-white mb-3 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#E5C07B]"/> Estadístiques de Porter
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {stats.goalsConceded.length > 0 && (
+                <Card title="Gols Encaixats" icon={<span className="text-sm">🥅</span>}
+                  className="border-[#C0392B]/15">
+                  <div className="space-y-3">
+                    {stats.goalsConceded.map(([name, count], i) => (
+                      <StatRow key={name} name={name} value={count}
+                        max={Math.max(...stats.goalsConceded.map(([,v]) => v), 1)}
+                        color="#C0392B" delay={i*60}/>
+                    ))}
+                  </div>
+                </Card>
+              )}
+              {stats.saves.length > 0 && (
+                <Card title="Aturades" icon={<span className="text-sm">🧤</span>}
+                  className="border-blue-500/15">
+                  <div className="space-y-3">
+                    {stats.saves.map(([name, count], i) => (
+                      <StatRow key={name} name={name} value={count}
+                        max={Math.max(...stats.saves.map(([,v]) => v), 1)}
+                        color="#61AFEF" delay={i*60}/>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+
         </div>
       )}
 

@@ -37,16 +37,15 @@ export const calcMatchStats = (match) => {
 
 export const calcGlobalStats = (database) => {
   const goals = {}, assists = {}, minutes = {};
-  const goalsFor = {}, goalsAgainst = {}, goalsConceded = {}, yellowCards = {};
+  const goalsFor = {}, goalsAgainst = {}, goalsConceded = {}, yellowCards = {}, saves = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
     goals[p] = 0; assists[p] = 0; minutes[p] = 0;
-    goalsFor[p] = 0; goalsAgainst[p] = 0; goalsConceded[p] = 0; yellowCards[p] = 0;
+    goalsFor[p] = 0; goalsAgainst[p] = 0; goalsConceded[p] = 0; yellowCards[p] = 0; saves[p] = 0;
   });
 
   database.matches.forEach(match => {
-    // Qui estava al camp en cada gol
     const getOnPitch = (goal) => {
       if (goal.onPitch) return goal.onPitch;
       const { stints } = calcMatchStats(match);
@@ -67,12 +66,24 @@ export const calcGlobalStats = (database) => {
       }
     });
 
-    // Targetes
+    // Parades: comptem events de la retransmissió de tipus "bona" que contenen "aturada" o "parada" o "paradon"
+    // i també els events de la retransmissió on el porter és protagonista en accions defensives
+    (match.events?.retransmissio || []).forEach(ev => {
+      const txt = (ev.text || '').toLowerCase();
+      const isSave = txt.includes('atura') || txt.includes('parad') || txt.includes('para ') ||
+                     txt.includes('vola') || txt.includes('santo') || txt.includes('miracle');
+      if (!isSave) return;
+      (ev.players || []).forEach(p => {
+        // Només comptem com a parada si el jugador és porter (posició Porter)
+        const pl = database.roster.find(r => r.name === p);
+        if (pl && pl.position === 'Porter' && saves[p] !== undefined) saves[p]++;
+      });
+    });
+
     (match.events.cards || []).forEach(card => {
       if (card.color === 'yellow' && yellowCards[card.player] !== undefined) yellowCards[card.player]++;
     });
 
-    // Minuts
     const { totals } = calcMatchStats(match);
     Object.entries(totals).forEach(([p, secs]) => { if (minutes[p] !== undefined) minutes[p] += secs; });
   });
@@ -86,6 +97,7 @@ export const calcGlobalStats = (database) => {
     goalsFor:      sortDesc(goalsFor),
     goalsAgainst:  sortDesc(goalsAgainst),
     goalsConceded: sortDesc(goalsConceded).filter(([,v]) => v > 0),
+    saves:         sortDesc(saves).filter(([,v]) => v > 0),
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
   };
 };

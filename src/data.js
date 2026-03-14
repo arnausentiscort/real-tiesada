@@ -91,7 +91,7 @@ export const DATABASE = {
       jornada: "Jornada 3",
       opponent: "Uruks",
       result: "2 - 5",
-      date: "03 Nov 2023",
+      date: "09 Mar 2026",
       youtubeId: "X9w3f1w47YA",
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
