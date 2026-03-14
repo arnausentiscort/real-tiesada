@@ -121,6 +121,18 @@ function MatchDetailPanel({ match, onBack }) {
         <ChevronLeft className="w-4 h-4"/> Tornar
       </button>
 
+      {/* Vídeo YouTube a dalt */}
+      {match.youtubeUrl && (
+        <div className="rounded-2xl overflow-hidden bg-black border border-white/5" style={{aspectRatio:'16/9'}}>
+          <iframe
+            src={`https://www.youtube.com/embed/${match.youtubeId}${match.youtubeUrl.includes('&t=') ? '?start=' + match.youtubeUrl.split('&t=')[1].replace('s','') : ''}`}
+            className="w-full h-full"
+            allowFullScreen
+            title={`${match.jornada} vs ${match.opponent}`}
+          />
+        </div>
+      )}
+
       {/* Capçalera */}
       <div className={`bg-[#1E1E1E] rounded-xl p-4 border ${rs.border}`}>
         <div className="flex flex-wrap justify-between items-center gap-3">

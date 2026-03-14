@@ -164,8 +164,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
 
       {/* ── HERO compacte amb xifres clau ── */}
       <div className="relative overflow-hidden rounded-2xl bg-[#1a1a1a] border border-[#E5C07B]/15 p-5">
-        <div className="absolute inset-0 opacity-4 pointer-events-none"
-          style={{ backgroundImage:'repeating-linear-gradient(45deg,#E5C07B 0,#E5C07B 1px,transparent 0,transparent 50%)', backgroundSize:'18px 18px' }}/>
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[10px] text-[#E5C07B]/50 uppercase tracking-widest mb-1">Actual · Futbol Sala</p>
