@@ -4,6 +4,138 @@ import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
 
 // ==========================================
+// RETRANSMISSIÓ MINUT A MINUT
+// ==========================================
+
+const TYPE_CONFIG = {
+  bona:    { icon: '✅', label: 'Jugada bona',  bg: 'bg-emerald-500/8',  border: 'border-emerald-500/20', dot: 'bg-emerald-400', text: 'text-emerald-400' },
+  dolenta: { icon: '💥', label: 'Error',         bg: 'bg-[#C0392B]/8',    border: 'border-[#C0392B]/20',   dot: 'bg-[#C0392B]',   text: 'text-[#C0392B]'  },
+  clip:    { icon: '🎬', label: 'Moment viral',  bg: 'bg-[#E5C07B]/8',    border: 'border-[#E5C07B]/20',   dot: 'bg-[#E5C07B]',   text: 'text-[#E5C07B]'  },
+  tactica: { icon: '🧠', label: 'Tàctica',       bg: 'bg-blue-500/8',     border: 'border-blue-500/20',    dot: 'bg-blue-400',    text: 'text-blue-400'   },
+};
+
+function RetransmissioSection({ events, onJump, hasVideo }) {
+  const [filter, setFilter] = React.useState('all');
+  const [hoveredPhoto, setHoveredPhoto] = React.useState(null);
+
+  const filtered = filter === 'all' ? events : events.filter(e => e.type === filter);
+  const counts = { bona: 0, dolenta: 0, clip: 0, tactica: 0 };
+  events.forEach(e => { if (counts[e.type] !== undefined) counts[e.type]++; });
+
+  return (
+    <div className="bg-[#1E1E1E] rounded-xl border border-[#E5C07B]/15 shadow-xl overflow-hidden">
+      {/* Capçalera */}
+      <div className="px-6 py-5 border-b border-white/5">
+        <h3 className="text-lg font-bold text-[#E5C07B] flex items-center gap-2 mb-4">
+          📺 Retransmissió minut a minut
+        </h3>
+        {/* Filtres */}
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setFilter('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all
+              ${filter==='all' ? 'bg-white/10 border-white/30 text-white' : 'border-white/10 text-gray-500 hover:text-white'}`}>
+            Tots ({events.length})
+          </button>
+          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => counts[key] > 0 && (
+            <button key={key} onClick={() => setFilter(key === filter ? 'all' : key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1
+                ${filter===key ? `${cfg.bg} ${cfg.border} ${cfg.text}` : 'border-white/10 text-gray-500 hover:text-white'}`}>
+              {cfg.icon} {cfg.label} ({counts[key]})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Llista */}
+      <div className="divide-y divide-white/5">
+        {filtered.map((ev, idx) => {
+          const cfg = TYPE_CONFIG[ev.type] || TYPE_CONFIG.clip;
+          const hasPhoto = !!ev.photo;
+          const isPhotoHovered = hoveredPhoto === idx;
+
+          return (
+            <div key={idx}
+              className={`flex items-start gap-4 px-5 py-4 transition-all hover:bg-white/3 ${cfg.bg}`}>
+
+              {/* Línia de temps + dot */}
+              <div className="flex flex-col items-center gap-1 shrink-0 pt-0.5">
+                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.dot} shadow-lg`}
+                  style={{ boxShadow: `0 0 8px currentColor` }}/>
+                <div className="w-px flex-1 bg-white/8 min-h-[16px]"/>
+              </div>
+
+              {/* Temps */}
+              <div className="w-10 shrink-0 pt-0.5">
+                <span className="font-mono text-xs text-gray-500 bg-[#121212] px-1.5 py-0.5 rounded border border-white/8">
+                  {ev.time}
+                </span>
+              </div>
+
+              {/* Contingut */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-200 leading-relaxed">{ev.text}</p>
+
+                {/* Jugadors */}
+                {ev.players?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {ev.players.map(p => {
+                      const playerObj = DATABASE.roster.find(pl => pl.name === p);
+                      return (
+                        <span key={p} className="flex items-center gap-1 text-[10px] bg-[#121212] border border-white/8 rounded-full px-2 py-0.5 text-gray-400">
+                          {playerObj?.photo && (
+                            <img src={`${BASE}${playerObj.photo}`} alt={p}
+                              className="w-3 h-3 rounded-full object-cover object-top"/>
+                          )}
+                          {p.split(' ')[0]}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Foto especial (Oriol pi) */}
+                {hasPhoto && (
+                  <div className="mt-3 flex items-start gap-3">
+                    <div
+                      className="relative rounded-xl overflow-hidden border border-[#E5C07B]/30 cursor-pointer shrink-0 transition-all duration-300"
+                      style={{ width: 120, height: 80 }}
+                      onMouseEnter={() => setHoveredPhoto(idx)}
+                      onMouseLeave={() => setHoveredPhoto(null)}>
+                      <img
+                        src={`${BASE}${isPhotoHovered && ev.photoHover ? ev.photoHover : ev.photo}`}
+                        alt="Moment"
+                        className="w-full h-full object-cover transition-all duration-400"
+                      />
+                      {ev.photoHover && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-white font-bold bg-black/60 px-2 py-1 rounded-full">Hover!</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#E5C07B]/60 italic">⭐ Moment especial</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Botó vídeo */}
+              {hasVideo && ev.videoUrl && (
+                <a href={ev.videoUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex-shrink-0 w-9 h-9 rounded-full bg-red-600/15 border border-red-500/20
+                    flex items-center justify-center hover:bg-red-600 hover:border-red-500 transition-all group/btn mt-0.5">
+                  <svg width="12" height="12" viewBox="0 0 12 12" className="fill-red-400 group-hover/btn:fill-white transition-colors">
+                    <polygon points="2,1 11,6 2,11"/>
+                  </svg>
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // VISTA B: DETALL D'UN PARTIT
 // ==========================================
 const BASE = import.meta.env.BASE_URL;
@@ -287,6 +419,15 @@ export default function MatchDetail({ match, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* === RETRANSMISSIÓ MINUT A MINUT === */}
+      {match.events?.retransmissio?.length > 0 && (
+        <RetransmissioSection
+          events={match.events.retransmissio}
+          onJump={jumpToGoal}
+          hasVideo={hasYoutube}
+        />
+      )}
 
       {/* === LÍNIA DE TEMPS — només si tenim substitucions === */}
       {hasSubstitutions && matchStats && (
