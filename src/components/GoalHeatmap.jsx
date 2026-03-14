@@ -321,28 +321,10 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         return (
           <g key={idx} onClick={() => setActiveGoal(isActive?null:idx)} style={{ cursor:'pointer' }}>
             {isActive && <circle cx={g._gx} cy={g._gy} r="22" fill={ACCENT} opacity="0.2"/>}
-
-            {isGround ? (
-              /* Ras de terra — el·lipse aplanada amb ombra */
-              <>
-                <ellipse cx={g._gx} cy={g._gy + 2} rx={r + 4} ry={3}
-                  fill="rgba(0,0,0,0.3)"/>
-                <ellipse cx={g._gx} cy={g._gy} rx={r} ry={Math.round(r * 0.55)}
-                  fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
-                  stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
-                  strokeWidth={isActive ? 2 : 1}/>
-                {/* costura de pilota rodant */}
-                <path d={`M ${g._gx - r + 2},${g._gy} Q ${g._gx},${g._gy - Math.round(r*0.4)} ${g._gx + r - 2},${g._gy}`}
-                  fill="none" stroke={isActive ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.18)'} strokeWidth="0.8"/>
-              </>
-            ) : (
-              /* Gol aeri — cercle normal */
-              <circle cx={g._gx} cy={g._gy} r={r}
-                fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
-                stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
-                strokeWidth={isActive ? 2 : 1}/>
-            )}
-
+            <circle cx={g._gx} cy={g._gy} r={isActive?13:9}
+              fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
+              stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
+              strokeWidth={isActive ? 2 : 1}/>
             <text x={g._gx} y={g._gy + (isGround ? -1 : 0)}
               textAnchor="middle" dominantBaseline="middle"
               fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
