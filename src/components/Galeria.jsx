@@ -22,6 +22,14 @@ function getVideoLink(matchId, minute) {
 const FOTOS = [
   {
     matchId: 'j3',
+    url:        'gallery/j3-paco-ivan-1.jpg',
+    photoHover: 'gallery/j3-paco-ivan-2.jpg',
+    caption:    'Quasi gol de Paco 🫁',
+    subtitle:   'Jornada 3 vs Uruks · min 11:52',
+    minute:     '11:52',
+  },
+  {
+    matchId: 'j3',
     url:        'gallery/j3-oriol-pi-1.jpg',
     photoHover: 'gallery/j3-oriol-pi-2.jpg',
     caption:    "L'Oriol fa el pi 🤸",
