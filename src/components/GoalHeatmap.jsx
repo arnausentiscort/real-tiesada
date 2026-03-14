@@ -124,18 +124,40 @@ function GoalCard({ goal, idx, onClose }) {
         )}
       </div>
 
-      {/* Botó vídeo */}
-      {videoUrl && (
-        <a href={videoUrl} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl border border-[#E5C07B]/25 bg-[#E5C07B]/8 hover:bg-[#E5C07B]/15 transition-all group">
-          <svg width="16" height="16" viewBox="0 0 16 16" className="flex-shrink-0">
-            <circle cx="8" cy="8" r="7" fill="none" stroke="#E5C07B" strokeWidth="1.2" opacity="0.7"/>
-            <polygon points="6,5 12,8 6,11" fill="#E5C07B" opacity="0.9"/>
-          </svg>
-          <span className="text-xs font-semibold text-[#E5C07B]/80 group-hover:text-[#E5C07B]">Veure al vídeo</span>
-          <span className="text-[10px] text-gray-600 ml-auto">min {goal.time}</span>
-        </a>
-      )}
+      {/* Botons acció */}
+      <div className="flex gap-2">
+        {/* Botó vídeo */}
+        {videoUrl && (
+          <a href={videoUrl} target="_blank" rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-[#E5C07B]/25 bg-[#E5C07B]/8 hover:bg-[#E5C07B]/15 transition-all group">
+            <svg width="14" height="14" viewBox="0 0 14 14" className="flex-shrink-0">
+              <circle cx="7" cy="7" r="6" fill="none" stroke="#E5C07B" strokeWidth="1.2" opacity="0.7"/>
+              <polygon points="5,4 11,7 5,10" fill="#E5C07B" opacity="0.9"/>
+            </svg>
+            <span className="text-xs font-semibold text-[#E5C07B]/80 group-hover:text-[#E5C07B]">Vídeo</span>
+          </a>
+        )}
+        {/* Botó compartir */}
+        {videoUrl && (
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(videoUrl).then(() => {
+                const btn = document.getElementById(`share-${goal.matchId}-${goal.time}`);
+                if (btn) { btn.textContent = '✓ Copiat'; setTimeout(() => { btn.textContent = 'Compartir'; }, 2000); }
+              });
+            }}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all">
+            <svg width="12" height="12" viewBox="0 0 12 12">
+              <circle cx="10" cy="2" r="1.5" fill="none" stroke="#888" strokeWidth="1.2"/>
+              <circle cx="10" cy="10" r="1.5" fill="none" stroke="#888" strokeWidth="1.2"/>
+              <circle cx="2" cy="6" r="1.5" fill="none" stroke="#888" strokeWidth="1.2"/>
+              <line x1="3.3" y1="5.3" x2="8.7" y2="2.7" stroke="#888" strokeWidth="1"/>
+              <line x1="3.3" y1="6.7" x2="8.7" y2="9.3" stroke="#888" strokeWidth="1"/>
+            </svg>
+            <span id={`share-${goal.matchId}-${goal.time}`} className="text-xs font-semibold text-gray-500">Compartir</span>
+          </button>
+        )}
+      </div>
 
       {/* Mini porteria */}
       {goal.goalPos && (
@@ -219,7 +241,8 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
           : false;
 
         return (
-          <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer' }}>
+          <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer',
+            animation: `goalPop 0.4s ease-out ${idx * 0.08}s both` }}>
             {/* Línia assist */}
             {assist && (
               <line
@@ -268,16 +291,16 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
 }
 
 // ── Porteria SVG — nou dibuix ─────────────────────────────────────
+const GROUND_Y = 185; // y >= aquest = gol ras de terra → el·lipse aplanada
+
 function GoalSVG({ goals, activeGoal, setActiveGoal }) {
   return (
     <svg viewBox="-18 -18 336 230" style={{ width:'100%', display:'block' }}>
       {/* terra */}
       <rect x="-18" y="200" width="336" height="12" fill="#1c3d1c"/>
-
       {/* fons xarxa */}
       <rect x="0" y="0" width="300" height="200" fill="#0d0d0d"/>
       <rect x="0" y="0" width="300" height="60" fill="rgba(255,255,255,0.012)"/>
-
       {/* profunditat 3D */}
       <line x1="0"   y1="0"   x2="-13" y2="-13" stroke="#555" strokeWidth="1.8"/>
       <line x1="300" y1="0"   x2="313" y2="-13" stroke="#555" strokeWidth="1.8"/>
@@ -291,18 +314,40 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
       {goals.map((g, idx) => {
         if (!g._gx) return null;
         const isActive = activeGoal === idx;
+        const isGround = g._gy >= GROUND_Y;
         const dorsal   = getDorsal(g.scorer);
+        const r        = isActive ? 13 : 9;
+
         return (
           <g key={idx} onClick={() => setActiveGoal(isActive?null:idx)} style={{ cursor:'pointer' }}>
             {isActive && <circle cx={g._gx} cy={g._gy} r="22" fill={ACCENT} opacity="0.2"/>}
-            <circle cx={g._gx} cy={g._gy} r={isActive?13:9}
-              fill={isActive?ACCENT:'rgba(255,255,255,0.82)'}
-              stroke={isActive?'white':'rgba(0,0,0,0.3)'}
-              strokeWidth={isActive?2:1}/>
-            <text x={g._gx} y={g._gy} textAnchor="middle" dominantBaseline="middle"
+
+            {isGround ? (
+              /* Ras de terra — el·lipse aplanada amb ombra */
+              <>
+                <ellipse cx={g._gx} cy={g._gy + 2} rx={r + 4} ry={3}
+                  fill="rgba(0,0,0,0.3)"/>
+                <ellipse cx={g._gx} cy={g._gy} rx={r} ry={Math.round(r * 0.55)}
+                  fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
+                  stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
+                  strokeWidth={isActive ? 2 : 1}/>
+                {/* costura de pilota rodant */}
+                <path d={`M ${g._gx - r + 2},${g._gy} Q ${g._gx},${g._gy - Math.round(r*0.4)} ${g._gx + r - 2},${g._gy}`}
+                  fill="none" stroke={isActive ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.18)'} strokeWidth="0.8"/>
+              </>
+            ) : (
+              /* Gol aeri — cercle normal */
+              <circle cx={g._gx} cy={g._gy} r={r}
+                fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
+                stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
+                strokeWidth={isActive ? 2 : 1}/>
+            )}
+
+            <text x={g._gx} y={g._gy + (isGround ? -1 : 0)}
+              textAnchor="middle" dominantBaseline="middle"
               fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
               fontWeight="bold"
-              fill={isActive?'#1a1a1a':'#111'} style={{ pointerEvents:'none' }}>
+              fill={isActive ? '#1a1a1a' : '#111'} style={{ pointerEvents:'none' }}>
               {dorsal ?? '?'}
             </text>
           </g>
