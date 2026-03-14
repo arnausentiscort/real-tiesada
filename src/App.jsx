@@ -48,9 +48,9 @@ export default function App() {
     }
   }, [view]);
 
-  const handleSelectMatch = (match) => { setView(match);       setMenuOpen(false); };
-  const handleSeasonChange = (s)    => { setSeason(s); setView('dashboard'); setMenuOpen(false); };
-  const navTo = (v)                 => { setView(v);           setMenuOpen(false); };
+  const handleSelectMatch = (match) => { setView(match); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const handleSeasonChange = (s)    => { setSeason(s); setView('dashboard'); setMenuOpen(false); window.scrollTo({ top: 0 }); };
+  const navTo = (v)                 => { setView(v); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   const navCurrent = [
     { id: 'dashboard',     icon: '📊', label: 'Stats'         },
