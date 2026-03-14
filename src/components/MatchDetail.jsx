@@ -1,56 +1,67 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronLeft, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
 
 const BASE = import.meta.env.BASE_URL;
 
-// ── Tipus d'events per la crònica ────────────────────────────────
-const TYPE_CFG = {
-  goal_favor:  { icon:'⚽', label:'Gol a favor',   size:'big',    accent:'#27AE60', bg:'rgba(39,174,96,0.08)',   border:'rgba(39,174,96,0.3)'   },
-  goal_contra: { icon:'❌', label:'Gol en contra',  size:'big',    accent:'#C0392B', bg:'rgba(192,57,43,0.08)',   border:'rgba(192,57,43,0.3)'   },
-  clip:        { icon:'🎬', label:'Moment viral',   size:'medium', accent:'#E5C07B', bg:'rgba(229,192,123,0.06)', border:'rgba(229,192,123,0.2)' },
-  bona:        { icon:'✅', label:'Jugada bona',    size:'small',  accent:'#27AE60', bg:'transparent',            border:'transparent'           },
-  dolenta:     { icon:'💥', label:'Error',          size:'small',  accent:'#C0392B', bg:'transparent',            border:'transparent'           },
-  tactica:     { icon:'🧠', label:'Tàctica',        size:'small',  accent:'#61AFEF', bg:'transparent',            border:'transparent'           },
-};
+// ── Emoji automàtic per al text de la jugada ─────────────────────
+function pickEmoji(text) {
+  const t = text.toLowerCase();
+  if (t.includes('gol') && (t.includes('favor') || t.includes('marca'))) return '⚽';
+  if (t.includes('aturad') || t.includes('parad') || t.includes('para ') || t.includes('vola') || t.includes('santo') || t.includes('miracle') || t.includes('paradon')) return '🧤';
+  if (t.includes('rot') || t.includes('tombarella') || t.includes('cau a terra') || t.includes('cul') || t.includes('maradona') || t.includes('borracho')) return '🎬';
+  if (t.includes('regal') || t.includes('embolic') || t.includes('perd') || t.includes('mano de dios') || t.includes('fan aigü') || t.includes('volea') || t.includes('destrossa') || t.includes('botiga')) return '💥';
+  if (t.includes('paret') || t.includes('connexió') || t.includes('tiqui') || t.includes('possessió') || t.includes('combinaci') || t.includes('jugada de pissarra') || t.includes('mil·limètr') || t.includes('pase filtrat')) return '🔗';
+  if (t.includes('canvi') || t.includes('entra pel') || t.includes('tàctic') || t.includes('manual')) return '🔄';
+  if (t.includes('ibañ')) return '📢';
+  if (t.includes('croqueta') || t.includes('vaselina') || t.includes('gir d\'estrella') || t.includes('ruleta') || t.includes('sombrerito')) return '🪄';
+  if (t.includes('falta') || t.includes('santo') || t.includes('lliure')) return '🛡️';
+  if (t.includes('passad') || t.includes('assist') || t.includes('espai per')) return '🎯';
+  if (t.includes('recuper')) return '💪';
+  return '▶️';
+}
 
-// ── Construeix la crònica unificada (gols + retransmissió) ────────
+// ── Construeix crònica unificada ─────────────────────────────────
 function buildCronica(match) {
   const items = [];
+  const ytId   = match.youtubeId;
+  const vimId  = match.vimeoId;
 
-  // Gols
+  const makeUrl = (timeStr) => {
+    const s = Math.max(0, parseTime(timeStr) - 3);
+    if (ytId)  return `yt:${s}`;   // flag intern → salta al player
+    if (vimId) return `vimeo:${s}`;
+    return null;
+  };
+
   (match.events?.goals || []).forEach(g => {
     items.push({
-      time: g.time,
-      kind: g.type === 'favor' ? 'goal_favor' : 'goal_contra',
-      scorer: g.scorer,
-      assist: g.assist,
+      time:       g.time,
+      kind:       g.type === 'favor' ? 'goal_favor' : 'goal_contra',
+      scorer:     g.scorer,
+      assist:     g.assist,
+      notes:      g.notes,
       goalkeeper: g.goalkeeper,
-      notes: g.notes,
-      videoUrl: match.youtubeId
-        ? `https://www.youtube.com/watch?v=${match.youtubeId}&t=${Math.max(0,parseTime(g.time)-3)}s`
-        : (match.vimeoId ? `https://vimeo.com/${match.vimeoId}#t=${Math.max(0,parseTime(g.time)-3)}s` : null),
+      jumpUrl:    makeUrl(g.time),
     });
   });
 
-  // Retransmissió
   (match.events?.retransmissio || []).forEach(r => {
     items.push({
-      time: r.time,
-      kind: r.type,
-      text: r.text,
-      players: r.players,
-      videoUrl: r.videoUrl,
-      photo: r.photo,
+      time:       r.time,
+      kind:       'moment',
+      text:       r.text,
+      players:    r.players,
+      emoji:      pickEmoji(r.text),
+      photo:      r.photo,
       photoHover: r.photoHover,
+      jumpUrl:    makeUrl(r.time),
     });
   });
 
-  // Ordena per minut
   items.sort((a, b) => parseTime(a.time) - parseTime(b.time));
 
-  // Calcula marcador en viu
   let home = 0, away = 0;
   items.forEach(item => {
     if (item.kind === 'goal_favor')  { home++; item.score = `${home}-${away}`; }
@@ -60,112 +71,118 @@ function buildCronica(match) {
   return items;
 }
 
-// ── Targeta gran de gol ───────────────────────────────────────────
+// ── Targeta gran de gol ──────────────────────────────────────────
 function GoalCard({ item, onJump }) {
-  const cfg = TYPE_CFG[item.kind];
   const isFavor = item.kind === 'goal_favor';
+  const accent  = isFavor ? '#27AE60' : '#C0392B';
+  const bg      = isFavor ? 'rgba(39,174,96,0.08)' : 'rgba(192,57,43,0.08)';
+  const border  = isFavor ? 'rgba(39,174,96,0.3)'  : 'rgba(192,57,43,0.3)';
+
   return (
     <div className="relative rounded-2xl overflow-hidden border"
-      style={{ background: cfg.bg, borderColor: cfg.border }}>
-      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: cfg.accent }}/>
-      <div className="pl-4 pr-4 py-4">
+      style={{ background: bg, borderColor: border }}>
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{ background: accent }}/>
+      <div className="pl-5 pr-4 py-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10 text-gray-300">
-              {item.time}
-            </span>
-            <span className="font-black font-mono text-xl" style={{ color: cfg.accent }}>
-              {item.score}
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: cfg.accent }}>
+            <span className="font-mono text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10 text-gray-300">{item.time}</span>
+            <span className="font-black font-mono text-2xl" style={{ color: accent }}>{item.score}</span>
+            <span className="text-sm font-bold uppercase tracking-wider" style={{ color: accent }}>
               {isFavor ? '⚽ GOL A FAVOR' : '❌ EN CONTRA'}
             </span>
           </div>
-          {/* Botó → salta al vídeo de dalt */}
-          {item.videoUrl && onJump && (
+          {item.jumpUrl && (
             <button onClick={() => onJump(item.time)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
-                bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-500">
+                bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white">
               ▶ Veure
             </button>
           )}
         </div>
         {isFavor ? (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-white font-black text-lg">{item.scorer}</span>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <span className="text-white font-black text-xl">{item.scorer}</span>
             {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{item.assist}</span></span>}
           </div>
         ) : (
-          item.notes && <p className="mt-2 text-sm text-gray-400 italic">{item.notes}</p>
+          item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
         )}
       </div>
     </div>
   );
 }
 
-// ── Targeta de moment (clip/viral) ────────────────────────────────
+// ── Targeta de moment — tots igual de protagonisme ───────────────
 function MomentCard({ item, onJump }) {
   const [hovered, setHovered] = useState(false);
-  const cfg = TYPE_CFG[item.kind];
   const hasPhoto = !!item.photo;
 
   return (
-    <div className="rounded-xl overflow-hidden border"
-      style={{ background: cfg.bg, borderColor: cfg.border }}>
+    <div className="group rounded-xl border border-white/6 bg-[#1c1c1c] hover:border-white/15
+      hover:bg-[#222] transition-all duration-200 overflow-hidden">
+
+      {/* Foto gran si en té */}
       {hasPhoto && (
-        <div className="relative overflow-hidden cursor-pointer"
-          style={{ aspectRatio:'16/9' }}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}>
+        <div className="relative overflow-hidden cursor-pointer" style={{ aspectRatio:'16/9' }}
+          onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
           <img src={`${BASE}${hovered && item.photoHover ? item.photoHover : item.photo}`}
-            alt={item.text}
-            className="w-full h-full object-cover transition-all duration-400"/>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
+            alt={item.text} className="w-full h-full object-cover transition-all duration-400"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"/>
           {item.photoHover && (
-            <div className={`absolute top-3 right-3 text-xs px-2 py-1 rounded-full border font-bold transition-all
-              ${hovered ? 'bg-[#E5C07B]/20 border-[#E5C07B]/50 text-[#E5C07B]' : 'bg-black/50 border-white/20 text-white/60'}`}>
-              {hovered ? '▶ acció' : '🎬 hover'}
+            <div className={`absolute top-2 right-2 text-[10px] px-2 py-0.5 rounded-full border font-bold transition-all
+              ${hovered ? 'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]' : 'bg-black/50 border-white/20 text-white/50'}`}>
+              {hovered ? '▶ acció' : '🎬'}
             </div>
           )}
-          {/* Botó vídeo → salta al player de dalt */}
-          {item.videoUrl && onJump && (
+          {item.jumpUrl && (
             <button onClick={() => onJump(item.time)}
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold
-                bg-red-600/80 hover:bg-red-600 text-white border border-red-500/50 transition-all">
+              className="absolute bottom-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold
+                bg-red-600/80 hover:bg-red-600 text-white transition-all">
               ▶ Vídeo
             </button>
           )}
-          <div className="absolute bottom-3 left-3">
-            <span className="font-mono text-xs bg-black/60 px-2 py-0.5 rounded text-gray-300">{item.time}</span>
-          </div>
+          <span className="absolute bottom-2 left-3 font-mono text-xs bg-black/60 px-1.5 py-0.5 rounded text-gray-300">{item.time}</span>
         </div>
       )}
-      <div className="px-4 py-3">
-        {!hasPhoto && (
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-mono text-xs bg-black/30 px-2 py-0.5 rounded border border-white/10 text-gray-400">{item.time}</span>
-            <span className="text-base">{cfg.icon}</span>
-          </div>
-        )}
-        <p className="text-sm text-gray-200 leading-relaxed">{item.text}</p>
-        {item.players?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {item.players.map(p => {
-              const pl = DATABASE.roster.find(r => r.name === p);
-              return (
-                <span key={p} className="flex items-center gap-1 text-[10px] bg-black/30 border border-white/8 rounded-full px-2 py-0.5 text-gray-400">
-                  {pl?.photo && <img src={`${BASE}${pl.photo}`} alt={p} className="w-3 h-3 rounded-full object-cover object-top"/>}
-                  {p.split(' ')[0]}
-                </span>
-              );
-            })}
-          </div>
-        )}
-        {!hasPhoto && item.videoUrl && onJump && (
+
+      {/* Contingut */}
+      <div className="flex items-start gap-3 px-4 py-3">
+        {/* Emoji gran */}
+        <span className="text-xl leading-none shrink-0 mt-0.5">{item.emoji}</span>
+
+        <div className="flex-1 min-w-0">
+          {/* Timestamp — si no hi ha foto */}
+          {!hasPhoto && (
+            <span className="font-mono text-[10px] text-gray-600 mr-2">{item.time}</span>
+          )}
+          <p className="text-sm text-gray-200 leading-relaxed">{item.text}</p>
+
+          {/* Jugadors */}
+          {item.players?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {item.players.map(p => {
+                const pl = DATABASE.roster.find(r => r.name === p);
+                return (
+                  <span key={p} className="flex items-center gap-1 text-[10px] bg-black/30 border border-white/8
+                    rounded-full px-2 py-0.5 text-gray-400">
+                    {pl?.photo && <img src={`${BASE}${pl.photo}`} alt={p}
+                      className="w-3 h-3 rounded-full object-cover object-top"/>}
+                    {p.split(' ')[0]}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Botó vídeo — dreta */}
+        {!hasPhoto && item.jumpUrl && (
           <button onClick={() => onJump(item.time)}
-            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-lg text-xs font-bold
-              bg-red-600/15 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white transition-all">
-            ▶ Veure al vídeo
+            className="shrink-0 w-7 h-7 rounded-full bg-red-600/10 border border-red-500/15
+              flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all">
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="text-red-400 hover:text-white">
+              <polygon points="1,0 8,4 1,8"/>
+            </svg>
           </button>
         )}
       </div>
@@ -173,28 +190,7 @@ function MomentCard({ item, onJump }) {
   );
 }
 
-// ── Línia compacta (bona/dolenta/tactica) ─────────────────────────
-function CompactLine({ item, onJump }) {
-  const cfg = TYPE_CFG[item.kind];
-  return (
-    <div className="flex items-start gap-3 py-2 px-3 rounded-xl hover:bg-white/3 transition-colors group cursor-pointer"
-      onClick={() => item.videoUrl && onJump && onJump(item.time)}>
-      <span className="font-mono text-[10px] text-gray-600 w-8 shrink-0 pt-0.5 group-hover:text-gray-400">{item.time}</span>
-      <span className="text-sm shrink-0">{cfg.icon}</span>
-      <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-200 transition-colors flex-1">{item.text}</p>
-      {item.videoUrl && (
-        <div className="shrink-0 w-6 h-6 rounded-full bg-red-600/10 flex items-center justify-center
-          opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all">
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" className="text-red-400">
-            <polygon points="1,0 8,4 1,8"/>
-          </svg>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Component principal ───────────────────────────────────────────
+// ── Component principal ──────────────────────────────────────────
 export default function MatchDetail({ match, onBack }) {
   const [videoStart, setVideoStart] = useState(0);
 
@@ -204,21 +200,14 @@ export default function MatchDetail({ match, onBack }) {
     return calcMatchStats(match);
   }, [match, hasSubstitutions]);
 
-  const barColor = (deviation) => {
-    if (deviation > 120)  return 'bg-[#C0392B]';
-    if (deviation < -120) return 'bg-[#4A5568]';
-    return 'bg-[#E5C07B]';
-  };
+  const barColor = (d) => d > 120 ? 'bg-[#C0392B]' : d < -120 ? 'bg-[#4A5568]' : 'bg-[#E5C07B]';
 
   const whoWasOnPitch = (timeSec) => {
     if (!hasSubstitutions) return null;
     const subs = match.events.substitutions;
-    let lastSub = subs[0];
-    for (const sub of subs) {
-      if (parseTime(sub.time) <= timeSec) lastSub = sub;
-      else break;
-    }
-    return lastSub.onPitch;
+    let last = subs[0];
+    for (const sub of subs) { if (parseTime(sub.time) <= timeSec) last = sub; else break; }
+    return last.onPitch;
   };
 
   const [home, away] = match.result.split('-').map(s => parseInt(s.trim()));
@@ -228,10 +217,9 @@ export default function MatchDetail({ match, onBack }) {
   const hasVideo   = hasYoutube || hasVimeo;
 
   const cronica = useMemo(() => buildCronica(match), [match]);
-  const hasCronica = cronica.length > 0;
 
   const jumpToGoal = (timeStr) => {
-    if (!match.youtubeId) return;
+    if (!match.youtubeId && !match.vimeoId) return;
     const secs = Math.max(0, parseTime(timeStr) - 3);
     setVideoStart(secs);
     document.getElementById('match-video')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -240,20 +228,17 @@ export default function MatchDetail({ match, onBack }) {
   return (
     <div className="space-y-6 animate-fade-in">
 
-      {/* Botó tornar */}
       <button onClick={onBack}
         className="flex items-center gap-2 text-gray-400 hover:text-[#E5C07B] transition-colors text-sm font-medium">
-        <ChevronLeft className="w-4 h-4" /> Tornar al Panel
+        <ChevronLeft className="w-4 h-4"/> Tornar
       </button>
 
       {/* Capçalera */}
       <div className="bg-[#1E1E1E] rounded-xl p-5 md:p-7 border border-[#E5C07B]/20 shadow-2xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <div className="text-[#E5C07B] text-xs font-semibold mb-1 uppercase tracking-wider">
-              {match.jornada} · {match.date}
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
+            <div className="text-[#E5C07B] text-xs font-semibold mb-1 uppercase tracking-wider">{match.jornada} · {match.date}</div>
+            <h2 className="text-2xl md:text-3xl font-black text-white">
               <span className="text-[#C0392B]">{DATABASE.teamName}</span>
               <span className="mx-3 text-gray-600 font-light">vs</span>
               <span>{match.opponent}</span>
@@ -267,30 +252,27 @@ export default function MatchDetail({ match, onBack }) {
 
       {/* Vídeo */}
       {hasVideo && (
-        <div id="match-video" className="bg-[#1E1E1E] rounded-xl overflow-hidden border border-white/5 shadow-xl">
-          <div className="aspect-video w-full bg-black">
+        <div id="match-video" className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-xl">
+          <div className="aspect-video w-full">
             {hasYoutube && (
               <iframe width="100%" height="100%"
                 src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart > 0 ? 1 : 0}`}
                 title={`${DATABASE.teamName} vs ${match.opponent}`}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen/>
             )}
             {hasVimeo && (
               <iframe width="100%" height="100%"
                 src={`https://player.vimeo.com/video/${match.vimeoId}?badge=0&autopause=0`}
                 title={`${DATABASE.teamName} vs ${match.opponent}`}
-                frameBorder="0"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen/>
+                frameBorder="0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
             )}
           </div>
         </div>
       )}
 
-      {/* Crònica del Partit */}
-      {hasCronica && (
+      {/* Crònica */}
+      {cronica.length > 0 && (
         <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden">
           <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
             <span className="text-base">📋</span>
@@ -299,10 +281,9 @@ export default function MatchDetail({ match, onBack }) {
           </div>
           <div className="p-3 space-y-2">
             {cronica.map((item, idx) => {
-              const size = TYPE_CFG[item.kind]?.size || 'small';
-              if (size === 'big')    return <GoalCard    key={idx} item={item} onJump={jumpToGoal}/>;
-              if (size === 'medium') return <MomentCard  key={idx} item={item} onJump={jumpToGoal}/>;
-              return                        <CompactLine key={idx} item={item} onJump={jumpToGoal}/>;
+              if (item.kind === 'goal_favor' || item.kind === 'goal_contra')
+                return <GoalCard key={idx} item={item} onJump={jumpToGoal}/>;
+              return <MomentCard key={idx} item={item} onJump={jumpToGoal}/>;
             })}
           </div>
         </div>
@@ -310,7 +291,6 @@ export default function MatchDetail({ match, onBack }) {
 
       {/* Minuts + Línia de temps */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
         {hasSubstitutions && matchStats ? (
           <div className="bg-[#1E1E1E] rounded-xl p-5 border border-white/5 shadow-xl">
             <div className="flex items-center justify-between mb-4">
@@ -332,7 +312,7 @@ export default function MatchDetail({ match, onBack }) {
                 const idealWidth = ((match.idealMinutesPerPlayer * 60) / matchStats.finalTime) * 100;
                 return (
                   <div key={player} className="group flex items-center gap-2">
-                    <span className="w-24 text-xs text-right truncate text-gray-500 group-hover:text-white transition-colors shrink-0">{player.split(' ')[0]}</span>
+                    <span className="w-20 text-xs text-right truncate text-gray-500 group-hover:text-white transition-colors shrink-0">{player.split(' ')[0]}</span>
                     <div className="flex-1 h-5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
                       <div className={`h-full ${barColor(deviation)} transition-all duration-700 rounded`}
                         style={{ width: `${Math.max(width, 1)}%` }}/>
@@ -358,7 +338,6 @@ export default function MatchDetail({ match, onBack }) {
           </div>
         )}
 
-        {/* Línia de temps */}
         {hasSubstitutions && matchStats && (
           <div className="bg-[#1E1E1E] rounded-xl p-5 border border-white/5 shadow-xl overflow-x-auto">
             <h3 className="text-sm font-bold text-[#E5C07B] mb-4 flex items-center gap-2">
@@ -377,9 +356,7 @@ export default function MatchDetail({ match, onBack }) {
                   const left = (parseTime(g.time)/matchStats.finalTime)*100;
                   return (
                     <div key={idx} className="absolute top-0 -translate-x-1/2 group cursor-default" style={{left:`${left}%`}}>
-                      {g.kind === 'goal_favor'
-                        ? <Star className="w-4 h-4 text-[#E5C07B] fill-[#E5C07B]"/>
-                        : <XCircle className="w-4 h-4 text-[#C0392B]"/>}
+                      {g.kind === 'goal_favor' ? <Star className="w-4 h-4 text-[#E5C07B] fill-[#E5C07B]"/> : <XCircle className="w-4 h-4 text-[#C0392B]"/>}
                       <div className="opacity-0 group-hover:opacity-100 absolute top-6 w-24 bg-[#0a0a0a] text-[10px] p-1.5 rounded z-50 border border-white/10 pointer-events-none whitespace-nowrap text-center">
                         {g.time} · {g.score}
                         {g.scorer && <div className="text-[#E5C07B]">{g.scorer}</div>}
@@ -408,16 +385,13 @@ export default function MatchDetail({ match, onBack }) {
                         {playerObj?.shirtName || playerName.split(' ')[0]}
                       </span>
                       <div className="flex-1 h-full relative">
-                        {playerStints.map((stint, idx) => {
+                        {playerStints.map((stint, i) => {
                           const left  = (stint.start/matchStats.finalTime)*100;
                           const width = ((stint.end-stint.start)/matchStats.finalTime)*100;
                           return (
-                            <div key={idx}
-                              className="absolute top-0.5 bottom-0.5 rounded border border-[#E5C07B]/20 hover:border-[#E5C07B]/60 transition-all cursor-default"
-                              style={{ left:`${left}%`, width:`${Math.max(width,0.8)}%`,
-                                background:'linear-gradient(90deg,#7b1c12,#C0392B)' }}
-                              title={`${playerName}: ${formatTime(stint.start)} → ${formatTime(stint.end)}`}
-                            />
+                            <div key={i} className="absolute top-0.5 bottom-0.5 rounded border border-[#E5C07B]/20 hover:border-[#E5C07B]/60 transition-all cursor-default"
+                              style={{ left:`${left}%`, width:`${Math.max(width,0.8)}%`, background:'linear-gradient(90deg,#7b1c12,#C0392B)' }}
+                              title={`${playerName}: ${formatTime(stint.start)} → ${formatTime(stint.end)}`}/>
                           );
                         })}
                       </div>
