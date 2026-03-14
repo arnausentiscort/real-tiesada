@@ -183,9 +183,25 @@ function GoalCard({ goal, idx, onClose }) {
   );
 }
 
+// ── Helper: path corb per assistència llarga ─────────────────────
+// Fa un arc que passa per sobre/sota del camp en lloc d'una línia recta
+function curvedAssistPath(x1, y1, x2, y2) {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  // Desplaça el punt de control perpendicular a la línia
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  // Curvatura proporcional a la distància, perpendicular cap amunt
+  const curve = Math.min(len * 0.3, 80);
+  const cx = mx - (dy / len) * curve;
+  const cy = my + (dx / len) * curve;
+  return `M ${x1},${y1} Q ${cx},${cy} ${x2},${y2}`;
+}
+
 // ── Camp SVG — nou dibuix ─────────────────────────────────────────
 function PitchSVG({ goals, activeGoal, setActiveGoal }) {
-  const LONG_ASSIST_THRESH = 200; // px — assistència llarga si > 200px
+  const LONG_ASSIST_THRESH = 200;
 
   return (
     <svg viewBox="0 0 800 420" style={{ width:'100%', display:'block' }}>
@@ -196,6 +212,17 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
         <marker id="arr-long" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
           <path d="M0,0 L0,7 L7,3.5 z" fill="#61AFEF" opacity="0.75"/>
         </marker>
+        <style>{`
+          @keyframes goalPop {
+            0%   { opacity:0; transform: scale(0.2); }
+            70%  { transform: scale(1.15); }
+            100% { opacity:1; transform: scale(1); }
+          }
+          @keyframes assistDraw {
+            from { stroke-dashoffset: 400; }
+            to   { stroke-dashoffset: 0; }
+          }
+        `}</style>
       </defs>
 
       {/* Gespa */}
@@ -231,58 +258,63 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
       {/* Gols */}
       {goals.map((g, idx) => {
         if (!g._sx) return null;
-        const isActive = activeGoal === idx;
-        const assist   = g.assistPos;
-        const dorsal   = getDorsal(g.scorer);
-
-        // Distància assist per detectar si és llarga
-        const isLongAssist = assist
-          ? Math.sqrt((assist.x - g._sx)**2 + (assist.y - g._sy)**2) > LONG_ASSIST_THRESH
-          : false;
+        const isActive       = activeGoal === idx;
+        const assist         = g.assistPos;
+        const dorsal         = getDorsal(g.scorer);
+        const assistDist     = assist ? Math.sqrt((assist.x - g._sx)**2 + (assist.y - g._sy)**2) : 0;
+        const isLongAssist   = assistDist > LONG_ASSIST_THRESH;
+        const assistColor    = isLongAssist ? '#61AFEF' : ACCENT;
+        const assistMarker   = isLongAssist ? 'url(#arr-long)' : 'url(#arr-short)';
+        const assistDash     = isLongAssist ? '8,4' : '5,3';
+        // Path de l'assistència: corba si llarga, recta si curta
+        const assistPath     = assist
+          ? (isLongAssist
+              ? curvedAssistPath(assist.x, assist.y, g._sx, g._sy)
+              : `M ${assist.x},${assist.y} L ${g._sx},${g._sy}`)
+          : null;
+        // Longitud aproximada del path per animació
+        const pathLen        = isLongAssist ? Math.round(assistDist * 1.3) : Math.round(assistDist);
 
         return (
-          <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer',
-            animation: `goalPop 0.4s ease-out ${idx * 0.08}s both` }}>
-            {/* Línia assist */}
-            {assist && (
-              <line
-                x1={assist.x} y1={assist.y} x2={g._sx} y2={g._sy}
-                stroke={isLongAssist ? '#61AFEF' : ACCENT}
-                strokeWidth={isActive ? 2.5 : 1.5}
-                strokeDasharray={isLongAssist ? '8,4' : '5,3'}
-                opacity={isActive ? 0.95 : 0.45}
-                markerEnd={isLongAssist ? 'url(#arr-long)' : 'url(#arr-short)'}
-              />
-            )}
-            {/* Punt assist */}
-            {assist && (
-              <circle cx={assist.x} cy={assist.y} r={isActive?5.5:3.5}
-                fill={isLongAssist ? '#61AFEF' : ACCENT}
-                opacity={isActive?0.85:0.35}/>
+          <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer' }}>
+            {/* Assistència */}
+            {assist && assistPath && (
+              <>
+                <path d={assistPath}
+                  fill="none"
+                  stroke={assistColor}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                  strokeDasharray={isActive ? `${pathLen} 0` : `${assistDash}`}
+                  opacity={isActive ? 0.95 : 0.45}
+                  markerEnd={assistMarker}
+                  style={isActive ? {
+                    strokeDasharray: `${pathLen} ${pathLen}`,
+                    strokeDashoffset: 0,
+                    animation: `assistDraw 0.5s ease-out both`,
+                  } : {}}
+                />
+                <circle cx={assist.x} cy={assist.y} r={isActive?5.5:3.5}
+                  fill={assistColor} opacity={isActive?0.85:0.35}/>
+              </>
             )}
             {/* Aura actiu */}
-            {isActive && <circle cx={g._sx} cy={g._sy} r="22" fill={ACCENT} opacity="0.18"/>}
-            {/* Cercle tir */}
+            {isActive && <circle cx={g._sx} cy={g._sy} r="22" fill={ACCENT} opacity="0.15"/>}
+            {/* Cercle gol — apareix amb pop */}
             <circle cx={g._sx} cy={g._sy} r={isActive?13:9}
               fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
-              stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
-              strokeWidth={isActive ? 2 : 1}/>
+              stroke={isActive ? 'white' : 'rgba(0,0,0,0.2)'}
+              strokeWidth={isActive ? 2 : 1}
+              style={{ transformOrigin: `${g._sx}px ${g._sy}px`,
+                animation: `goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1}s both` }}/>
             {/* Dorsal */}
-            {dorsal !== null ? (
-              <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
-                fontSize={dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
-                fontWeight="bold"
-                fill={isActive?'#1a1a1a':'#1c3d1c'}
-                style={{ pointerEvents:'none' }}>
-                {dorsal}
-              </text>
-            ) : (
-              <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
-                fontSize={isActive?8:6.5} fontWeight="bold"
-                fill={isActive?'#1a1a1a':'#1c3d1c'} style={{ pointerEvents:'none' }}>
-                ?
-              </text>
-            )}
+            <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
+              fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
+              fontWeight="bold"
+              fill={isActive?'#1a1a1a':'#1c3d1c'}
+              style={{ pointerEvents:'none',
+                animation: `goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1}s both` }}>
+              {dorsal ?? '?'}
+            </text>
           </g>
         );
       })}
@@ -316,7 +348,6 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         const isActive = activeGoal === idx;
         const isGround = g._gy >= GROUND_Y;
         const dorsal   = getDorsal(g.scorer);
-        const r        = isActive ? 13 : 9;
 
         return (
           <g key={idx} onClick={() => setActiveGoal(isActive?null:idx)} style={{ cursor:'pointer' }}>
@@ -324,12 +355,15 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
             <circle cx={g._gx} cy={g._gy} r={isActive?13:9}
               fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
               stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
-              strokeWidth={isActive ? 2 : 1}/>
+              strokeWidth={isActive ? 2 : 1}
+              style={{ transformOrigin:`${g._gx}px ${g._gy}px`,
+                animation:`goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1 + 0.15}s both` }}/>
             <text x={g._gx} y={g._gy + (isGround ? -1 : 0)}
               textAnchor="middle" dominantBaseline="middle"
               fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
               fontWeight="bold"
-              fill={isActive ? '#1a1a1a' : '#111'} style={{ pointerEvents:'none' }}>
+              fill={isActive ? '#1a1a1a' : '#111'} style={{ pointerEvents:'none',
+                animation:`goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1 + 0.15}s both` }}>
               {dorsal ?? '?'}
             </text>
           </g>
@@ -407,10 +441,11 @@ export default function GoalHeatmap() {
         ))}
       </div>
 
-      {/* Layout: camp + info, porteria sota */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-3 items-start">
+      {/* Layout: camp + porteria / info lateral */}
+      {/* Mòbil: tot en columna. Desktop: camp+porteria esquerra, info dreta */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_210px] gap-3 items-start">
 
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           {/* Camp */}
           <div className="bg-[#0f1a0f] rounded-2xl border border-white/5 p-3 overflow-hidden">
             <p className="text-[10px] text-gray-600 mb-2 uppercase tracking-wider font-bold">Camp · zona de tir</p>
@@ -423,11 +458,20 @@ export default function GoalHeatmap() {
           </div>
         </div>
 
-        {/* Info gol */}
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 min-h-[240px] lg:sticky lg:top-4">
+        {/* Info gol — sota en mòbil, lateral en desktop */}
+        {/* En mòbil: només apareix si hi ha gol actiu */}
+        <div className={`bg-[#1a1a1a] rounded-2xl border border-white/5 lg:sticky lg:top-4 lg:min-h-[240px]
+          ${activeGoalData ? 'block' : 'hidden lg:block'}`}>
           <GoalCard goal={activeGoalData} idx={activeGoal} onClose={() => setActiveGoal(null)}/>
         </div>
       </div>
+
+      {/* Mòbil: hint si no hi ha gol seleccionat */}
+      {!activeGoalData && (
+        <p className="text-center text-xs text-gray-700 lg:hidden">
+          Toca un punt al camp per veure el detall del gol
+        </p>
+      )}
 
       {/* Llegenda */}
       <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-1">

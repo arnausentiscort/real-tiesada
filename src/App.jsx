@@ -12,16 +12,6 @@ import { DATABASE }     from './data.js';
 
 const BASE = import.meta.env.BASE_URL;
 
-function NavBtn({ active, onClick, children }) {
-  return (
-    <button onClick={onClick}
-      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-        active ? 'bg-[#E5C07B]/15 text-[#E5C07B]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-      {children}
-    </button>
-  );
-}
-
 function SeasonToggle({ season, onChange }) {
   return (
     <div className="flex items-center gap-1 bg-[#0d0d0d] border border-white/10 rounded-xl p-1">
@@ -48,7 +38,6 @@ export default function App() {
 
   const isMatch = view && typeof view === 'object';
 
-  // Dispara confeti quan s'obre un resultat de victòria
   useEffect(() => {
     if (!isMatch) return;
     const [f, a] = view.result.split('-').map(Number);
@@ -59,29 +48,16 @@ export default function App() {
     }
   }, [view]);
 
-  const handleSelectMatch = (match) => {
-    setView(match);
-    setMenuOpen(false);
-  };
+  const handleSelectMatch = (match) => { setView(match);       setMenuOpen(false); };
+  const handleSeasonChange = (s)    => { setSeason(s); setView('dashboard'); setMenuOpen(false); };
+  const navTo = (v)                 => { setView(v);           setMenuOpen(false); };
 
-  const handleSeasonChange = (s) => {
-    setSeason(s);
-    setView('dashboard');
-    setMenuOpen(false);
-  };
-
-  const navTo = (v) => {
-    setView(v);
-    setMenuOpen(false);
-  };
-
-  // Nav items per temporada actual
   const navCurrent = [
-    { id: 'dashboard',     label: '📊 Stats'         },
-    { id: 'squad',         label: '👥 Plantilla'      },
-    { id: 'clasificacion', label: '🏆 Classificació'  },
-    { id: 'heatmap',       label: '🎯 Mapa de Gols'   },
-    { id: 'galeria',       label: '📸 Galeria'        },
+    { id: 'dashboard',     icon: '📊', label: 'Stats'         },
+    { id: 'squad',         icon: '👥', label: 'Plantilla'     },
+    { id: 'clasificacion', icon: '🏆', label: 'Classificació' },
+    { id: 'heatmap',       icon: '🎯', label: 'Mapa de Gols'  },
+    { id: 'galeria',       icon: '📸', label: 'Galeria'       },
   ];
 
   const activeNavId = isMatch ? 'dashboard' : (typeof view === 'string' ? view : 'dashboard');
@@ -89,23 +65,22 @@ export default function App() {
   if (loading) return <LoadingScreen onDone={() => setLoading(false)} />;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-[#E2E8F0] font-sans pb-16">
+    <div className="min-h-screen bg-[#121212] text-[#E2E8F0] font-sans pb-24 md:pb-8">
       <Confetti active={confetti} />
 
-      {/* ── NAVBAR ── */}
+      {/* ── NAVBAR desktop (top) ── */}
       <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
-        <div className="max-w-6xl mx-auto flex items-center justify-between h-16 gap-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between h-14 gap-3">
 
           {/* Logo */}
-          <button onClick={() => navTo('dashboard')}
-            className="flex items-center gap-3 group shrink-0">
+          <button onClick={() => navTo('dashboard')} className="flex items-center gap-2 group shrink-0">
             <img src={`${BASE}escut.svg`} alt="Real Tiesada"
-              className="w-10 h-10 drop-shadow-[0_0_8px_rgba(229,192,123,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(229,192,123,0.6)] transition-all" />
+              className="w-8 h-8 drop-shadow-[0_0_8px_rgba(229,192,123,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(229,192,123,0.6)] transition-all" />
             <div className="hidden sm:block">
-              <div className="text-lg font-black tracking-widest text-[#E5C07B] uppercase leading-none group-hover:text-white transition-colors">
+              <div className="text-base font-black tracking-widest text-[#E5C07B] uppercase leading-none">
                 {DATABASE.teamName}
               </div>
-              <div className="text-xs text-gray-600 tracking-wider">
+              <div className="text-[10px] text-gray-600 tracking-wider">
                 {season === 'current' ? 'Actual' : 'Split 1 · 24/25'}
               </div>
             </div>
@@ -116,45 +91,21 @@ export default function App() {
 
           {/* Nav desktop */}
           {season === 'current' && (
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-0.5">
               {navCurrent.map(n => (
-                <NavBtn key={n.id} active={activeNavId === n.id} onClick={() => navTo(n.id)}>
-                  {n.label}
-                </NavBtn>
+                <button key={n.id} onClick={() => navTo(n.id)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    activeNavId === n.id
+                      ? 'bg-[#E5C07B]/15 text-[#E5C07B]'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                  {n.icon} {n.label}
+                </button>
               ))}
             </div>
           )}
-
-          {/* Hamburger mòbil */}
-          {season === 'current' && (
-            <button
-              className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <div className="space-y-1.5">
-                <span className={`block w-5 h-0.5 bg-current transition-all ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-                <span className={`block w-5 h-0.5 bg-current transition-all ${menuOpen ? 'opacity-0' : ''}`} />
-                <span className={`block w-5 h-0.5 bg-current transition-all ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-              </div>
-            </button>
-          )}
         </div>
 
-        {/* Menú mòbil desplegable */}
-        {menuOpen && season === 'current' && (
-          <div className="md:hidden border-t border-white/5 py-2 px-2">
-            {navCurrent.map(n => (
-              <button key={n.id}
-                onClick={() => navTo(n.id)}
-                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 ${
-                  activeNavId === n.id ? 'bg-[#E5C07B]/15 text-[#E5C07B]' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                {n.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Breadcrumb */}
+        {/* Breadcrumb match */}
         {isMatch && season === 'current' && (
           <div className="max-w-6xl mx-auto pb-2 flex items-center gap-2 text-xs text-gray-500 px-1">
             <button onClick={() => setView('dashboard')} className="hover:text-[#E5C07B] transition-colors">
@@ -167,7 +118,7 @@ export default function App() {
       </nav>
 
       {/* ── CONTINGUT ── */}
-      <main className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-3 md:px-6 py-5 md:py-8">
         {season === 'current' && (
           <>
             {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
@@ -181,14 +132,48 @@ export default function App() {
         {season === 's1' && <Split1Dashboard />}
       </main>
 
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-white/5 mt-16 py-6 text-center">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <img src={`${BASE}escut.svg`} alt="" className="w-6 h-6 opacity-50" />
-          <span className="text-gray-600 text-sm font-bold tracking-widest uppercase">{DATABASE.teamName}</span>
+      {/* ── FOOTER desktop ── */}
+      <footer className="hidden md:block border-t border-white/5 mt-8 py-5 text-center">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <img src={`${BASE}escut.svg`} alt="" className="w-5 h-5 opacity-40" />
+          <span className="text-gray-600 text-xs font-bold tracking-widest uppercase">{DATABASE.teamName}</span>
         </div>
         <p className="text-gray-700 text-xs">Estadístiques internes · No oficial</p>
       </footer>
+
+      {/* ── BOTTOM NAV mòbil ── */}
+      {season === 'current' && !isMatch && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-white/10">
+          <div className="flex items-stretch h-16">
+            {navCurrent.map(n => (
+              <button key={n.id} onClick={() => navTo(n.id)}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-all ${
+                  activeNavId === n.id ? 'text-[#E5C07B]' : 'text-gray-600 hover:text-gray-300'}`}>
+                <span className="text-lg leading-none">{n.icon}</span>
+                <span className="text-[9px] font-semibold leading-none tracking-wide">
+                  {n.label.split(' ')[0]}
+                </span>
+                {activeNavId === n.id && (
+                  <div className="absolute bottom-0 w-8 h-0.5 rounded-full bg-[#E5C07B]"
+                    style={{ bottom: 0 }}/>
+                )}
+              </button>
+            ))}
+          </div>
+          {/* safe area iOS */}
+          <div className="h-safe-bottom bg-[#1a1a1a]/95" style={{ height: 'env(safe-area-inset-bottom, 0px)' }}/>
+        </div>
+      )}
+
+      {/* Bottom nav quan hi ha match obert — botó enrere */}
+      {season === 'current' && isMatch && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-white/10">
+          <button onClick={() => setView('dashboard')}
+            className="w-full h-14 flex items-center justify-center gap-2 text-[#E5C07B] text-sm font-bold">
+            ← Tornar a Estadístiques
+          </button>
+        </div>
+      )}
     </div>
   );
 }
