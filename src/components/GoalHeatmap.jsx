@@ -52,6 +52,23 @@ function jitter(goals) {
   return result;
 }
 
+// Helper: URL de vídeo amb timestamp
+function getVideoUrl(goal) {
+  const match = DATABASE.matches.find(m => m.id === goal.matchId);
+  if (!match) return null;
+  const [min, sec] = (goal.time || '0:0').split(':').map(Number);
+  const secs = Math.max(0, (min * 60 + (sec || 0)) - 5);
+  if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${secs}s`;
+  if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${secs}s`;
+  return null;
+}
+
+// Helper: dorsal del jugador
+function getDorsal(scorerName) {
+  const p = DATABASE.roster.find(r => r.name === scorerName);
+  return p ? p.number : null;
+}
+
 // ── Targeta info gol ──────────────────────────────────────────────
 function GoalCard({ goal, idx, onClose }) {
   if (!goal) return (
@@ -63,38 +80,64 @@ function GoalCard({ goal, idx, onClose }) {
       <p className="text-gray-600 text-sm leading-relaxed">Clica un gol<br/>per veure el detall</p>
     </div>
   );
+
+  const videoUrl = getVideoUrl(goal);
+  const dorsal   = getDorsal(goal.scorer);
+
   return (
     <div className="p-5 space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+      {/* Capçalera */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-[#1a1a1a]"
-            style={{ background: ACCENT }}>{idx + 1}</div>
+          {/* Dorsal */}
+          <div className="flex flex-col items-center justify-center w-10 h-10 rounded-xl border-2 border-[#E5C07B]/40 bg-[#E5C07B]/10 flex-shrink-0">
+            <span className="text-[9px] text-[#E5C07B]/60 font-bold leading-none">#</span>
+            <span className="text-sm font-black text-[#E5C07B] leading-none">{dorsal ?? '?'}</span>
+          </div>
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">{goal.jornada} · {goal.opponent}</p>
-            <p className="text-white font-bold text-lg leading-tight">min {goal.time}</p>
+            <p className="text-white font-bold text-base leading-tight">min {goal.time}</p>
           </div>
         </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center text-base">×</button>
+        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all flex items-center justify-center flex-shrink-0">×</button>
       </div>
+
       <div className="h-px bg-white/5"/>
-      <div className="space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: ACCENT }}/>
-          <div>
-            <p className="text-[10px] text-gray-600 uppercase tracking-wider">Gol</p>
-            <p className="text-white font-semibold text-sm">{goal.scorer}</p>
+
+      {/* Info */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: ACCENT }}/>
+          <div className="min-w-0">
+            <span className="text-[10px] text-gray-600 uppercase tracking-wider">Gol · </span>
+            <span className="text-white font-semibold text-sm">{goal.scorer}</span>
           </div>
         </div>
         {goal.assist && (
-          <div className="flex items-start gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-gray-500"/>
-            <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-wider">Assistència</p>
-              <p className="text-gray-300 font-medium text-sm">{goal.assist}</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-gray-500"/>
+            <div className="min-w-0">
+              <span className="text-[10px] text-gray-600 uppercase tracking-wider">Assist · </span>
+              <span className="text-gray-300 font-medium text-sm">{goal.assist}</span>
             </div>
           </div>
         )}
       </div>
+
+      {/* Botó vídeo */}
+      {videoUrl && (
+        <a href={videoUrl} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl border border-[#E5C07B]/25 bg-[#E5C07B]/8 hover:bg-[#E5C07B]/15 transition-all group">
+          <svg width="16" height="16" viewBox="0 0 16 16" className="flex-shrink-0">
+            <circle cx="8" cy="8" r="7" fill="none" stroke="#E5C07B" strokeWidth="1.2" opacity="0.7"/>
+            <polygon points="6,5 12,8 6,11" fill="#E5C07B" opacity="0.9"/>
+          </svg>
+          <span className="text-xs font-semibold text-[#E5C07B]/80 group-hover:text-[#E5C07B]">Veure al vídeo</span>
+          <span className="text-[10px] text-gray-600 ml-auto">min {goal.time}</span>
+        </a>
+      )}
+
+      {/* Mini porteria */}
       {goal.goalPos && (
         <>
           <div className="h-px bg-white/5"/>
@@ -119,15 +162,17 @@ function GoalCard({ goal, idx, onClose }) {
 }
 
 // ── Camp SVG — nou dibuix ─────────────────────────────────────────
-// viewBox 0 0 800 420, porteria esquerra a x=18, porteria dreta a x=782
-// Zones: 6 cols x 4 files sobre tot el camp
-// Col centers: 82,209,336,464,591,718  File centers: 66,162,258,354
 function PitchSVG({ goals, activeGoal, setActiveGoal }) {
+  const LONG_ASSIST_THRESH = 200; // px — assistència llarga si > 200px
+
   return (
     <svg viewBox="0 0 800 420" style={{ width:'100%', display:'block' }}>
       <defs>
-        <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+        <marker id="arr-short" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
           <path d="M0,0 L0,7 L7,3.5 z" fill={ACCENT} opacity="0.75"/>
+        </marker>
+        <marker id="arr-long" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L0,7 L7,3.5 z" fill="#61AFEF" opacity="0.75"/>
         </marker>
       </defs>
 
@@ -145,22 +190,20 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
       <circle cx="400" cy="210" r="185" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2"/>
       <circle cx="400" cy="210" r="4" fill="rgba(255,255,255,0.9)"/>
 
-      {/* ÀREA ESQUERRA: 2 quarts de cercle + línia vertical */}
+      {/* ÀREA ESQUERRA */}
       <path d="M 18,80 A 70,70 0 0,1 88,150 L 88,270 A 70,70 0 0,1 18,340 Z" fill="rgba(255,255,255,0.04)"/>
       <path d="M 18,80 A 70,70 0 0,1 88,150" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <line x1="88" y1="150" x2="88" y2="270" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <path d="M 88,270 A 70,70 0 0,1 18,340" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <circle cx="58" cy="210" r="3" fill="rgba(255,255,255,0.7)"/>
-      {/* Porteria esquerra */}
       <rect x="3" y="185" width="15" height="50" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.95)" strokeWidth="2.5" rx="1"/>
 
-      {/* ÀREA DRETA mirror */}
+      {/* ÀREA DRETA */}
       <path d="M 782,80 A 70,70 0 0,0 712,150 L 712,270 A 70,70 0 0,0 782,340 Z" fill="rgba(255,255,255,0.04)"/>
       <path d="M 782,80 A 70,70 0 0,0 712,150" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <line x1="712" y1="150" x2="712" y2="270" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <path d="M 712,270 A 70,70 0 0,0 782,340" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <circle cx="742" cy="210" r="3" fill="rgba(255,255,255,0.7)"/>
-      {/* Porteria dreta */}
       <rect x="782" y="185" width="15" height="50" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.95)" strokeWidth="2.5" rx="1"/>
 
       {/* Gols */}
@@ -168,24 +211,55 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
         if (!g._sx) return null;
         const isActive = activeGoal === idx;
         const assist   = g.assistPos;
+        const dorsal   = getDorsal(g.scorer);
+
+        // Distància assist per detectar si és llarga
+        const isLongAssist = assist
+          ? Math.sqrt((assist.x - g._sx)**2 + (assist.y - g._sy)**2) > LONG_ASSIST_THRESH
+          : false;
+
         return (
           <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer' }}>
+            {/* Línia assist */}
             {assist && (
-              <line x1={assist.x} y1={assist.y} x2={g._sx} y2={g._sy}
-                stroke={ACCENT} strokeWidth={isActive?2.5:1.5} strokeDasharray="5,3"
-                opacity={isActive?0.95:0.45} markerEnd="url(#arr)"/>
+              <line
+                x1={assist.x} y1={assist.y} x2={g._sx} y2={g._sy}
+                stroke={isLongAssist ? '#61AFEF' : ACCENT}
+                strokeWidth={isActive ? 2.5 : 1.5}
+                strokeDasharray={isLongAssist ? '8,4' : '5,3'}
+                opacity={isActive ? 0.95 : 0.45}
+                markerEnd={isLongAssist ? 'url(#arr-long)' : 'url(#arr-short)'}
+              />
             )}
-            {assist && <circle cx={assist.x} cy={assist.y} r={isActive?5.5:3.5} fill={ACCENT} opacity={isActive?0.85:0.35}/>}
+            {/* Punt assist */}
+            {assist && (
+              <circle cx={assist.x} cy={assist.y} r={isActive?5.5:3.5}
+                fill={isLongAssist ? '#61AFEF' : ACCENT}
+                opacity={isActive?0.85:0.35}/>
+            )}
+            {/* Aura actiu */}
             {isActive && <circle cx={g._sx} cy={g._sy} r="22" fill={ACCENT} opacity="0.18"/>}
-            <circle cx={g._sx} cy={g._sy} r={isActive?12:8}
-              fill={isActive?ACCENT:'rgba(255,255,255,0.88)'}
-              stroke={isActive?'white':'rgba(0,0,0,0.3)'}
-              strokeWidth={isActive?2:1}/>
-            <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
-              fontSize={isActive?8:6.5} fontWeight="bold"
-              fill={isActive?'#1a1a1a':'#1c3d1c'} style={{ pointerEvents:'none' }}>
-              {idx+1}
-            </text>
+            {/* Cercle tir */}
+            <circle cx={g._sx} cy={g._sy} r={isActive?13:9}
+              fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
+              stroke={isActive ? 'white' : 'rgba(0,0,0,0.25)'}
+              strokeWidth={isActive ? 2 : 1}/>
+            {/* Dorsal */}
+            {dorsal !== null ? (
+              <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
+                fontSize={dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
+                fontWeight="bold"
+                fill={isActive?'#1a1a1a':'#1c3d1c'}
+                style={{ pointerEvents:'none' }}>
+                {dorsal}
+              </text>
+            ) : (
+              <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
+                fontSize={isActive?8:6.5} fontWeight="bold"
+                fill={isActive?'#1a1a1a':'#1c3d1c'} style={{ pointerEvents:'none' }}>
+                ?
+              </text>
+            )}
           </g>
         );
       })}
@@ -217,17 +291,19 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
       {goals.map((g, idx) => {
         if (!g._gx) return null;
         const isActive = activeGoal === idx;
+        const dorsal   = getDorsal(g.scorer);
         return (
           <g key={idx} onClick={() => setActiveGoal(isActive?null:idx)} style={{ cursor:'pointer' }}>
             {isActive && <circle cx={g._gx} cy={g._gy} r="22" fill={ACCENT} opacity="0.2"/>}
-            <circle cx={g._gx} cy={g._gy} r={isActive?12:8}
+            <circle cx={g._gx} cy={g._gy} r={isActive?13:9}
               fill={isActive?ACCENT:'rgba(255,255,255,0.82)'}
-              stroke={isActive?'white':'rgba(0,0,0,0.4)'}
+              stroke={isActive?'white':'rgba(0,0,0,0.3)'}
               strokeWidth={isActive?2:1}/>
             <text x={g._gx} y={g._gy} textAnchor="middle" dominantBaseline="middle"
-              fontSize={isActive?8:6.5} fontWeight="bold"
+              fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
+              fontWeight="bold"
               fill={isActive?'#1a1a1a':'#111'} style={{ pointerEvents:'none' }}>
-              {idx+1}
+              {dorsal ?? '?'}
             </text>
           </g>
         );
@@ -330,15 +406,15 @@ export default function GoalHeatmap() {
       <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-1">
         <div className="flex items-center gap-2">
           <svg width="22" height="8"><line x1="0" y1="4" x2="15" y2="4" stroke={ACCENT} strokeWidth="1.5" strokeDasharray="4,2" opacity="0.7"/><polygon points="13,1 20,4 13,7" fill={ACCENT} opacity="0.7"/></svg>
-          assistència
+          assist curta
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-white/75 border border-black/20"/>
-          tir a porteria
+          <svg width="22" height="8"><line x1="0" y1="4" x2="15" y2="4" stroke="#61AFEF" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/><polygon points="13,1 20,4 13,7" fill="#61AFEF" opacity="0.7"/></svg>
+          assist llarga / llançament
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full border-2" style={{ background:ACCENT+'30', borderColor:ACCENT }}/>
-          gol seleccionat
+          <div className="w-3.5 h-3.5 rounded-full bg-white/75 border border-black/20 flex items-center justify-center" style={{fontSize:'5px', color:'#1c3d1c', fontWeight:'bold'}}>9</div>
+          dorsal del marcador
         </div>
       </div>
     </div>

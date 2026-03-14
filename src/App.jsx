@@ -28,7 +28,7 @@ function SeasonToggle({ season, onChange }) {
       <button onClick={() => onChange('current')}
         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
           season === 'current' ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
-        25/26 · Split 2
+        Actual
       </button>
       <button onClick={() => onChange('s1')}
         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
@@ -106,7 +106,7 @@ export default function App() {
                 {DATABASE.teamName}
               </div>
               <div className="text-xs text-gray-600 tracking-wider">
-                {season === 'current' ? 'Split 2 · 25/26' : 'Split 1 · 24/25'}
+                {season === 'current' ? 'Actual' : 'Split 1 · 24/25'}
               </div>
             </div>
           </button>
