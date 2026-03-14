@@ -1,6 +1,6 @@
 // ================================================
 // DATA SPLIT 1 · Futsal 24/25
-// Stats de l'Excel Punts_mvp.xlsx (8 partits)
+// Stats Excel + Events JSON combinats
 // ================================================
 
 export const DATABASE_S1 = {
@@ -20,7 +20,7 @@ export const DATABASE_S1 = {
   ],
 
   matches: [
-    // ── Jornada 1 — Real Magic Balompié ──────────────────────
+    // ── Jornada 1 — Real Magic Balompié ────────────────────────
     {
       id: "j1-s1",
       jornada: "Jornada 1",
@@ -41,11 +41,31 @@ export const DATABASE_S1 = {
         "Roi": { gols:0, assists:0, jugadesBones:0, cagades:2, golsEncaixats:0, parades:0, pts:-4.0 },
         "Sentis": { gols:0, assists:0, jugadesBones:4, cagades:1, golsEncaixats:0, parades:0, pts:4.5 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"1:35", type:"favor", scorer:"Oriol", assist:"Pau", details:"El pistolero", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1132s" },
+        { time:"3:20", type:"favor", scorer:"Pau", assist:"Coro", details:"De banda", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1237s" },
+        { time:"13:35", type:"favor", scorer:"Medina", assist:null, details:"", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1852s" },
+        { time:"3:46", type:"contra", goalkeeper:"Medina", details:"Roi es reventa el cap", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1263s" },
+        { time:"8:34", type:"contra", goalkeeper:"Lluc", details:"", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1551s" },
+        { time:"12:20", type:"contra", goalkeeper:"Medina", details:"Golas per la escuadra", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1777s" },
+        { time:"12:34", type:"contra", goalkeeper:"Coro", details:"", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1791s" },
+        { time:"18:32", type:"contra", goalkeeper:"Pau", details:"La perd Aron", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2149s" },
+        { time:"27:15", type:"contra", goalkeeper:"Medina", details:"", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2672s" },
+        { time:"27:21", type:"contra", goalkeeper:"Medina", details:"La perd Pau", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2678s" },
+        { time:"32:00", type:"contra", goalkeeper:"Lluc", details:"De falta", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2957s" },
+        { time:"32:42", type:"contra", goalkeeper:"Lluc", details:"Ja estaven tiesos", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2999s" },
+      ],
+      highlights: [
+        { player:"Roi", time:"3:40", details:"Surt Maradona al camp", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1257s" },
+        { player:"Coro", time:"4:10", details:"Conducció bonísima pel centre", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1287s" },
+        { player:"Aron", time:"2:35", details:"Ruleta + desborde", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1192s" },
+        { player:"Roi", time:"20:03", details:"Culet de Roi", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2240s" },
+        { player:"Oriol", time:"27:02", details:"Es menja a Pau", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=2659s" },
+        { player:"Sentis", time:"13:32", details:"Taco de Sentis", videoUrl:"https://www.youtube.com/watch?v=78vD3yEYWdY&t=1849s" },
+      ],
     },
 
-    // ── Jornada 2 — Aston Birra ──────────────────────
+    // ── Jornada 2 — Aston Birra ────────────────────────
     {
       id: "j2-s1",
       jornada: "Jornada 2",
@@ -65,11 +85,31 @@ export const DATABASE_S1 = {
         "Roi": { gols:0, assists:0, jugadesBones:0, cagades:1, golsEncaixats:1, parades:0, pts:-2.75 },
         "Sentis": { gols:0, assists:1, jugadesBones:7, cagades:0, golsEncaixats:0, parades:0, pts:8.5 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"13:08", type:"favor", scorer:"Coro", assist:"Sentis", details:"Coro se torna loco", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=785s" },
+        { time:"14:21", type:"favor", scorer:"Marc", assist:"Aron", details:"Manos de Aron pero golazo", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=858s" },
+        { time:"5:14", type:"contra", goalkeeper:"Pau", details:"", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=311s" },
+        { time:"8:38", type:"contra", goalkeeper:"Medina", details:"", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=515s" },
+        { time:"11:01", type:"contra", goalkeeper:"Medina", details:"Dormim en un corner", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=658s" },
+        { time:"18:22", type:"contra", goalkeeper:"Medina", details:"Defendem malament", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1099s" },
+        { time:"28:30", type:"contra", goalkeeper:"Medina", details:"Contra mal situats", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1707s" },
+        { time:"32:10", type:"contra", goalkeeper:"Medina", details:"De falta fatal", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1927s" },
+        { time:"37:40", type:"contra", goalkeeper:"Pau", details:"En una contra", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=2257s" },
+        { time:"41:48", type:"contra", goalkeeper:"Coro", details:"La perd Pau", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=2505s" },
+        { time:"42:48", type:"contra", goalkeeper:"Coro", details:"Ningú es cierre", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=2565s" },
+        { time:"45:43", type:"contra", goalkeeper:"Coro", details:"Medina decideix ser Messi caminant", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=2740s" },
+        { time:"46:23", type:"contra", goalkeeper:"Roi", details:"Chirlazo al Roi", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=2780s" },
+      ],
+      highlights: [
+        { player:"Roi", time:"0:32", details:"Roi i Coro ballant", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=29s" },
+        { player:"Medina", time:"6:48", details:"Ens fan un PAL", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=405s" },
+        { player:"Coro", time:"23:46", details:"Es fa la de Messi sent porter", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1423s" },
+        { player:"Sentis", time:"18:57", details:"Bolea de Zidane", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1134s" },
+        { player:"Lluc", time:"19:40", details:"Ens pixan el cul 2 canyons", videoUrl:"https://www.youtube.com/watch?v=HM-4WBRTxrI&t=1177s" },
+      ],
     },
 
-    // ── Jornada 3 — Inafuman y Beben ──────────────────────
+    // ── Jornada 3 — Inafuman y Beben ────────────────────────
     {
       id: "j3-s1",
       jornada: "Jornada 3",
@@ -90,11 +130,26 @@ export const DATABASE_S1 = {
         "Roi": { gols:1, assists:0, jugadesBones:0, cagades:1, golsEncaixats:0, parades:0, pts:5.5 },
         "Sentis": { gols:0, assists:0, jugadesBones:0, cagades:0, golsEncaixats:0, parades:0, pts:-1.0 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"25:07", type:"favor", scorer:"Miro", assist:"Pau", details:"Golaaaas", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=3003s" },
+        { time:"57:20", type:"favor", scorer:"Coro", assist:"Miro", details:"Don croqueta", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=4936s" },
+        { time:"23:56", type:"contra", goalkeeper:"Medina", details:"Es pixan a Miro", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=2932s" },
+        { time:"29:23", type:"contra", goalkeeper:"Medina", details:"Contra", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=3259s" },
+        { time:"31:24", type:"contra", goalkeeper:"Medina", details:"Saque de banda", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=3380s" },
+        { time:"40:24", type:"contra", goalkeeper:"Medina", details:"Gol al pal", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=3920s" },
+        { time:"44:41", type:"contra", goalkeeper:"Medina", details:"De corner", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=4177s" },
+        { time:"68:42", type:"contra", goalkeeper:"Pau", details:"Perd saque banda", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=5618s" },
+        { time:"69:30", type:"contra", goalkeeper:"Pau", details:"Tothom dormit", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=5666s" },
+      ],
+      highlights: [
+        { player:"Coro", time:"22:33", details:"Va borracho", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=2849s" },
+        { player:"Coro", time:"54:49", details:"Sombrerito", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=4785s" },
+        { player:"Marc", time:"54:14", details:"Marc 1vs1", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=4750s" },
+        { player:"Medina", time:"37:45", details:"Mare meva", videoUrl:"https://www.youtube.com/watch?v=h1mGEGwetcs&t=3761s" },
+      ],
     },
 
-    // ── Jornada 4 — Pink Devils ──────────────────────
+    // ── Jornada 4 — Pink Devils ────────────────────────
     {
       id: "j4-s1",
       jornada: "Jornada 4",
@@ -113,11 +168,13 @@ export const DATABASE_S1 = {
         "Pau": { gols:1, assists:0, jugadesBones:3, cagades:1, golsEncaixats:4, parades:11, pts:10.75 },
         "Roi": { gols:0, assists:0, jugadesBones:0, cagades:1, golsEncaixats:0, parades:0, pts:0.5 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+      ],
+      highlights: [
+      ],
     },
 
-    // ── Jornada 5 — Birra Real ──────────────────────
+    // ── Jornada 5 — Birra Real ────────────────────────
     {
       id: "j5-s1",
       jornada: "Jornada 5",
@@ -136,11 +193,13 @@ export const DATABASE_S1 = {
         "Pau": { gols:0, assists:0, jugadesBones:3, cagades:1, golsEncaixats:4, parades:1, pts:-1.25 },
         "Roi": { gols:0, assists:0, jugadesBones:1, cagades:1, golsEncaixats:0, parades:0, pts:1.0 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+      ],
+      highlights: [
+      ],
     },
 
-    // ── Jornada 6 — Vodka Juniors ──────────────────────
+    // ── Jornada 6 — Vodka Juniors ────────────────────────
     {
       id: "j6-s1",
       jornada: "Jornada 6",
@@ -159,11 +218,19 @@ export const DATABASE_S1 = {
         "Pau": { gols:0, assists:0, jugadesBones:7, cagades:1, golsEncaixats:0, parades:2, pts:5.5 },
         "Roi": { gols:0, assists:0, jugadesBones:1, cagades:1, golsEncaixats:0, parades:0, pts:0.0 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"3:18", type:"contra", goalkeeper:"Medina", details:"Corner mal defensat", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=1711s" },
+        { time:"38:28", type:"contra", goalkeeper:"Coro", details:"Cordó surt tard", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=3821s" },
+        { time:"45:54", type:"contra", goalkeeper:"Medina", details:"Fan falta", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=4267s" },
+        { time:"50:02", type:"contra", goalkeeper:"Medina", details:"De Ramona", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=4515s" },
+      ],
+      highlights: [
+        { player:"Roi", time:"15:31", details:"Manotazo", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=2444s" },
+        { player:"Coro", time:"46:34", details:"Pagada a Coro — vermella", videoUrl:"https://www.youtube.com/watch?v=PaUUke29GNs&t=4307s" },
+      ],
     },
 
-    // ── Jornada 7 — Fig Frames ──────────────────────
+    // ── Jornada 7 — Fig Frames ────────────────────────
     {
       id: "j7-s1",
       jornada: "Jornada 7",
@@ -182,11 +249,19 @@ export const DATABASE_S1 = {
         "Pau": { gols:0, assists:0, jugadesBones:2, cagades:1, golsEncaixats:1, parades:0, pts:1.25 },
         "Roi": { gols:0, assists:0, jugadesBones:1, cagades:0, golsEncaixats:0, parades:0, pts:0.5 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"19:46", type:"favor", scorer:"Marc", assist:null, details:"Golàs", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=2376s" },
+        { time:"35:07", type:"contra", goalkeeper:"Pau", details:"Molt malament", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=3297s" },
+        { time:"43:53", type:"contra", goalkeeper:"Coro", details:"De fora l'àrea", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=3823s" },
+        { time:"49:09", type:"contra", goalkeeper:"Lluc", details:"Convocació", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=4139s" },
+      ],
+      highlights: [
+        { player:"Aron", time:"41:13", details:"Cadí es trenca", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=3663s" },
+        { player:"Lluc", time:"45:57", details:"Que paradon", videoUrl:"https://www.youtube.com/watch?v=ycmGQkTey-o&t=3947s" },
+      ],
     },
 
-    // ── Jornada 8 — Ràcing de Saberbeber ──────────────────────
+    // ── Jornada 8 — Ràcing de Saberbeber ────────────────────────
     {
       id: "j8-s1",
       jornada: "Jornada 8",
@@ -204,8 +279,27 @@ export const DATABASE_S1 = {
         "Pau": { gols:0, assists:1, jugadesBones:4, cagades:0, golsEncaixats:5, parades:10, pts:10.25 },
         "Roi": { gols:0, assists:1, jugadesBones:1, cagades:0, golsEncaixats:1, parades:2, pts:7.25 },
       },
-      goals: [],
-      highlights: [],
+      goals: [
+        { time:"34:54", type:"favor", scorer:"Lluc", assist:"Marc", details:"De corner", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=2430s" },
+        { time:"43:18", type:"favor", scorer:"Lluc", assist:null, details:"Pase de Guille", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=2934s" },
+        { time:"49:56", type:"favor", scorer:"Lluc", assist:null, details:"El rival es dorm", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3332s" },
+        { time:"54:02", type:"favor", scorer:"Aron", assist:"Roi", details:"De porta a gol", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3578s" },
+        { time:"58:55", type:"favor", scorer:"Aron", assist:"Pau", details:"De saque de banda", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3871s" },
+        { time:"5:35", type:"contra", goalkeeper:"Pau", details:"1r minut", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=671s" },
+        { time:"11:46", type:"contra", goalkeeper:"Pau", details:"Cagada de Lluc", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=1042s" },
+        { time:"29:32", type:"contra", goalkeeper:"Pau", details:"De canyete", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=2108s" },
+        { time:"44:08", type:"contra", goalkeeper:"Pau", details:"El Pau ni es mou", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=2984s" },
+        { time:"47:21", type:"contra", goalkeeper:"Pau", details:"La perd Guille", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3177s" },
+        { time:"48:49", type:"contra", goalkeeper:"Aron", details:"Una contra", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3265s" },
+        { time:"49:26", type:"contra", goalkeeper:"Lluc", details:"Es ballen a Guille", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3302s" },
+        { time:"51:13", type:"contra", goalkeeper:"Roi", details:"Fan una paret", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3409s" },
+        { time:"60:55", type:"contra", goalkeeper:"Marc", details:"Res a dir", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3991s" },
+      ],
+      highlights: [
+        { player:"Roi", time:"48:48", details:"Fa un canyo", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3264s" },
+        { player:"Roi", time:"55:02", details:"Fa vaselina", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3638s" },
+        { player:"Marc", time:"51:53", details:"Malisiiiiiim", videoUrl:"https://www.youtube.com/watch?v=WlUoJdl_JQE&t=3449s" },
+      ],
     },
 
   ],
