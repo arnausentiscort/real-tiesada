@@ -30,6 +30,14 @@ const FOTOS = [
   },
   {
     matchId: 'j3',
+    url:        'gallery/j3-roi-passa-1.jpg',
+    photoHover: 'gallery/j3-roi-passa-2.jpg',
+    caption:    'El Roi la llança fora 💥',
+    subtitle:   'Jornada 3 vs Uruks · min 17:31',
+    minute:     '17:31',
+  },
+  {
+    matchId: 'j3',
     url:        'gallery/j3-oriol-pi-1.jpg',
     photoHover: 'gallery/j3-oriol-pi-2.jpg',
     caption:    "L'Oriol fa el pi 🤸",
