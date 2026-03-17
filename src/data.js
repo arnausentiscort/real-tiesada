@@ -166,6 +166,61 @@ export const DATABASE = {
           { time:"33:33", type:"bona",    text:"Al Pau li roben la cartera, el Medina fa un miracle, el Pau cau misteriosament a l'àrea i el Medina tanca amb la jugada 'con suerte'.", players:["Pau Ibañez","Joan Medina"], videoUrl:"https://www.youtube.com/watch?v=X9w3f1w47YA&t=2009s" },
         ]
       }
+    },
+
+    // ── JORNADA 4 — Touchlas FC ──────────────────────────────────────
+    {
+      id: "j4-touchlas",
+      jornada: "Jornada 4",
+      opponent: "Touchlas FC",
+      result: "2 - 5",
+      date: "17 Mar 2026",
+      youtubeId: "tokKRGjQP1Q",
+      vimeoId: null,
+      idealMinutesPerPlayer: 16.0,
+      events: {
+        substitutions: [
+          { time: "3:00",  onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
+          { time: "6:45",  onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
+          { time: "10:26", onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Roi Seoane"] },
+          { time: "12:13", onPitch: ["Roger Miro", "Paco Montero", "Roi Seoane", "Pau Ibañez"] },
+          { time: "15:38", onPitch: ["Arnau Sentis", "Paco Montero", "Roi Seoane", "Roger Miro"] },
+          { time: "17:38", onPitch: ["Arnau Sentis", "Paco Montero", "Chengzhi Li", "Roger Miro"] },
+          { time: "19:13", onPitch: ["Chengzhi Li", "Roger Miro", "Paco Montero", "Joan Medina"] },
+          { time: "20:40", onPitch: ["Pau Ibañez", "Joan Medina", "Paco Montero", "Chengzhi Li"] },
+          { time: "23:14", onPitch: ["Pau Ibañez", "Joan Medina", "Marc Farreras", "Chengzhi Li"] },
+          { time: "23:37", onPitch: ["Pau Ibañez", "Joan Medina", "Marc Farreras", "Arnau Sentis"] },
+          { time: "26:54", onPitch: ["Marc Farreras", "Roger Miro", "Paco Montero", "Joan Medina"] },
+          { time: "29:30", onPitch: ["Roi Seoane", "Roger Miro", "Paco Montero", "Marc Farreras"] },
+          { time: "31:52", onPitch: ["Chengzhi Li", "Roi Seoane", "Roger Miro", "Paco Montero"] },
+          { time: "34:26", onPitch: ["Roi Seoane", "Chengzhi Li", "Joan Medina", "Arnau Sentis"] },
+          { time: "36:00", onPitch: ["Arnau Sentis", "Roi Seoane", "Marc Farreras", "Joan Medina"] },
+          { time: "38:00", onPitch: ["Arnau Sentis", "Chengzhi Li", "Marc Farreras", "Joan Medina"] },
+          { time: "38:33", onPitch: ["Roger Miro", "Chengzhi Li", "Marc Farreras", "Joan Medina"] },
+          { time: "39:45", onPitch: ["Roger Miro", "Chengzhi Li", "Marc Farreras", "Arnau Sentis"] },
+          { time: "40:51", onPitch: [] },
+        ],
+        cards: [],
+        goals: [
+          { time: "9:15",  type: "favor",  scorer: "Marc Farreras", assist: "Chengzhi Li", goalkeeper: "Ivan Mico",
+            onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Joan Medina"],
+            zone: null, shotPos: null, assistPos: null, goalPos: null },
+          { time: "18:01", type: "favor",  scorer: "Chengzhi Li",   assist: null,           goalkeeper: "Ivan Mico",
+            onPitch: ["Paco Montero", "Chengzhi Li", "Roger Miro", "Arnau Sentis"],
+            zone: null, shotPos: null, assistPos: null, goalPos: null },
+          { time: "15:25", type: "contra", goalkeeper: "Ivan Mico",
+            onPitch: ["Paco Montero", "Roi Seoane", "Roger Miro", "Pau Ibañez"] },
+          { time: "18:43", type: "contra", goalkeeper: "Ivan Mico",
+            onPitch: ["Paco Montero", "Roger Miro", "Chengzhi Li", "Arnau Sentis"] },
+          { time: "33:20", type: "contra", goalkeeper: "Ivan Mico",
+            onPitch: ["Chengzhi Li", "Roi Seoane", "Roger Miro", "Paco Montero"] },
+          { time: "34:00", type: "contra", goalkeeper: "Pau Ibañez",
+            onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Paco Montero"] },
+          { time: "35:50", type: "contra", goalkeeper: "Pau Ibañez",
+            onPitch: ["Arnau Sentis", "Roi Seoane", "Chengzhi Li", "Joan Medina"] },
+        ],
+        retransmissio: [],
+      }
     }
   ]
 };
