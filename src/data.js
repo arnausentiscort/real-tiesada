@@ -214,7 +214,7 @@ export const DATABASE = {
         ],
         retransmissio: [],
       }
-    }
+    },
   ]
 };
 
