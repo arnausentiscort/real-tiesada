@@ -31,11 +31,7 @@ export const DATABASE = {
       date: "23 Feb 2026",
       vimeoId: "1167919011",
       youtubeId: null,
-      idealMinutesPerPlayer: 16.0,
-      events: {
-        substitutions: [],
-        cards: [
-          { time: "36:00", color: "yellow", player: "Oriol Tomas" }
+      idealMinutesPerPlayer: 18.2,
         ],
         goals: [
           { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"],
@@ -64,7 +60,7 @@ export const DATABASE = {
       date: "02 Mar 2026",
       youtubeId: null,
       vimeoId: null,
-      idealMinutesPerPlayer: 16.0,
+      idealMinutesPerPlayer: 20.0,
       events: {
         substitutions: [],
         goals: [
@@ -177,10 +173,7 @@ export const DATABASE = {
       date: "17 Mar 2026",
       youtubeId: "tokKRGjQP1Q",
       vimeoId: null,
-      idealMinutesPerPlayer: 16.0,
-      events: {
-        substitutions: [
-          { time: "3:00",  onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
+      idealMinutesPerPlayer: 20.0,
           { time: "6:45",  onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
           { time: "10:26", onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Roi Seoane"] },
           { time: "12:13", onPitch: ["Roger Miro", "Paco Montero", "Roi Seoane", "Pau Ibañez"] },
