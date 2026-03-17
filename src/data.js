@@ -32,7 +32,8 @@ export const DATABASE = {
       vimeoId: "1167919011",
       youtubeId: null,
       idealMinutesPerPlayer: 18.2,
-        ],
+      events: {
+        substitutions: [],
         goals: [
           { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"],
             zone: "mig5E",   shotPos: { x: 646, y: 210 }, assistPos: null,              goalPos: { x: 225, y: 193 } },
@@ -174,6 +175,8 @@ export const DATABASE = {
       youtubeId: "tokKRGjQP1Q",
       vimeoId: null,
       idealMinutesPerPlayer: 20.0,
+      events: {
+        substitutions: [
           { time: "6:45",  onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
           { time: "10:26", onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Roi Seoane"] },
           { time: "12:13", onPitch: ["Roger Miro", "Paco Montero", "Roi Seoane", "Pau Ibañez"] },
