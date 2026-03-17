@@ -1,162 +1,120 @@
 import React, { useState } from 'react';
-import { ExternalLink, RefreshCw } from 'lucide-react';
 
-const CLASIFICACION_URL = 'https://apuntamelo.com/clasificacion-grupo/9/14/0/642/0/3354/2';
-
-// Dades hardcoded de la classificació — actualitza-les manualment cada jornada
-// o mira la URL de dalt
 const TABLA = [
-  // { pos, equipo, pj, pg, pe, pp, gf, gc, pts, esNosaltres }
-  // EXEMPLE — substituir amb les dades reals
-  { pos: 1,  equipo: 'Equip 1',       pj:3, pg:3, pe:0, pp:0, gf:12, gc:4,  pts:9,  esNosaltres: false },
-  { pos: 2,  equipo: 'Equip 2',       pj:3, pg:2, pe:1, pp:0, gf:9,  gc:5,  pts:7,  esNosaltres: false },
-  { pos: 3,  equipo: 'Real Tiesada',  pj:3, pg:0, pe:0, pp:3, gf:8,  gc:19, pts:0,  esNosaltres: true  },
-  // Afegeix la resta d'equips aquí
+  { pos: 1, equipo: 'Ensaimada',    pj:4, pg:4, pe:0, pp:0, gf:25, gc:8,  pts:12, forma: ['V','V','V','V'], esNosaltres: false },
+  { pos: 2, equipo: 'Uruks',        pj:4, pg:4, pe:0, pp:0, gf:17, gc:11, pts:12, forma: ['V','V','V','V'], esNosaltres: false },
+  { pos: 3, equipo: 'Touchla FC',   pj:4, pg:3, pe:0, pp:1, gf:14, gc:11, pts:9,  forma: ['D','V','V','V'], esNosaltres: false },
+  { pos: 4, equipo: 'Dgeneracion',  pj:3, pg:2, pe:0, pp:1, gf:16, gc:7,  pts:6,  forma: ['V','V','D'],     esNosaltres: false },
+  { pos: 5, equipo: 'Vietkong',     pj:3, pg:1, pe:0, pp:2, gf:9,  gc:9,  pts:3,  forma: ['D','V','D'],     esNosaltres: false },
+  { pos: 6, equipo: 'Great Spirit', pj:4, pg:1, pe:0, pp:3, gf:11, gc:16, pts:3,  forma: ['D','V','D','D'], esNosaltres: false },
+  { pos: 7, equipo: 'Vikings',      pj:3, pg:1, pe:0, pp:2, gf:6,  gc:12, pts:3,  forma: ['D','V','D'],     esNosaltres: false },
+  { pos: 8, equipo: 'Fabbas FC',    pj:3, pg:0, pe:0, pp:3, gf:7,  gc:17, pts:0,  forma: ['D','D','D'],     esNosaltres: false },
+  { pos: 9, equipo: 'Real Tiesada', pj:4, pg:0, pe:0, pp:4, gf:10, gc:24, pts:0,  forma: ['D','D','D','D'], esNosaltres: true  },
 ];
 
+function FormaCircle({ r }) {
+  const color = r === 'V' ? '#4ade80' : r === 'E' ? '#facc15' : '#f87171';
+  return <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:color, margin:'0 2px' }}/>;
+}
+
 export default function Clasificacion() {
-  const [showIframe, setShowIframe]   = useState(false);
-  const [iframeError, setIframeError] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
+
+  const nosaltres = TABLA.find(e => e.esNosaltres);
 
   return (
     <div className="space-y-6 animate-fade-in">
       <header>
         <h2 className="text-3xl font-black text-white mb-1">Classificació</h2>
-        <p className="text-gray-500 text-sm">Lliga de Futbol Sala · Temporada 25/26</p>
+        <p className="text-gray-500 text-sm">Dilluns 2a Lliga 25-26</p>
       </header>
 
-      {/* Taula local */}
-      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="font-bold text-[#E5C07B]">Taula de Classificació</h3>
-          <a
-            href={CLASIFICACION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#E5C07B] transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            Veure a apuntamelo.com
-          </a>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-gray-600 border-b border-white/5">
-                <th className="text-left pl-5 py-3 w-8">#</th>
-                <th className="text-left py-3">Equip</th>
-                <th className="text-center py-3 px-2">PJ</th>
-                <th className="text-center py-3 px-2 text-emerald-500/70">PG</th>
-                <th className="text-center py-3 px-2 text-yellow-500/70">PE</th>
-                <th className="text-center py-3 px-2 text-[#C0392B]/70">PP</th>
-                <th className="text-center py-3 px-2 hidden sm:table-cell">GF</th>
-                <th className="text-center py-3 px-2 hidden sm:table-cell">GC</th>
-                <th className="text-center py-3 px-2 hidden sm:table-cell">Dif</th>
-                <th className="text-center py-3 pr-5 font-black text-[#E5C07B]">Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TABLA.map((equip, idx) => (
-                <tr
-                  key={idx}
-                  className={`border-b border-white/5 last:border-0 transition-colors
-                    ${equip.esNosaltres
-                      ? 'bg-[#C0392B]/8 border-[#C0392B]/20'
-                      : 'hover:bg-white/3'}`}
-                >
-                  <td className="pl-5 py-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black
-                      ${equip.pos === 1 ? 'bg-[#E5C07B] text-black' :
-                        equip.pos === 2 ? 'bg-gray-400 text-black' :
-                        equip.pos === 3 ? 'bg-amber-700 text-white' : 'bg-white/5 text-gray-500'}`}>
-                      {equip.pos}
-                    </span>
-                  </td>
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      {equip.esNosaltres && (
-                        <img src={`${import.meta.env.BASE_URL}escut.svg`} alt="" className="w-5 h-5 shrink-0" />
-                      )}
-                      <span className={`font-medium ${equip.esNosaltres ? 'text-[#E5C07B] font-black' : ''}`}>
-                        {equip.equipo}
-                      </span>
-                      {equip.esNosaltres && (
-                        <span className="text-xs bg-[#C0392B]/20 text-[#C0392B] px-1.5 py-0.5 rounded-full font-bold">nosaltres</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="text-center py-3 px-2 text-gray-400">{equip.pj}</td>
-                  <td className="text-center py-3 px-2 text-emerald-400 font-bold">{equip.pg}</td>
-                  <td className="text-center py-3 px-2 text-yellow-400">{equip.pe}</td>
-                  <td className="text-center py-3 px-2 text-[#C0392B]">{equip.pp}</td>
-                  <td className="text-center py-3 px-2 hidden sm:table-cell text-gray-400">{equip.gf}</td>
-                  <td className="text-center py-3 px-2 hidden sm:table-cell text-gray-400">{equip.gc}</td>
-                  <td className="text-center py-3 px-2 hidden sm:table-cell">
-                    <span className={`text-xs font-mono ${equip.gf - equip.gc > 0 ? 'text-emerald-400' : equip.gf - equip.gc < 0 ? 'text-[#C0392B]' : 'text-gray-500'}`}>
-                      {equip.gf - equip.gc > 0 ? '+' : ''}{equip.gf - equip.gc}
-                    </span>
-                  </td>
-                  <td className="text-center py-3 pr-5">
-                    <span className={`font-black text-lg ${equip.esNosaltres ? 'text-[#E5C07B]' : 'text-white'}`}>
-                      {equip.pts}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Nota actualització */}
-        <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between">
-          <p className="text-xs text-gray-700 flex items-center gap-1.5">
-            <RefreshCw className="w-3 h-3" />
-            Actualitza manualment a <code className="text-gray-600">src/components/Clasificacion.jsx</code> → array <code className="text-gray-600">TABLA</code>
-          </p>
-        </div>
-      </div>
-
-      {/* Iframe apuntamelo */}
-      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 overflow-hidden">
-        <div
-          className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-white/3 transition-colors"
-          onClick={() => setShowIframe(!showIframe)}
-        >
+      {/* Targeta posició nostra */}
+      {nosaltres && (
+        <div className="bg-[#1a1a1a] border border-[#E5C07B]/20 rounded-2xl p-4 flex items-center gap-4">
+          <div className="text-4xl font-black text-[#E5C07B]">#{nosaltres.pos}</div>
           <div>
-            <div className="font-bold text-[#E5C07B]">📡 Classificació en directe</div>
-            <div className="text-xs text-gray-600">Des d'apuntamelo.com (pot trigar)</div>
+            <p className="text-white font-bold">Real Tiesada</p>
+            <p className="text-gray-500 text-sm">{nosaltres.pts} punts · {nosaltres.pj} partits jugats · GD {nosaltres.gf - nosaltres.gc}</p>
           </div>
-          <span className="text-gray-500 text-sm">{showIframe ? '▲ Tancar' : '▼ Obrir'}</span>
+        </div>
+      )}
+
+      {/* Taula */}
+      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden">
+        {/* Capçalera */}
+        <div className="grid text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 py-2 border-b border-white/5"
+          style={{ gridTemplateColumns: '28px 1fr 36px 28px 28px 28px 36px 36px 36px 60px' }}>
+          <span>Pos</span>
+          <span>Equip</span>
+          <span className="text-center">Pts</span>
+          <span className="text-center">PJ</span>
+          <span className="text-center">G</span>
+          <span className="text-center">E</span>
+          <span className="text-center">P</span>
+          <span className="text-center">GF</span>
+          <span className="text-center">GC</span>
+          <span className="text-center">Últims</span>
         </div>
 
-        {showIframe && (
-          <div className="border-t border-white/5">
-            {!iframeError ? (
-              <iframe
-                src={CLASIFICACION_URL}
-                className="w-full"
-                style={{ height: '600px', border: 'none', background: '#fff' }}
-                onError={() => setIframeError(true)}
-                title="Classificació apuntamelo"
-              />
-            ) : (
-              <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">El site no permet mostrar-se dins la web.</p>
-                <a
-                  href={CLASIFICACION_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#C0392B] text-white px-4 py-2 rounded-xl font-bold hover:brightness-110 transition-all"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Obrir a apuntamelo.com
-                </a>
-              </div>
-            )}
-          </div>
-        )}
+        {TABLA.map((eq, i) => {
+          const isUs = eq.esNosaltres;
+          const dg = eq.gf - eq.gc;
+          return (
+            <div key={eq.equipo}
+              className={`grid items-center px-4 py-3 border-b border-white/5 last:border-0 transition-colors
+                ${isUs ? 'bg-[#E5C07B]/5 border-l-2 border-l-[#E5C07B]' : 'hover:bg-white/[0.02]'}`}
+              style={{ gridTemplateColumns: '28px 1fr 36px 28px 28px 28px 36px 36px 36px 60px' }}>
+
+              {/* Posició */}
+              <span className={`text-sm font-black ${i < 2 ? 'text-[#E5C07B]' : i < 4 ? 'text-gray-400' : 'text-gray-600'}`}>
+                {eq.pos}
+              </span>
+
+              {/* Nom */}
+              <span className={`text-sm font-semibold truncate ${isUs ? 'text-[#E5C07B]' : 'text-white'}`}>
+                {eq.equipo}
+                {isUs && <span className="ml-1 text-[9px] text-[#E5C07B]/60">← nosaltres</span>}
+              </span>
+
+              {/* Punts */}
+              <span className={`text-center text-sm font-black ${isUs ? 'text-[#E5C07B]' : 'text-white'}`}>
+                {eq.pts}
+              </span>
+
+              <span className="text-center text-xs text-gray-400">{eq.pj}</span>
+              <span className="text-center text-xs text-emerald-400">{eq.pg}</span>
+              <span className="text-center text-xs text-yellow-400">{eq.pe}</span>
+              <span className="text-center text-xs text-red-400">{eq.pp}</span>
+              <span className="text-center text-xs text-gray-400">{eq.gf}</span>
+              <span className="text-center text-xs text-gray-400">{eq.gc}</span>
+
+              {/* Forma */}
+              <span className="flex items-center justify-center gap-0">
+                {(eq.forma || []).map((r, j) => <FormaCircle key={j} r={r} />)}
+              </span>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Línia de descens */}
+      <p className="text-xs text-gray-700 text-center">— Les posicions 8a i 9a estan en zona de descens —</p>
+
+      {/* Botó apuntamelo */}
+      <button onClick={() => setShowIframe(!showIframe)}
+        className="w-full py-2 text-xs text-gray-600 hover:text-gray-400 border border-white/5 rounded-xl transition-colors">
+        {showIframe ? 'Tancar' : 'Veure classificació oficial ↗'}
+      </button>
+
+      {showIframe && (
+        <iframe
+          src="https://apuntamelo.com/clasificacion-grupo/9/14/0/642/0/3354/2"
+          className="w-full rounded-xl border border-white/10"
+          style={{ height: 500 }}
+          title="Classificació oficial"
+        />
+      )}
     </div>
   );
 }
