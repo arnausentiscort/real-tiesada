@@ -31,9 +31,12 @@ export const DATABASE = {
       date: "23 Feb 2026",
       vimeoId: "1167919011",
       youtubeId: null,
-      idealMinutesPerPlayer: 18.2,
+      idealMinutesPerPlayer: 14.5,
       events: {
         substitutions: [],
+        cards: [
+          { time: "36:00", color: "yellow", player: "Oriol Tomas" }
+        ],
         goals: [
           { time: "05:00", type: "favor",  scorer: "Paco Montero", assist: null,            goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Ivan Mico", "Paco Montero"],
             zone: "mig5E",   shotPos: { x: 646, y: 210 }, assistPos: null,              goalPos: { x: 225, y: 193 } },
@@ -174,19 +177,22 @@ export const DATABASE = {
       date: "17 Mar 2026",
       youtubeId: "tokKRGjQP1Q",
       vimeoId: null,
-      idealMinutesPerPlayer: 20.0,
+      idealMinutesPerPlayer: 17.5,
       events: {
         substitutions: [
+          { time: "3:00",  onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
           { time: "6:45",  onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
           { time: "10:26", onPitch: ["Pau Ibañez", "Marc Farreras", "Chengzhi Li", "Roi Seoane"] },
           { time: "12:13", onPitch: ["Roger Miro", "Paco Montero", "Roi Seoane", "Pau Ibañez"] },
           { time: "15:38", onPitch: ["Arnau Sentis", "Paco Montero", "Roi Seoane", "Roger Miro"] },
           { time: "17:38", onPitch: ["Arnau Sentis", "Paco Montero", "Chengzhi Li", "Roger Miro"] },
           { time: "19:13", onPitch: ["Chengzhi Li", "Roger Miro", "Paco Montero", "Joan Medina"] },
+          { time: "19:29", onPitch: [] },
           { time: "20:40", onPitch: ["Pau Ibañez", "Joan Medina", "Paco Montero", "Chengzhi Li"] },
           { time: "23:14", onPitch: ["Pau Ibañez", "Joan Medina", "Marc Farreras", "Chengzhi Li"] },
           { time: "23:37", onPitch: ["Pau Ibañez", "Joan Medina", "Marc Farreras", "Arnau Sentis"] },
           { time: "26:54", onPitch: ["Marc Farreras", "Roger Miro", "Paco Montero", "Joan Medina"] },
+          { time: "27:50", onPitch: [] },
           { time: "29:30", onPitch: ["Roi Seoane", "Roger Miro", "Paco Montero", "Marc Farreras"] },
           { time: "31:52", onPitch: ["Chengzhi Li", "Roi Seoane", "Roger Miro", "Paco Montero"] },
           { time: "34:26", onPitch: ["Roi Seoane", "Chengzhi Li", "Joan Medina", "Arnau Sentis"] },
