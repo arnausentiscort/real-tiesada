@@ -249,13 +249,23 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
           />
           <GoalClickable value={goal.goalPos||null} label="On entra a la porteria:"
             onChange={v=>onChange({...goal,goalPos:v})}/>
+          <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
+            placeholder="Comentari del gol (opcional) — ex: Xut creuat des de la banda..."
+            rows={2}
+            className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
         </>
       ) : (
-        <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
-          className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:border-[#E5C07B]/40 outline-none">
-          <option value="">Porter...</option>
-          {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
-        </select>
+        <>
+          <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
+            className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:border-[#E5C07B]/40 outline-none">
+            <option value="">Porter...</option>
+            {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
+          </select>
+          <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
+            placeholder="Comentari del gol en contra (opcional) — ex: De falta directa, porter sense opcions..."
+            rows={2}
+            className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
+        </>
       )}
     </div>
   );
@@ -377,6 +387,7 @@ function matchToForm(m) {
     conductPos: g.conductPos || null,
     goalPos: g.goalPos || null,
     zone: g.zone || '',
+    notes: g.notes || '',
     pts: {
       assist: g.assistPos ? { x: g.assistPos.x, y: g.assistPos.y, zone: '' } : null,
       conduct: g.conductPos ? { x: g.conductPos.x, y: g.conductPos.y, zone: '' } : null,
@@ -409,10 +420,12 @@ function generateEditCode(match) {
       const cp = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
       const gp = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
       const ass = g.assist ? `"${g.assist}"` : 'null';
+      const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
       return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
-            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp} },`;
+            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp}${notes} },`;
     }
-    return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}" },`;
+    const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
+    return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}"${notes} },`;
   }).join('\n');
 
   const momentsCode = match.moments.map(m => {
