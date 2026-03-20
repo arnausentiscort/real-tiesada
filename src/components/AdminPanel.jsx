@@ -336,17 +336,216 @@ ${momentsCode}
 function injectMatchIntoDataJs(currentJs, matchCode) {
   const marker = '\n  ]\n};';
   const idx = currentJs.lastIndexOf(marker);
-  if (idx === -1) throw new Error("No he trobat el marcador al data.js. Verifica el fitxer.");
+  if (idx === -1) throw new Error("No he trobat el marcador al data.js.");
   return currentJs.slice(0, idx) + matchCode + '\n' + currentJs.slice(idx);
 }
 
-// ── Admin Panel ───────────────────────────────────────────────────
+// Substitueix el bloc d'un partit existent pel seu id
+function replaceMatchInDataJs(currentJs, matchId, newMatchCode) {
+  // Cerca "id: \"matchId\"" i agafa tot el bloc { ... }, del match
+  const idStr = `id: "${matchId}"`;
+  const start = currentJs.indexOf(idStr);
+  if (start === -1) throw new Error(`No he trobat el partit "${matchId}" al data.js`);
+  // Retrocedeix fins al { que obre el match
+  let braceStart = currentJs.lastIndexOf('{', start);
+  if (braceStart === -1) throw new Error('Error localitzant el bloc del partit');
+  // Avança fins a trobar el }, tancador del match (compta claus)
+  let depth = 0, i = braceStart;
+  while (i < currentJs.length) {
+    if (currentJs[i] === '{') depth++;
+    else if (currentJs[i] === '}') { depth--; if (depth === 0) break; }
+    i++;
+  }
+  // Inclou la coma i el salt de línia que venen després
+  let end = i + 1;
+  if (currentJs[end] === ',') end++;
+  // newMatchCode ja ve amb la coma final inclosa
+  return currentJs.slice(0, braceStart) + newMatchCode.trimStart() + currentJs.slice(end);
+}
+
+// Converteix un match de DATABASE al format del formulari
+function matchToForm(m) {
+  const ytUrl = m.youtubeId ? `https://www.youtube.com/watch?v=${m.youtubeId}` : '';
+  const goals = (m.events?.goals || []).map(g => ({
+    type: g.type,
+    time: g.time,
+    scorer: g.scorer || '',
+    assist: g.assist || null,
+    goalkeeper: g.goalkeeper || '',
+    shotPos: g.shotPos || null,
+    assistPos: g.assistPos || null,
+    conductPos: g.conductPos || null,
+    goalPos: g.goalPos || null,
+    zone: g.zone || '',
+    pts: {
+      assist: g.assistPos ? { x: g.assistPos.x, y: g.assistPos.y, zone: '' } : null,
+      conduct: g.conductPos ? { x: g.conductPos.x, y: g.conductPos.y, zone: '' } : null,
+      shot: g.shotPos ? { x: g.shotPos.x, y: g.shotPos.y, zone: g.zone || '' } : null,
+    }
+  }));
+  const moments = (m.events?.retransmissio || []).map(r => ({
+    time: r.time, text: r.text,
+  }));
+  return {
+    _id: m.id,
+    _isEdit: true,
+    jornada: m.jornada,
+    opponent: m.opponent,
+    date: m.date,
+    result: m.result,
+    youtubeUrl: ytUrl,
+    goals, moments,
+  };
+}
+
+// Genera codi per editar (amb id original)
+function generateEditCode(match) {
+  const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
+
+  const goalsCode = match.goals.map(g => {
+    if (g.type === 'favor') {
+      const sp = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
+      const ap = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
+      const cp = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
+      const gp = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
+      const ass = g.assist ? `"${g.assist}"` : 'null';
+      return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
+            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp} },`;
+    }
+    return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}" },`;
+  }).join('\n');
+
+  const momentsCode = match.moments.map(m => {
+    const [min, sec] = (m.time || '0:0').split(':').map(Number);
+    const secs = Math.max(0, min * 60 + (sec || 0) - 3);
+    const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
+    const txt = (m.text || '').replace(/\\/g, '\\\\').replace(/"/g, "'");
+    return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
+  }).join('\n');
+
+  const ytStr = ytId ? `"${ytId}"` : 'null';
+
+  return `{
+      id: "${match._id}",
+      jornada: "${match.jornada || ''}",
+      opponent: "${match.opponent || ''}",
+      result: "${match.result || ''}",
+      date: "${match.date || ''}",
+      youtubeId: ${ytStr},
+      vimeoId: null,
+      idealMinutesPerPlayer: 16.0,
+      events: {
+        substitutions: [],
+        cards: [],
+        goals: [
+${goalsCode}
+        ],
+        retransmissio: [
+${momentsCode}
+        ],
+      }
+    },`;
+}
+
+// ── Pantalla de selecció de partit per editar ─────────────────────
+function MatchSelector({ onSelect, onNew }) {
+  const getRS = (f, a) => f > a ? 'text-emerald-400' : f < a ? 'text-[#C0392B]' : 'text-yellow-400';
+  return (
+    <div className="space-y-3">
+      <button onClick={onNew}
+        className="w-full py-3 border-2 border-dashed border-[#E5C07B]/30 rounded-xl text-[#E5C07B] font-bold text-sm hover:border-[#E5C07B]/60 hover:bg-[#E5C07B]/5 transition-all flex items-center justify-center gap-2">
+        <Plus className="w-4 h-4"/> Nou Partit
+      </button>
+      <p className="text-xs text-gray-600 uppercase tracking-wider pt-2">Editar Partit Existent</p>
+      {[...DATABASE.matches].reverse().map(m => {
+        const [f, a] = m.result.split('-').map(s => parseInt(s.trim()));
+        return (
+          <button key={m.id} onClick={() => onSelect(m)}
+            className="w-full flex items-center gap-3 bg-[#1a1a1a] hover:bg-[#222] border border-white/8 hover:border-white/20 rounded-xl p-3 transition-all text-left group">
+            <div className={`font-black font-mono text-lg w-14 text-center shrink-0 ${getRS(f,a)}`}>{f}-{a}</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-sm truncate">{m.opponent}</p>
+              <p className="text-gray-600 text-xs">{m.jornada} · {m.date}</p>
+            </div>
+            <span className="text-gray-600 group-hover:text-[#E5C07B] text-xs transition-colors shrink-0">Editar →</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Formulari complet (nou o edició) ─────────────────────────────
+function MatchForm({ match, setMatch, onPreview }) {
+  const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',pts:{assist:null,conduct:null,shot:null}}]}));
+  const addMoment = () => setMatch(m => ({...m, moments: [...m.moments, {time:'',text:''}]}));
+  const updateGoal   = (i, g) => setMatch(m => ({...m, goals:   m.goals.map((x,j)=>j===i?g:x)}));
+  const updateMoment = (i, g) => setMatch(m => ({...m, moments: m.moments.map((x,j)=>j===i?g:x)}));
+  const removeGoal   = (i) => setMatch(m => ({...m, goals:   m.goals.filter((_,j)=>j!==i)}));
+  const removeMoment = (i) => setMatch(m => ({...m, moments: m.moments.filter((_,j)=>j!==i)}));
+
+  return (
+    <>
+      {/* Info bàsica */}
+      <div className="bg-[#1a1a1a] rounded-xl border border-white/8 p-4 space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">📋 Informació bàsica</p>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={match.jornada} onChange={e=>setMatch(m=>({...m,jornada:e.target.value}))} placeholder="Jornada 5"
+            className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+          <input value={match.date} onChange={e=>setMatch(m=>({...m,date:e.target.value}))} placeholder="24 Mar 2026"
+            className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+        </div>
+        <input value={match.opponent} onChange={e=>setMatch(m=>({...m,opponent:e.target.value}))} placeholder="Nom del rival"
+          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+        <input value={match.result} onChange={e=>setMatch(m=>({...m,result:e.target.value}))} placeholder="Resultat (ex: 3 - 2)"
+          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+        <input value={match.youtubeUrl} onChange={e=>setMatch(m=>({...m,youtubeUrl:e.target.value}))} placeholder="URL YouTube (opcional)"
+          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+      </div>
+
+      {/* Gols */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-[#E5C07B]">⚽ Gols ({match.goals.length})</p>
+          <button onClick={addGoal} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
+            <Plus className="w-3 h-3"/> Afegir gol
+          </button>
+        </div>
+        {match.goals.map((g,i) => (
+          <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)}/>
+        ))}
+      </div>
+
+      {/* Moments */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-[#E5C07B]">📝 Moments ({match.moments.length})</p>
+          <button onClick={addMoment} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
+            <Plus className="w-3 h-3"/> Afegir moment
+          </button>
+        </div>
+        <p className="text-[11px] text-gray-600">Ordre cronològic. L'emoji s'assigna automàticament.</p>
+        {match.moments.map((m,i) => (
+          <MomentForm key={i} moment={m} idx={i} onChange={m=>updateMoment(i,m)} onRemove={()=>removeMoment(i)}/>
+        ))}
+      </div>
+
+      <button onClick={onPreview}
+        className="w-full py-3 bg-[#E5C07B] text-[#121212] font-black rounded-xl hover:bg-[#f0cc85] transition-all text-sm">
+        Previsualitzar codi →
+      </button>
+    </>
+  );
+}
+
+// ── Admin Panel principal ─────────────────────────────────────────
 export default function AdminPanel({ onClose }) {
-  const [token, setToken]       = useState(() => localStorage.getItem('gh_token') || '');
+  const [token, setToken]         = useState(() => localStorage.getItem('gh_token') || '');
   const [tokenSaved, setTokenSaved] = useState(!!localStorage.getItem('gh_token'));
-  const [step, setStep]         = useState('form');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [screen, setScreen]       = useState('select'); // select | form | preview | saving | done | error
+  const [errorMsg, setErrorMsg]   = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [isEdit, setIsEdit]       = useState(false);
 
   const emptyMatch = {
     jornada: `Jornada ${DATABASE.matches.length + 1}`,
@@ -357,36 +556,60 @@ export default function AdminPanel({ onClose }) {
 
   const saveToken = () => { localStorage.setItem('gh_token', token); setTokenSaved(true); };
 
-  const addGoal   = () => setMatch(m=>({...m,goals:[...m.goals,{type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',pts:{assist:null,conduct:null,shot:null}}]}));
-  const addMoment = () => setMatch(m=>({...m,moments:[...m.moments,{time:'',text:''}]}));
-  const updateGoal   = (i,g) => setMatch(m=>({...m,goals:m.goals.map((x,j)=>j===i?g:x)}));
-  const updateMoment = (i,g) => setMatch(m=>({...m,moments:m.moments.map((x,j)=>j===i?g:x)}));
-  const removeGoal   = (i) => setMatch(m=>({...m,goals:m.goals.filter((_,j)=>j!==i)}));
-  const removeMoment = (i) => setMatch(m=>({...m,moments:m.moments.filter((_,j)=>j!==i)}));
+  const handleSelectMatch = (m) => {
+    setMatch(matchToForm(m));
+    setIsEdit(true);
+    setScreen('form');
+  };
 
-  const handlePreview = () => { setGeneratedCode(generateMatchCode(match)); setStep('preview'); };
+  const handleNewMatch = () => {
+    setMatch(emptyMatch);
+    setIsEdit(false);
+    setScreen('form');
+  };
+
+  const handlePreview = () => {
+    const code = isEdit ? generateEditCode(match) : generateMatchCode(match);
+    setGeneratedCode(code);
+    setScreen('preview');
+  };
 
   const handlePush = async () => {
-    setStep('saving');
+    setScreen('saving');
     try {
       const tk = token || localStorage.getItem('gh_token');
       if (!tk) throw new Error('Cal el token de GitHub');
       const { sha, content } = await getFileSha(tk);
-      const newContent = injectMatchIntoDataJs(content, generatedCode);
-      await pushFile(tk, sha, newContent, `Add ${match.jornada} vs ${match.opponent} (${match.result})`);
-      setStep('done');
-    } catch(e) { setErrorMsg(e.message); setStep('error'); }
+      let newContent;
+      if (isEdit) {
+        newContent = replaceMatchInDataJs(content, match._id, generatedCode);
+      } else {
+        newContent = injectMatchIntoDataJs(content, generatedCode);
+      }
+      const commitMsg = isEdit
+        ? `Edit ${match.jornada} vs ${match.opponent}`
+        : `Add ${match.jornada} vs ${match.opponent} (${match.result})`;
+      await pushFile(tk, sha, newContent, commitMsg);
+      setScreen('done');
+    } catch(e) { setErrorMsg(e.message); setScreen('error'); }
   };
+
+  const backLabel = screen === 'form' ? 'select' : screen === 'preview' ? 'form' : null;
 
   return (
     <div className="fixed inset-0 z-[300] bg-[#0d0d0d] overflow-y-auto">
+      {/* Header */}
       <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-white/8 px-4 py-3 flex items-center gap-3">
-        {step !== 'form' && (
-          <button onClick={()=>setStep('form')} className="text-gray-500 hover:text-white"><ChevronLeft className="w-5 h-5"/></button>
+        {backLabel && (
+          <button onClick={() => setScreen(backLabel)} className="text-gray-500 hover:text-white transition-colors">
+            <ChevronLeft className="w-5 h-5"/>
+          </button>
         )}
-        <span className="text-[#E5C07B] font-black text-sm">🔧 Admin — Nou Partit</span>
+        <span className="text-[#E5C07B] font-black text-sm">
+          🔧 Admin — {screen === 'select' ? 'Partits' : isEdit ? `Editant ${match.jornada}` : 'Nou Partit'}
+        </span>
         <div className="ml-auto flex items-center gap-3">
-          {tokenSaved && <span className="text-[10px] text-emerald-400 flex items-center gap-1"><Check className="w-3 h-3"/>Token guardat</span>}
+          {tokenSaved && <span className="text-[10px] text-emerald-400 flex items-center gap-1"><Check className="w-3 h-3"/>Token ✓</span>}
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center">
             <X className="w-4 h-4 text-gray-400"/>
           </button>
@@ -394,6 +617,7 @@ export default function AdminPanel({ onClose }) {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+
         {/* Token */}
         {!tokenSaved && (
           <div className="bg-[#1a1a1a] rounded-xl border border-[#E5C07B]/20 p-4">
@@ -406,109 +630,75 @@ export default function AdminPanel({ onClose }) {
           </div>
         )}
 
-        {step==='form' && (
-          <>
-            {/* Info bàsica */}
-            <div className="bg-[#1a1a1a] rounded-xl border border-white/8 p-4 space-y-3">
-              <p className="text-xs font-bold text-[#E5C07B]">📋 Informació bàsica</p>
-              <div className="grid grid-cols-2 gap-2">
-                <input value={match.jornada} onChange={e=>setMatch(m=>({...m,jornada:e.target.value}))} placeholder="Jornada 5"
-                  className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-                <input value={match.date} onChange={e=>setMatch(m=>({...m,date:e.target.value}))} placeholder="24 Mar 2026"
-                  className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-              </div>
-              <input value={match.opponent} onChange={e=>setMatch(m=>({...m,opponent:e.target.value}))} placeholder="Nom del rival"
-                className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-              <input value={match.result} onChange={e=>setMatch(m=>({...m,result:e.target.value}))} placeholder="Resultat (ex: 3 - 2)"
-                className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-              <input value={match.youtubeUrl} onChange={e=>setMatch(m=>({...m,youtubeUrl:e.target.value}))} placeholder="URL YouTube (opcional)"
-                className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-            </div>
-
-            {/* Gols */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-[#E5C07B]">⚽ Gols ({match.goals.length})</p>
-                <button onClick={addGoal} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
-                  <Plus className="w-3 h-3"/> Afegir gol
-                </button>
-              </div>
-              {match.goals.map((g,i)=>(
-                <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)}/>
-              ))}
-            </div>
-
-            {/* Moments */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold text-[#E5C07B]">📝 Moments ({match.moments.length})</p>
-                <button onClick={addMoment} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
-                  <Plus className="w-3 h-3"/> Afegir moment
-                </button>
-              </div>
-              <p className="text-[11px] text-gray-600">Ordre cronològic. L'emoji s'assigna automàticament.</p>
-              {match.moments.map((m,i)=>(
-                <MomentForm key={i} moment={m} idx={i} onChange={m=>updateMoment(i,m)} onRemove={()=>removeMoment(i)}/>
-              ))}
-            </div>
-
-            <button onClick={handlePreview}
-              className="w-full py-3 bg-[#E5C07B] text-[#121212] font-black rounded-xl hover:bg-[#f0cc85] transition-all text-sm">
-              Previsualitzar codi →
-            </button>
-          </>
+        {/* SELECCIÓ */}
+        {screen === 'select' && (
+          <MatchSelector onSelect={handleSelectMatch} onNew={handleNewMatch}/>
         )}
 
-        {step==='preview' && (
+        {/* FORMULARI */}
+        {screen === 'form' && (
+          <MatchForm match={match} setMatch={setMatch} onPreview={handlePreview}/>
+        )}
+
+        {/* PREVIEW */}
+        {screen === 'preview' && (
           <div className="space-y-4">
+            {isEdit && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-400">
+                ⚠️ Modo edició — substituirà el bloc del {match.jornada} al data.js
+              </div>
+            )}
             <div className="bg-[#111] rounded-xl border border-white/8 p-4">
-              <p className="text-xs text-gray-500 mb-2 font-bold">Codi generat</p>
+              <p className="text-xs text-gray-500 mb-2 font-bold">Codi {isEdit ? 'actualitzat' : 'nou'}</p>
               <pre className="text-[10px] text-[#E5C07B] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">{generatedCode}</pre>
             </div>
             <div className="bg-[#1a1a1a] rounded-xl border border-[#E5C07B]/20 p-4">
               <p className="text-sm text-white font-bold">{match.jornada} vs {match.opponent} — {match.result}</p>
-              <p className="text-xs text-gray-500">{match.goals.filter(g=>g.type==='favor').length}⚽ a favor · {match.goals.filter(g=>g.type==='contra').length}❌ contra · {match.moments.length} moments</p>
+              <p className="text-xs text-gray-500">{match.goals.filter(g=>g.type==='favor').length}⚽ · {match.goals.filter(g=>g.type==='contra').length}❌ · {match.moments.length} moments</p>
             </div>
             <button onClick={handlePush}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-2">
-              <Github className="w-4 h-4"/> Pujar a GitHub → deploy automàtic
+              <Github className="w-4 h-4"/> {isEdit ? 'Guardar canvis a GitHub' : 'Pujar a GitHub'} → deploy automàtic
             </button>
             <p className="text-[10px] text-gray-600 text-center">La web s'actualitzarà en ~2 minuts</p>
           </div>
         )}
 
-        {step==='saving' && (
+        {/* SAVING */}
+        {screen === 'saving' && (
           <div className="flex flex-col items-center py-20 gap-4">
             <Loader className="w-10 h-10 text-[#E5C07B] animate-spin"/>
-            <p className="text-white font-bold">Pujant a GitHub...</p>
+            <p className="text-white font-bold">{isEdit ? 'Actualitzant...' : 'Pujant...'}</p>
           </div>
         )}
 
-        {step==='done' && (
+        {/* DONE */}
+        {screen === 'done' && (
           <div className="flex flex-col items-center py-20 gap-4">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
               <Check className="w-8 h-8 text-emerald-400"/>
             </div>
             <p className="text-white font-bold text-lg">Fet! ✅</p>
-            <p className="text-gray-500 text-sm text-center">Partit pujat. Web actualitzada en ~2 min.</p>
-            <button onClick={()=>{setMatch(emptyMatch);setStep('form');}}
+            <p className="text-gray-500 text-sm text-center">{isEdit ? 'Canvis guardats.' : 'Partit pujat.'} Web actualitzada en ~2 min.</p>
+            <button onClick={() => setScreen('select')}
               className="px-6 py-2 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-xl text-sm font-bold">
-              Afegir un altre
+              ← Tornar als partits
             </button>
           </div>
         )}
 
-        {step==='error' && (
+        {/* ERROR */}
+        {screen === 'error' && (
           <div className="flex flex-col items-center py-12 gap-4">
             <div className="w-16 h-16 rounded-full bg-[#C0392B]/20 flex items-center justify-center">
               <AlertCircle className="w-8 h-8 text-[#C0392B]"/>
             </div>
             <p className="text-white font-bold">Error</p>
-            <p className="text-gray-500 text-sm text-center">{errorMsg}</p>
+            <p className="text-gray-500 text-sm text-center max-w-xs">{errorMsg}</p>
             <div className="flex gap-3">
-              <button onClick={()=>setStep('preview')} className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg text-sm">← Tornar</button>
+              <button onClick={()=>setScreen('preview')} className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg text-sm">← Tornar</button>
               {(errorMsg.includes('401') || errorMsg.includes('token')) && (
-                <button onClick={()=>{localStorage.removeItem('gh_token');setTokenSaved(false);setStep('form');}}
+                <button onClick={()=>{localStorage.removeItem('gh_token');setTokenSaved(false);setScreen('form');}}
                   className="px-4 py-2 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-lg text-sm">
                   Canviar token
                 </button>
