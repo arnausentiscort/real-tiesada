@@ -8,6 +8,7 @@ import GoalHeatmap      from './components/GoalHeatmap.jsx';
 import Galeria          from './components/Galeria.jsx';
 import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
+import AdminPanel       from './components/AdminPanel.jsx';
 import { DATABASE }     from './data.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -35,6 +36,19 @@ export default function App() {
   const [season, setSeason]     = useState('current');
   const [confetti, setConfetti] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+
+  // Botó ocult: triple clic al logo obre el panel admin
+  const [logoClicks, setLogoClicks] = useState(0);
+  const handleLogoClick = () => {
+    setLogoClicks(c => {
+      const next = c + 1;
+      if (next >= 3) { setShowAdmin(true); return 0; }
+      setTimeout(() => setLogoClicks(0), 1000);
+      return next;
+    });
+    navTo('dashboard');
+  };
 
   const isMatch = view && typeof view === 'object';
 
@@ -68,12 +82,16 @@ export default function App() {
     <div className="min-h-screen bg-[#121212] text-[#E2E8F0] font-sans pb-24 md:pb-8">
       <Confetti active={confetti} />
 
+      {/* Admin Panel */}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)}/>}
+
       {/* ── NAVBAR desktop (top) ── */}
       <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 gap-3">
 
-          {/* Logo */}
-          <button onClick={() => navTo('dashboard')} className="flex items-center gap-2 group shrink-0">
+          {/* Logo — triple clic obre admin */}
+          <button onClick={handleLogoClick}
+            className="flex items-center gap-2 group shrink-0">
             <img src={`${BASE}escut.svg`} alt="Real Tiesada"
               className="w-8 h-8 drop-shadow-[0_0_8px_rgba(229,192,123,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(229,192,123,0.6)] transition-all" />
             <div className="hidden sm:block">
