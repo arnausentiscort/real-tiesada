@@ -115,7 +115,7 @@ export const DATABASE = {
       youtubeId: "X9w3f1w47YA",
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
-      savesManual: { "Joan Medina": 3, "Pau Ibañez": 4 },
+      savesManual: { "Roger Miro": 1, "Joan Medina": 6, "Pau Ibañez": 3 },
       events: {
         substitutions: [
           { time: "00:00", goalkeeper: "Joan Medina",  onPitch: ["Roi Seoane", "Pau Ibañez", "Ivan Mico", "Chengzhi Li"] },

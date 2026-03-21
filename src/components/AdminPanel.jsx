@@ -616,32 +616,21 @@ function MatchForm({ match, setMatch, onPreview }) {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
-          <span className="text-[10px] text-gray-600">(intern, no es mostra públicament)</span>
+          <span className="text-[10px] text-gray-600">(intern)</span>
         </div>
         <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
-          {DATABASE.roster.filter(p=>p.position==='Porter').map(pl => (
-            <div key={pl.name} className="flex items-center gap-3">
-              <span className="text-xs text-gray-400 w-24 shrink-0">{pl.shirtName}</span>
-              <input type="number" min="0" max="30"
-                value={(match.savesManual||{})[pl.name] ?? ''}
-                onChange={e => {
-                  const v = parseInt(e.target.value);
-                  const s = {...(match.savesManual||{})};
-                  if (isNaN(v) || e.target.value === '') delete s[pl.name];
-                  else s[pl.name] = v;
-                  setMatch(m=>({...m, savesManual: s}));
-                }}
-                placeholder="0"
-                className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:border-emerald-500/40 outline-none"/>
-            </div>
-          ))}
-          {/* Permet afegir altres jugadors que han fet de porter */}
-          {DATABASE.roster.filter(p=>p.position!=='Porter').map(pl => {
+          {/* Tots els jugadors que tenen aturades registrades */}
+          {DATABASE.roster.map(pl => {
             const hasSave = (match.savesManual||{})[pl.name] !== undefined;
-            if (!hasSave) return null;
+            const isPorter = pl.position === 'Porter';
+            if (!isPorter && !hasSave) return null;
             return (
               <div key={pl.name} className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 w-24 shrink-0">{pl.shirtName}</span>
+                <span className="text-xs w-28 shrink-0 flex items-center gap-1"
+                  style={{color: isPorter ? '#10B981' : '#E5C07B'}}>
+                  {pl.shirtName}
+                  {!isPorter && <span className="text-[9px] text-gray-600">(camp)</span>}
+                </span>
                 <input type="number" min="0" max="30"
                   value={(match.savesManual||{})[pl.name] ?? ''}
                   onChange={e => {
@@ -653,18 +642,26 @@ function MatchForm({ match, setMatch, onPreview }) {
                   }}
                   placeholder="0"
                   className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:border-emerald-500/40 outline-none"/>
+                {!isPorter && hasSave && (
+                  <button onClick={() => {
+                    const s = {...(match.savesManual||{})};
+                    delete s[pl.name];
+                    setMatch(m=>({...m, savesManual: s}));
+                  }} className="text-gray-700 hover:text-red-400 text-xs transition-colors">✕</button>
+                )}
               </div>
             );
           }).filter(Boolean)}
-          {/* Selector per afegir porter esporàdic */}
+          {/* Selector per afegir jugador de camp com a porter esporàdic */}
           <select onChange={e => {
             if (!e.target.value) return;
             setMatch(m=>({...m, savesManual:{...(m.savesManual||{}), [e.target.value]:0}}));
             e.target.value='';
           }} className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-gray-500 focus:border-emerald-500/40 outline-none mt-1">
             <option value="">+ Afegir jugador de camp que ha fet de porter...</option>
-            {DATABASE.roster.filter(p=>p.position!=='Porter' && !((match.savesManual||{})[p.name]!==undefined))
-              .map(p=><option key={p.name} value={p.name}>{p.shirtName}</option>)}
+            {DATABASE.roster
+              .filter(p => p.position !== 'Porter' && (match.savesManual||{})[p.name] === undefined)
+              .map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
           </select>
         </div>
       </div>
