@@ -14,7 +14,12 @@ async function getFileSha(token) {
   });
   if (!r.ok) throw new Error(`GitHub error ${r.status}`);
   const d = await r.json();
-  return { sha: d.sha, content: atob(d.content.replace(/\n/g,'')) };
+  // Decodifica correctament UTF-8 (accents, caràcters especials)
+  const binary = atob(d.content.replace(/\n/g,''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const content = new TextDecoder('utf-8').decode(bytes);
+  return { sha: d.sha, content };
 }
 async function pushFile(token, sha, newContent, message) {
   const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
