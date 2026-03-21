@@ -619,7 +619,7 @@ function TimelineChart({ match, matchStats }) {
       </div>
     </div>
   );
-}
+
 
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack }) {
