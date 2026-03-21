@@ -157,7 +157,7 @@ function PlayerCard({ player, stats, onClick }) {
 
             {/* Stats horitzontals */}
             <div className="grid grid-cols-3 gap-0 border-t" style={{borderColor:'rgba(255,255,255,0.07)'}}>
-              {isGK ? [
+              {(isGK ? [
                 {v: saves||0, l:'PAR'},
                 {v: conceded||0, l:'GC'},
                 {v: `${Math.floor(minSecs/60)}'`, l:'MIN'},
@@ -165,15 +165,7 @@ function PlayerCard({ player, stats, onClick }) {
                 {v: goals, l:'GOL'},
                 {v: assists, l:'ASS'},
                 {v: `${Math.floor(minSecs/60)}'`, l:'MIN'},
-              ].map(({v,l},i) => (
-                <div key={l} className="flex flex-col items-center py-1.5" style={{
-                  borderRight: i<2 ? '1px solid rgba(255,255,255,0.07)' : 'none'
-                }}>
-                  <span className="text-sm font-black leading-none" style={{color:'rgba(255,255,255,0.9)'}}>{v}</span>
-                  <span className="text-[8px] mt-0.5 font-bold" style={{color:'rgba(255,255,255,0.3)'}}>{l}</span>
-                </div>
-              ))}
-              {isGK && [{v: saves||0, l:'PAR'},{v: conceded||0, l:'GC'},{v: `${Math.floor(minSecs/60)}'`, l:'MIN'}].map(({v,l},i) => (
+              ]).map(({v,l},i) => (
                 <div key={l} className="flex flex-col items-center py-1.5" style={{
                   borderRight: i<2 ? '1px solid rgba(255,255,255,0.07)' : 'none'
                 }}>
