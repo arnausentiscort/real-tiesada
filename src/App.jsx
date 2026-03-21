@@ -157,6 +157,9 @@ export default function App() {
           <span className="text-gray-600 text-xs font-bold tracking-widest uppercase">{DATABASE.teamName}</span>
         </div>
         <p className="text-gray-700 text-xs">Estadístiques internes · No oficial</p>
+        <p className="text-gray-700 text-[10px] mt-1">
+          Patrocinat per <span className="text-[#E5C07B]/50 font-bold">Cal Sendra</span>
+        </p>
       </footer>
 
       {/* ── BOTTOM NAV mòbil ── */}

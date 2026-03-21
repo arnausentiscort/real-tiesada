@@ -421,6 +421,9 @@ function generateMatchCode(match) {
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
     return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
   }).join('\n');
+  const savesCode = Object.keys(match.savesManual||{}).length > 0
+    ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
+
   const ytStr = ytId ? `"${ytId}"` : 'null';
   const id = `j${DATABASE.matches.length+1}-${(match.opponent||'rival').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20)}`;
   return `
@@ -434,7 +437,7 @@ function generateMatchCode(match) {
       youtubeId: ${ytStr},
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
-      events: {
+${savesCode}      events: {
         substitutions: [
 ${subsCode}
         ],
@@ -498,6 +501,7 @@ function matchToForm(m) {
   const moments = (m.events?.retransmissio || []).map(r => ({
     time: r.time, text: r.text,
   }));
+  const savesManual = m.savesManual ? {...m.savesManual} : {};
   return {
     _id: m.id,
     _isEdit: true,
@@ -506,7 +510,7 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
-    goals, subs, moments,
+    goals, subs, moments, savesManual,
   };
 }
 
@@ -522,6 +526,8 @@ function generateEditCode(match) {
     const txt = (m.text || '').replace(/\\/g, '\\\\').replace(/"/g, "'");
     return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
   }).join('\n');
+  const savesCode = Object.keys(match.savesManual||{}).length > 0
+    ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
   const ytStr = ytId ? `"${ytId}"` : 'null';
   return `{
       id: "${match._id}",
@@ -532,7 +538,7 @@ function generateEditCode(match) {
       youtubeId: ${ytStr},
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
-      events: {
+${savesCode}      events: {
         substitutions: [
 ${subsCode}
         ],
@@ -606,7 +612,64 @@ function MatchForm({ match, setMatch, onPreview }) {
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
       </div>
 
-      {/* Substitucions */}
+      {/* Aturades per porter (intern) */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
+          <span className="text-[10px] text-gray-600">(intern, no es mostra públicament)</span>
+        </div>
+        <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
+          {DATABASE.roster.filter(p=>p.position==='Porter').map(pl => (
+            <div key={pl.name} className="flex items-center gap-3">
+              <span className="text-xs text-gray-400 w-24 shrink-0">{pl.shirtName}</span>
+              <input type="number" min="0" max="30"
+                value={(match.savesManual||{})[pl.name] ?? ''}
+                onChange={e => {
+                  const v = parseInt(e.target.value);
+                  const s = {...(match.savesManual||{})};
+                  if (isNaN(v) || e.target.value === '') delete s[pl.name];
+                  else s[pl.name] = v;
+                  setMatch(m=>({...m, savesManual: s}));
+                }}
+                placeholder="0"
+                className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:border-emerald-500/40 outline-none"/>
+            </div>
+          ))}
+          {/* Permet afegir altres jugadors que han fet de porter */}
+          {DATABASE.roster.filter(p=>p.position!=='Porter').map(pl => {
+            const hasSave = (match.savesManual||{})[pl.name] !== undefined;
+            if (!hasSave) return null;
+            return (
+              <div key={pl.name} className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 w-24 shrink-0">{pl.shirtName}</span>
+                <input type="number" min="0" max="30"
+                  value={(match.savesManual||{})[pl.name] ?? ''}
+                  onChange={e => {
+                    const v = parseInt(e.target.value);
+                    const s = {...(match.savesManual||{})};
+                    if (isNaN(v) || e.target.value === '') delete s[pl.name];
+                    else s[pl.name] = v;
+                    setMatch(m=>({...m, savesManual: s}));
+                  }}
+                  placeholder="0"
+                  className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:border-emerald-500/40 outline-none"/>
+              </div>
+            );
+          }).filter(Boolean)}
+          {/* Selector per afegir porter esporàdic */}
+          <select onChange={e => {
+            if (!e.target.value) return;
+            setMatch(m=>({...m, savesManual:{...(m.savesManual||{}), [e.target.value]:0}}));
+            e.target.value='';
+          }} className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-gray-500 focus:border-emerald-500/40 outline-none mt-1">
+            <option value="">+ Afegir jugador de camp que ha fet de porter...</option>
+            {DATABASE.roster.filter(p=>p.position!=='Porter' && !((match.savesManual||{})[p.name]!==undefined))
+              .map(p=><option key={p.name} value={p.name}>{p.shirtName}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Gols */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-bold text-[#E5C07B]">🔄 Substitucions ({(match.subs||[]).length})</p>
@@ -667,7 +730,7 @@ export default function AdminPanel({ onClose }) {
   const emptyMatch = {
     jornada: `Jornada ${DATABASE.matches.length + 1}`,
     opponent: '', date: '', result: '', youtubeUrl: '',
-    goals: [], subs: [], moments: [],
+    goals: [], subs: [], moments: [], savesManual: {},
   };
   const [match, setMatch] = useState(emptyMatch);
 

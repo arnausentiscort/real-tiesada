@@ -121,17 +121,23 @@ export const calcGlobalStats = (database) => {
       }
     });
 
-    // Parades
-    (match.events?.retransmissio || []).forEach(ev => {
-      const txt = (ev.text || '').toLowerCase();
-      const isSave = txt.includes('atura') || txt.includes('parad') || txt.includes('para ') ||
-                     txt.includes('vola') || txt.includes('santo') || txt.includes('miracle');
-      if (!isSave) return;
-      (ev.players || []).forEach(p => {
-        const pl = database.roster.find(r => r.name === p);
-        if (pl && pl.position === 'Porter' && saves[p] !== undefined) saves[p]++;
+    // Parades — usa savesManual si existeix, sinó calcula de la retransmissió
+    if (match.savesManual) {
+      Object.entries(match.savesManual).forEach(([name, count]) => {
+        if (saves[name] !== undefined) saves[name] += count;
       });
-    });
+    } else {
+      (match.events?.retransmissio || []).forEach(ev => {
+        const txt = (ev.text || '').toLowerCase();
+        const isSave = txt.includes('atura') || txt.includes('parad') || txt.includes('para ') ||
+                       txt.includes('vola') || txt.includes('santo') || txt.includes('miracle');
+        if (!isSave) return;
+        (ev.players || []).forEach(p => {
+          const pl = database.roster.find(r => r.name === p);
+          if (pl && pl.position === 'Porter' && saves[p] !== undefined) saves[p]++;
+        });
+      });
+    }
 
     // Targetes
     (match.events.cards || []).forEach(card => {

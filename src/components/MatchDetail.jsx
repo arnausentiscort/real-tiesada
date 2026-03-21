@@ -157,7 +157,7 @@ function TimelineChart({ match, matchStats }) {
 
   const subs = match.events.substitutions || [];
 
-  // Stints de porter per jornada
+  // Stints de porter
   const goalkeeperStints = {};
   if (subs.length > 1) {
     let prevGK = subs[0].goalkeeper || null;
@@ -176,27 +176,234 @@ function TimelineChart({ match, matchStats }) {
       if (!goalkeeperStints[prevGK]) goalkeeperStints[prevGK] = [];
       goalkeeperStints[prevGK].push({ start: prevT, end: finalTime });
     }
-  } else {
-    // J4: Ivan porter tot el partit
-    const gkFromGoals = [...new Set((match.events.goals||[]).filter(g=>g.type==='contra').map(g=>g.goalkeeper).filter(Boolean))];
-    // Si no tenim info de goalkeeper a les subs, detectem de les goals
-    const fixedGK = match.id === 'j4-touchlas' ? 'Ivan Mico' : null;
-    if (fixedGK) goalkeeperStints[fixedGK] = [{start:0, end:finalTime}];
   }
 
-  // Tots els jugadors: camp + porter
+  // Pauses (onPitch buit)
+  const pauses = [];
+  for (let i = 0; i < subs.length - 1; i++) {
+    if ((subs[i].onPitch||[]).length === 0) {
+      pauses.push({ start: parseTime(subs[i].time), end: parseTime(subs[i+1].time) });
+    }
+  }
+
+  // Tots els jugadors: camp + porter — ordenats per minuts de CAMP (no porter)
+  const campSecs = (name) => stints.filter(s=>s.player===name).reduce((a,s)=>a+(s.end-s.start),0);
+  const gkSecs   = (name) => (goalkeeperStints[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+
   const allPlayers = [...new Set([
     ...playerStats.map(p => p.player),
     ...Object.keys(goalkeeperStints),
   ])];
+  // Ordenar per minuts de CAMP (porters purs al final)
+  allPlayers.sort((a,b) => campSecs(b) - campSecs(a));
 
-  // Ordena per temps total (camp + porter)
-  const totalSecs = (name) => {
-    const camp = (stints.filter(s=>s.player===name).reduce((a,s)=>a+(s.end-s.start),0));
-    const gk   = (goalkeeperStints[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
-    return camp + gk;
-  };
-  allPlayers.sort((a,b) => totalSecs(b) - totalSecs(a));
+  const idealSecs = match.idealMinutesPerPlayer * 60;
+  const pct = (s) => `${(s/finalTime*100).toFixed(2)}%`;
+  const w   = (s,e) => `${((e-s)/finalTime*100).toFixed(2)}%`;
+
+  // Ticks
+  const ticks = [];
+  for (let m=5; m<=Math.floor(finalTime/60); m+=5) ticks.push(m);
+
+  // Gols
+  const goals = (match.events?.goals||[]).sort((a,b)=>parseTime(a.time)-parseTime(b.time));
+
+  return (
+    <div className="space-y-5">
+      {/* Gantt */}
+      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5 overflow-x-auto">
+        <h3 className="text-sm font-bold text-[#E5C07B] mb-4 flex items-center gap-2">
+          <Clock className="w-4 h-4"/> Línia de Temps
+        </h3>
+        <div style={{minWidth:560}}>
+          {/* Ticks */}
+          <div className="flex mb-2">
+            <div style={{width:88}} className="shrink-0"/>
+            <div className="flex-1 relative h-4">
+              {ticks.map(m => (
+                <div key={m} className="absolute flex flex-col items-center -translate-x-1/2" style={{left:pct(m*60)}}>
+                  <div className="w-px h-2 bg-white/15"/>
+                  <span className="text-[9px] text-gray-600">{m}'</span>
+                </div>
+              ))}
+            </div>
+            <div style={{width:48}} className="shrink-0"/>
+          </div>
+
+          {/* Fila gols */}
+          <div className="flex items-center mb-2">
+            <div style={{width:88}} className="text-[9px] text-gray-600 text-right pr-2 shrink-0">Gols</div>
+            <div className="flex-1 relative" style={{height:20}}>
+              {pauses.map((p,i) => (
+                <div key={i} className="absolute inset-y-0 bg-white/4 border-x border-white/8"
+                  style={{left:pct(p.start), width:w(p.start,p.end)}}/>
+              ))}
+              <div className="absolute inset-y-0 border-l border-dashed border-[#E5C07B]/30" style={{left:pct(idealSecs)}}/>
+              {goals.map((g,i) => (
+                <div key={i} className="absolute inset-y-0 flex flex-col items-center group cursor-pointer"
+                  style={{left:pct(parseTime(g.time)), transform:'translateX(-50%)', zIndex:10}}>
+                  <div className="flex-1 w-px" style={{background:g.type==='favor'?'rgba(39,174,96,0.6)':'rgba(192,57,43,0.6)'}}/>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] border"
+                    style={{background:g.type==='favor'?'rgba(39,174,96,0.2)':'rgba(192,57,43,0.2)',
+                      borderColor:g.type==='favor'?'rgba(39,174,96,0.7)':'rgba(192,57,43,0.7)'}}>
+                    {g.type==='favor'?'⚽':'❌'}
+                  </div>
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#0a0a0a] border border-white/15 rounded-lg px-2 py-1
+                    text-[9px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-20">
+                    <span style={{color:g.type==='favor'?'#4ade80':'#f87171'}}>{g.time}</span>
+                    {g.scorer && <span className="text-gray-400 ml-1">{shirtName(g.scorer)}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{width:48}} className="shrink-0"/>
+          </div>
+
+          {/* Files jugadors */}
+          {allPlayers.map(name => {
+            const cSecs = campSecs(name);
+            const gSecs = gkSecs(name);
+            const campS = stints.filter(s=>s.player===name);
+            const gkS   = goalkeeperStints[name] || [];
+            // Porter stints tallats per pauses
+            const gkSplitted = [];
+            gkS.forEach(gs => {
+              let cur = gs.start;
+              [...pauses, {start:Infinity,end:Infinity}].sort((a,b)=>a.start-b.start).forEach(pause => {
+                if (pause.start > cur && pause.start < gs.end) {
+                  gkSplitted.push({start:cur, end:Math.min(pause.start, gs.end)});
+                  cur = pause.end;
+                }
+              });
+              if (cur < gs.end) gkSplitted.push({start:cur, end:gs.end});
+            });
+            const pl = DATABASE.roster.find(p=>p.name===name);
+            const dev = cSecs - idealSecs;
+
+            return (
+              <div key={name} className="flex items-center mb-1.5 group">
+                <div style={{width:88}} className="shrink-0 flex items-center justify-end gap-1.5 pr-2">
+                  {pl?.photo ? (
+                    <div className="w-5 h-5 rounded-full overflow-hidden border border-white/15 shrink-0">
+                      <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover object-top"/>
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
+                      <span className="text-[7px] font-black text-[#E5C07B]/50">{name[0]}</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-gray-500 group-hover:text-white transition-colors truncate font-semibold" style={{maxWidth:56}}>
+                    {pl?.shirtName || name.split(' ')[0].toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 relative" style={{height:22}}>
+                  {pauses.map((p,i) => (
+                    <div key={i} className="absolute inset-y-0 bg-white/4 border-x border-white/8"
+                      style={{left:pct(p.start), width:w(p.start,p.end)}}/>
+                  ))}
+                  <div className="absolute inset-y-0 border-l border-dashed border-[#E5C07B]/20" style={{left:pct(idealSecs)}}/>
+                  {campS.map((s,i) => (
+                    <div key={`c${i}`} className="absolute rounded border border-[#E5C07B]/10 hover:border-[#E5C07B]/40 transition-all"
+                      style={{left:pct(s.start), width:w(s.start,s.end), top:2, bottom:2,
+                        background:'linear-gradient(90deg,#7b1c12,#C0392B)'}}/>
+                  ))}
+                  {gkSplitted.map((s,i) => (
+                    <div key={`g${i}`} className="absolute rounded border border-emerald-500/20 hover:border-emerald-500/50 transition-all"
+                      style={{left:pct(s.start), width:w(s.start,s.end), top:2, bottom:2,
+                        background:'linear-gradient(90deg,#1a4a1a,#27AE60)'}}/>
+                  ))}
+                  {goals.map((g,i) => (
+                    <div key={i} className="absolute inset-y-0 w-px pointer-events-none"
+                      style={{left:pct(parseTime(g.time)), background:g.type==='favor'?'rgba(39,174,96,0.2)':'rgba(192,57,43,0.2)'}}/>
+                  ))}
+                </div>
+                <div style={{width:48}} className="shrink-0 text-right pl-1">
+                  <div className="text-[10px] font-mono font-bold text-white">{formatTime(cSecs)}</div>
+                  {gSecs > 0 && <div className="text-[9px] font-mono text-emerald-400">+{formatTime(gSecs)}</div>}
+                  <div className="text-[9px] font-mono" style={{color:dev>120?'#C0392B':dev<-120?'#4A5568':'#E5C07B'}}>
+                    {dev>=0?'+':''}{formatTime(Math.abs(dev))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Llegenda */}
+          <div className="flex gap-4 mt-3 pt-3 border-t border-white/5 text-[9px] text-gray-600">
+            <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block" style={{background:'linear-gradient(90deg,#1a4a1a,#27AE60)'}}/>Porter</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block" style={{background:'linear-gradient(90deg,#7b1c12,#C0392B)'}}/>Camp</span>
+            <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-[#E5C07B]/50"/>Ideal ({match.idealMinutesPerPlayer} min)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Barres minuts — ordenades per minuts de camp */}
+      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-[#E5C07B] flex items-center gap-2">
+            <Clock className="w-4 h-4"/> Minuts per Jugador
+          </h3>
+          <span className="text-xs bg-[#121212] px-2 py-1 rounded text-gray-500 border border-white/5">
+            Ideal: {match.idealMinutesPerPlayer} min
+          </span>
+        </div>
+        <div className="flex gap-3 mb-3 text-[10px] text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block bg-[#C0392B]"/>Camp</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block bg-emerald-500"/>Porter</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-[#E5C07B]/50"/>Ideal</span>
+        </div>
+        <div className="space-y-2.5">
+          {allPlayers.map(name => {
+            const cSecs  = campSecs(name);
+            const gSecs  = gkSecs(name);
+            const dev    = cSecs - idealSecs;
+            const pl     = DATABASE.roster.find(p=>p.name===name);
+            const campW  = (cSecs / finalTime) * 100;
+            const gkW    = (gSecs / finalTime) * 100;
+            const idealW = (idealSecs / finalTime) * 100;
+            return (
+              <div key={name} className="flex items-center gap-2 group">
+                {pl?.photo ? (
+                  <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                    <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover object-top"/>
+                  </div>
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
+                    <span className="text-[8px] font-black text-[#E5C07B]/50">{name[0]}</span>
+                  </div>
+                )}
+                <span className="w-20 text-xs text-right truncate text-gray-500 group-hover:text-white transition-colors shrink-0 font-semibold">
+                  {pl?.shirtName || name.split(' ')[0].toUpperCase()}
+                </span>
+                <div className="flex-1 flex flex-col gap-0.5 relative">
+                  {cSecs > 0 && (
+                    <div className="h-2.5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
+                      <div className="h-full bg-[#C0392B] rounded transition-all duration-700" style={{width:`${Math.max(campW,1)}%`}}/>
+                      <div className="absolute top-0 bottom-0 w-px bg-white/30" style={{left:`${idealW}%`}}/>
+                    </div>
+                  )}
+                  {gSecs > 0 && (
+                    <div className="h-2.5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
+                      <div className="h-full bg-emerald-500 rounded transition-all duration-700" style={{width:`${Math.max(gkW,1)}%`}}/>
+                      <div className="absolute top-0 bottom-0 w-px bg-white/20" style={{left:`${idealW}%`}}/>
+                    </div>
+                  )}
+                </div>
+                <div className="w-20 text-right shrink-0">
+                  <div className="text-xs font-mono font-bold text-white">{formatTime(cSecs)}</div>
+                  {gSecs > 0 && <div className="text-[9px] font-mono text-emerald-400">+{formatTime(gSecs)} 🧤</div>}
+                  <div className="text-[9px] font-mono" style={{color:dev>120?'#C0392B':dev<-120?'#4A5568':'#E5C07B'}}>
+                    {dev>=0?'+':''}{formatTime(Math.abs(dev))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const idealSecs = match.idealMinutesPerPlayer * 60;
   const pct = (s) => `${(s/finalTime*100).toFixed(2)}%`;

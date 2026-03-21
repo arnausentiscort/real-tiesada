@@ -82,10 +82,15 @@ async function generateExcel() {
   // FULL 2 — Gols per Jugador (resum global)
   // ════════════════════════════════════════════════════════════════
   const stats = calcGlobalStats(DATABASE);
-  const hdr2 = ['Jugador','Dorsal','Posició','Gols\nMarcats','Assists','Gols\nA favor\n(camp)','Gols\nEn contra\n(camp)','Gols\nEncaixats\n(porter)','Aturades'];
+  const hdr2 = ['Jugador','Dorsal','Posició','Gols\nMarcats','Assists','Gols\nA favor\n(camp)','Gols\nEn contra\n(camp)','Gols\nEncaixats\n(porter)','Aturades\nTotals'];
   const data2 = [hdr2];
   PLAYERS.forEach(name => {
     const pl  = DATABASE.roster.find(p=>p.name===name);
+    // Aturades: suma de savesManual de tots els partits
+    let totalSaves = 0;
+    DATABASE.matches.forEach(match => {
+      if (match.savesManual?.[name] !== undefined) totalSaves += match.savesManual[name];
+    });
     data2.push([
       name, `#${pl?.number||''}`, pl?.position||'',
       stats.topScorers.find(([n])=>n===name)?.[1]||0,
@@ -93,8 +98,27 @@ async function generateExcel() {
       stats.goalsFor.find(([n])=>n===name)?.[1]||0,
       stats.goalsAgainst.find(([n])=>n===name)?.[1]||0,
       stats.goalsConceded.find(([n])=>n===name)?.[1]||0,
-      stats.saves.find(([n])=>n===name)?.[1]||0,
+      totalSaves||'-',
     ]);
+  });
+
+  // Fila aturades per jornada
+  data2.push([]);
+  data2.push(['', '', '', '', '', '', '', '', '']);
+  const hdrSaves = ['Jugador','Dorsal', ...DATABASE.matches.map(m=>m.jornada), 'TOTAL'];
+  data2.push(hdrSaves);
+  PLAYERS.forEach(name => {
+    const pl = DATABASE.roster.find(p=>p.name===name);
+    let total = 0;
+    const row = [name, `#${pl?.number||''}`];
+    DATABASE.matches.forEach(match => {
+      const v = match.savesManual?.[name];
+      row.push(v !== undefined ? v : '-');
+      if (v !== undefined) total += v;
+    });
+    row.push(total || '-');
+    const hasAny = DATABASE.matches.some(m => m.savesManual?.[name] !== undefined);
+    if (hasAny) data2.push(row);
   });
   const ws2 = XLSX.utils.aoa_to_sheet(data2);
   ws2['!cols'] = [{wch:22},{wch:8},{wch:14},{wch:10},{wch:10},{wch:12},{wch:12},{wch:14},{wch:10}];

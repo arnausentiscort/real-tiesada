@@ -106,6 +106,7 @@ export const DATABASE = {
       youtubeId: "X9w3f1w47YA",
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
+      savesManual: { "Joan Medina": 3, "Pau Ibañez": 4 },
       events: {
         substitutions: [
           { time: "00:00", goalkeeper: "Joan Medina",  onPitch: ["Roi Seoane", "Pau Ibañez", "Ivan Mico", "Chengzhi Li"] },
@@ -192,6 +193,7 @@ export const DATABASE = {
       youtubeId: "tokKRGjQP1Q",
       vimeoId: null,
       idealMinutesPerPlayer: 17.5,
+      savesManual: { "Ivan Mico": 5, "Pau Ibañez": 0 },
       events: {
         substitutions: [
           { time: "3:00",  goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
