@@ -33,7 +33,7 @@ export const DATABASE = {
       youtubeId: null,
       idealMinutesPerPlayer: 14.5,
       goalkeeperMinutes: { "Marc Farreras": 15, "Joan Medina": 15, "Pau Ibañez": 10 },
-      fieldMinutes: { "Marc Farreras": 25, "Joan Medina": 25, "Pau Ibañez": 30, "Arnau Sentis": 10, "Roger Miro": 10, "Paco Montero": 10, "Andreu Cases": 10, "Oriol Tomas": 10, "Roi Seoane": 10, "Ivan Mico": 10, "Chengzhi Li": 10 },
+      fieldMinutes: { "Arnau Sentis": 14.5, "Roger Miro": 14.5, "Joan Medina": 14.5, "Pau Ibañez": 14.5, "Roi Seoane": 14.5, "Oriol Tomas": 14.5, "Paco Montero": 14.5, "Andreu Cases": 14.5, "Chengzhi Li": 14.5, "Ivan Mico": 14.5, "Marc Farreras": 14.5 },
       events: {
         substitutions: [],
         cards: [
@@ -68,23 +68,25 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 20.0,
       goalkeeperMinutes: { "Pau Ibañez": 15, "Joan Medina": 25 },
-      fieldMinutes: { "Pau Ibañez": 25, "Joan Medina": 15, "Arnau Sentis": 15, "Roger Miro": 15, "Paco Montero": 15, "Andreu Cases": 15, "Oriol Tomas": 15, "Roi Seoane": 15, "Ivan Mico": 15, "Marc Farreras": 15 },
+      fieldMinutes: { "Arnau Sentis": 16, "Roger Miro": 16, "Joan Medina": 16, "Pau Ibañez": 16, "Roi Seoane": 16, "Oriol Tomas": 16, "Paco Montero": 16, "Andreu Cases": 16, "Ivan Mico": 16, "Marc Farreras": 16 },
       events: {
         substitutions: [],
         goals: [
-          { time: "17:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null,
-            zone: "B6S",   shotPos: { x: 745, y: 187 }, assistPos: null,              goalPos: { x: 125, y: 193 } },
-          { time: "31:00", type: "favor",  scorer: "Andreu Cases", assist: null, goalkeeper: null,
-            zone: "B4E",   shotPos: { x: 519, y: 162 }, assistPos: null,              goalPos: { x: 225, y: 75  } },
-          { time: "03:00", type: "contra", goalkeeper: null },
-          { time: "05:00", type: "contra", goalkeeper: null },
-          { time: "14:00", type: "contra", goalkeeper: null },
-          { time: "18:00", type: "contra", goalkeeper: null },
-          { time: "22:00", type: "contra", goalkeeper: null },
-          { time: "25:00", type: "contra", goalkeeper: null },
-          { time: "26:00", type: "contra", goalkeeper: null },
-          { time: "29:00", type: "contra", goalkeeper: null },
-          { time: "30:00", type: "contra", goalkeeper: null }
+          { time: "17:00", type: "favor", scorer: "Andreu Cases", assist: null, goalkeeper: null,
+            zone: "B6S", shotPos: { x: 745, y: 187 }, assistPos: null, goalPos: { x: 125, y: 193 },
+            onPitch: ["Andreu Cases","Chengzhi Li","Paco Montero","Ivan Mico"] },
+          { time: "31:00", type: "favor", scorer: "Andreu Cases", assist: null, goalkeeper: null,
+            zone: "B4E", shotPos: { x: 519, y: 162 }, assistPos: null, goalPos: { x: 225, y: 75 },
+            onPitch: ["Andreu Cases","Roger Miro","Marc Farreras","Pau Ibañez"] },
+          { time: "03:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Luis D.",     onPitch: ["Chengzhi Li","Ivan Mico","Paco Montero","Roi Seoane"] },
+          { time: "05:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Carles B.",   onPitch: ["Chengzhi Li","Ivan Mico","Roi Seoane","Oriol Tomas"] },
+          { time: "14:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Albert C.",   onPitch: ["Arnau Sentis","Ivan Mico","Joan Medina","Roi Seoane"] },
+          { time: "16:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Pròpia porta del Miró", onPitch: ["Roger Miro","Arnau Sentis","Oriol Tomas","Joan Medina"] },
+          { time: "18:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Carles B.",   onPitch: ["Roger Miro","Arnau Sentis","Oriol Tomas","Andreu Cases"] },
+          { time: "22:00", type: "contra", goalkeeper: "Joan Medina", notes: "Carles B.",   onPitch: ["Roger Miro","Chengzhi Li","Andreu Cases","Pau Ibañez"] },
+          { time: "25:00", type: "contra", goalkeeper: "Joan Medina", notes: "Carles B.",   onPitch: ["Roger Miro","Arnau Sentis","Andreu Cases","Paco Montero"] },
+          { time: "26:00", type: "contra", goalkeeper: "Joan Medina", notes: "Fernando P.", onPitch: ["Roi Seoane","Ivan Mico","Andreu Cases","Pau Ibañez"] },
+          { time: "29:00", type: "contra", goalkeeper: "Joan Medina", notes: "Fernando P.", onPitch: ["Oriol Tomas","Paco Montero","Pau Ibañez","Joan Medina"] },
         ]
       }
     },
