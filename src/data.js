@@ -8,11 +8,28 @@ export const DATABASE = {
   // Proper partit (actualitza cada setmana)
   nextMatch: {
     opponent: "Dgeneración X",
-    date: "2026-03-28T19:00:00",  // ISO format per al countdown
-    dateLabel: "28 Mar 2026 · 19:00h",
-    location: "Pavelló Municipal",
+    date: "2026-03-23T23:15:00",
+    dateLabel: "23 Mar 2026 · 23:15h",
+    location: "St. Ignasi Sala 2",
     jornada: "Jornada 5",
+    isHome: true,
   },
+
+  // Calendari complet de la temporada
+  calendar: [
+    { date: "2026-03-23T23:15:00", dateLabel: "23 Mar · 23:15h", jornada: "Jornada 5",  opponent: "Dgeneración X", location: "St. Ignasi Sala 2", isHome: true  },
+    { date: "2026-03-30T22:30:00", dateLabel: "30 Mar · 22:30h", jornada: "Jornada 6",  opponent: "Fabbas FC",     location: "St. Ignasi Sala 2", isHome: false },
+    { date: "2026-04-13T21:45:00", dateLabel: "13 Abr · 21:45h", jornada: "Jornada 7",  opponent: "Great Spirit",  location: "St. Ignasi Sala 2", isHome: true  },
+    { date: "2026-04-27T21:45:00", dateLabel: "27 Abr · 21:45h", jornada: "Jornada 8",  opponent: "Vietkong",      location: "St. Ignasi Sala 2", isHome: false },
+    { date: "2026-05-04T22:30:00", dateLabel: "04 Mai · 22:30h", jornada: "Jornada 9",  opponent: "Vikings",       location: "St. Ignasi Sala 2", isHome: true  },
+    { date: "2026-05-11T21:00:00", dateLabel: "11 Mai · 21:00h", jornada: "Jornada 10", opponent: "Ensaimada",     location: "St. Ignasi Sala 1", isHome: false },
+    { date: "2026-05-18T22:30:00", dateLabel: "18 Mai · 22:30h", jornada: "Jornada 11", opponent: "Uruks",         location: "St. Ignasi Sala 2", isHome: true  },
+    { date: "2026-06-01T21:00:00", dateLabel: "01 Jun · 21:00h", jornada: "Jornada 12", opponent: "Touchlas FC",   location: "St. Ignasi Sala 1", isHome: false },
+    { date: "2026-06-08T21:45:00", dateLabel: "08 Jun · 21:45h", jornada: "Jornada 13", opponent: "Dgeneración X", location: "St. Ignasi Sala 1", isHome: true  },
+    { date: "2026-06-15T21:00:00", dateLabel: "15 Jun · 21:00h", jornada: "Jornada 14", opponent: "Fabbas FC",     location: "St. Ignasi Sala 1", isHome: false },
+    { date: "2026-06-22T23:15:00", dateLabel: "22 Jun · 23:15h", jornada: "Jornada 15", opponent: "Great Spirit",  location: "St. Ignasi Sala 1", isHome: true  },
+    { date: "2026-07-06T21:45:00", dateLabel: "06 Jul · 21:45h", jornada: "Jornada 16", opponent: "Vietkong",      location: "St. Ignasi Sala 1", isHome: false },
+  ],
 
   // Plantilla amb foto, dorsal i posició
   roster: [

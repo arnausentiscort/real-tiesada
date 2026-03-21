@@ -10,11 +10,11 @@ function AnimatedScore({ home, away, resultColor }) {
   const [displayHome, setDisplayHome] = useState(0);
   const [displayAway, setDisplayAway] = useState(0);
   const [done, setDone] = useState(false);
-  const started = useRef(false);
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
+    setDisplayHome(0);
+    setDisplayAway(0);
+    setDone(false);
     if (home === 0 && away === 0) { setDone(true); return; }
     let h = 0, a = 0;
     const interval = setInterval(() => {

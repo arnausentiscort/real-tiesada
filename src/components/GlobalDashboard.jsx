@@ -36,14 +36,19 @@ function useCountdown(targetDate) {
 }
 
 function CountdownHero({ onSelectMatch }) {
-  const next = DATABASE.nextMatch;
+  // Detecta el proper partit no jugat del calendari
+  const now = new Date();
+  const upcoming = (DATABASE.calendar || [])
+    .filter(c => new Date(c.date) > now)
+    .sort((a,b) => new Date(a.date) - new Date(b.date));
+  const next = upcoming[0] || DATABASE.nextMatch;
+
   const lastMatch = DATABASE.matches[DATABASE.matches.length - 1];
   const [lf, la] = lastMatch.result.split('-').map(s=>parseInt(s.trim()));
   const lastRS = getRS(lf, la);
   const t = useCountdown(next?.date);
   const [pulse, setPulse] = useState(false);
 
-  // Pols cada segon
   useEffect(() => {
     if (!t || t.past) return;
     setPulse(true);
@@ -63,7 +68,6 @@ function CountdownHero({ onSelectMatch }) {
         borderColor: isToday ? 'rgba(229,192,123,0.4)' : 'rgba(255,255,255,0.07)'
       }}>
 
-      {/* Brillo de fons si és avui */}
       {isToday && (
         <div className="absolute inset-0 pointer-events-none"
           style={{background:'radial-gradient(ellipse at 50% 0%, rgba(229,192,123,0.08) 0%, transparent 70%)'}}/>
@@ -79,13 +83,26 @@ function CountdownHero({ onSelectMatch }) {
               <span className="text-[10px] font-bold text-[#E5C07B]/60 uppercase tracking-widest">
                 {isToday ? '🔥 AVUI JUGUEM!' : isSoon ? '⚡ Proper Partit' : 'Proper Partit'}
               </span>
+              {/* Badge local/visitant */}
+              {next.isHome !== undefined && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                  style={{
+                    background: next.isHome ? 'rgba(39,174,96,0.1)' : 'rgba(192,57,43,0.1)',
+                    borderColor: next.isHome ? 'rgba(39,174,96,0.3)' : 'rgba(192,57,43,0.3)',
+                    color: next.isHome ? '#27AE60' : '#C0392B',
+                  }}>
+                  {next.isHome ? '🏠 Local' : '✈️ Visitant'}
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h2 className="text-2xl font-black text-white">
-                <span className="text-[#C0392B]">Tiesada</span>
-                <span className="mx-2 text-gray-600 font-light">vs</span>
-                <span>{next.opponent}</span>
+                {next.isHome ? (
+                  <><span className="text-[#C0392B]">Tiesada</span><span className="mx-2 text-gray-600 font-light">vs</span><span>{next.opponent}</span></>
+                ) : (
+                  <><span>{next.opponent}</span><span className="mx-2 text-gray-600 font-light">vs</span><span className="text-[#C0392B]">Tiesada</span></>
+                )}
               </h2>
               <span className="text-[10px] text-gray-600 bg-white/5 px-2 py-0.5 rounded-full border border-white/8">
                 {next.jornada}
@@ -118,12 +135,24 @@ function CountdownHero({ onSelectMatch }) {
                 ))}
               </div>
             )}
-            {t?.past && (
-              <div className="text-sm text-gray-500">El partit ja ha passat</div>
+            {t?.past && <div className="text-sm text-gray-500">El proper partit és aviat</div>}
+
+            {/* Llista dels pròxims partits */}
+            {upcoming.length > 1 && (
+              <div className="mt-4 pt-3 border-t border-white/5 space-y-1">
+                {upcoming.slice(1, 4).map((c,i) => (
+                  <div key={i} className="flex items-center gap-2 text-[10px] text-gray-600">
+                    <span className="text-gray-700">{c.dateLabel}</span>
+                    <span className="text-gray-800">·</span>
+                    <span>{c.isHome ? 'vs' : '@'} {c.opponent}</span>
+                    <span className="text-gray-800 ml-auto">{c.jornada.replace('Jornada ','J')}</span>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Separador vertical */}
+          {/* Separador */}
           <div className="hidden md:block w-px bg-white/6"/>
 
           {/* Últim resultat */}
