@@ -1,11 +1,17 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
 import { DATABASE } from '../data.js';
-import { calcGlobalStats } from '../utils.js';
+import { calcGlobalStats, formatTime } from '../utils.js';
 
 const BASE = import.meta.env.BASE_URL;
 const ACCENT = '#E5C07B';
 const GARNET = '#C0392B';
+
+// ── Nom de dorsal ─────────────────────────────────────────────────
+function sName(fullName) {
+  const p = DATABASE.roster.find(r => r.name === fullName);
+  return p?.shirtName || fullName.split(' ')[0].toUpperCase();
+}
 
 // ── InView hook ───────────────────────────────────────────────────
 function useInView(threshold = 0.1) {
@@ -44,7 +50,7 @@ function StatRow({ name, value, max, color, delay = 0 }) {
           <span className="text-[9px] font-black text-[#E5C07B]/40">{name[0]}</span>
         </div>
       )}
-      <span className="text-xs text-gray-500 w-16 truncate shrink-0">{name.split(' ')[0]}</span>
+      <span className="text-xs text-gray-500 w-16 truncate shrink-0">{sName(name)}</span>
       <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
         <div className="h-full rounded-lg"
           style={{ width: inView?`${Math.max(pct,value>0?4:0)}%`:'0%', background: color,
@@ -83,7 +89,7 @@ function PlayerCard({ rank, name, value, label, emoji }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] text-gray-600 uppercase tracking-wider">{label}</p>
-        <p className={`font-bold truncate text-sm ${isTop?'text-[#E5C07B]':'text-white'}`}>{name.split(' ')[0]}</p>
+        <p className={`font-bold truncate text-sm ${isTop?'text-[#E5C07B]':'text-white'}`}>{sName(name)}</p>
       </div>
       <div className="flex flex-col items-center shrink-0">
         <span className={`font-black font-mono ${isTop?'text-2xl text-[#E5C07B]':'text-lg text-white'}`}>{value}</span>
@@ -137,8 +143,8 @@ function PlayerModal({ player, stats, onClose }) {
             </div>
             <div>
               <p className="text-[10px] text-[#E5C07B]/50 uppercase tracking-wider">#{player.number} · {player.position}</p>
-              <h3 className="text-2xl font-black text-white">{player.name.split(' ')[0]}</h3>
-              <p className="text-gray-500 text-sm">{player.name.split(' ').slice(1).join(' ')}</p>
+              <h3 className="text-2xl font-black text-white">{sName(player.name)}</h3>
+              <p className="text-gray-500 text-sm">{player.name}</p>
             </div>
           </div>
           {/* Stats ràpides */}
@@ -266,7 +272,7 @@ function MatchSideCard({ match, onSelect, isActive }) {
   const [f,a] = match.result.split('-').map(s=>parseInt(s.trim()));
   const rs = getRS(f,a);
   const goalsF = (match.events?.goals||[]).filter(g=>g.type==='favor');
-  const topScorer = goalsF.length > 0 ? goalsF[0].scorer?.split(' ')[0] : null;
+  const topScorer = goalsF.length > 0 ? sName(goalsF[0].scorer) : null;
 
   return (
     <div onClick={() => onSelect(match)}
@@ -468,7 +474,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           <span className="text-[9px] font-bold text-[#E5C07B]/40">{p.name[0]}</span>
                         </div>
                       )}
-                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{p.name.split(' ')[0]}</span>
+                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(p.name)}</span>
                       <div className="flex-1 flex flex-col gap-0.5">
                         <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
                           <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{width:`${(gf/maxV)*100}%`}}/>
@@ -537,11 +543,77 @@ export default function GlobalDashboard({ onSelectMatch }) {
                         <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
                       </div>
                     )}
-                    <span className="flex-1 text-sm font-bold text-yellow-200">{name}</span>
+                    <span className="flex-1 text-sm font-bold text-yellow-200">{sName(name)}</span>
                     <span className="text-xl font-black text-yellow-400">{count} 🟨</span>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Minuts totals — camp + porter */}
+          {stats.totalMinutes.length > 0 && (
+            <div>
+              <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#E5C07B]"/> Minuts Totals per Jugador
+              </h3>
+              <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5">
+                <div className="flex gap-4 mb-3 text-[10px] text-gray-500">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded inline-block bg-[#C0392B]"/>Camp</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded inline-block bg-emerald-500"/>Porter</span>
+                </div>
+                <div className="space-y-3">
+                  {DATABASE.roster.map(pl => {
+                    const campSecs   = stats.minutesCamp.find(([n])=>n===pl.name)?.[1] || 0;
+                    const porterSecs = stats.minutesPorter.find(([n])=>n===pl.name)?.[1] || 0;
+                    const totalSecs  = campSecs + porterSecs;
+                    if (totalSecs === 0) return null;
+                    const maxTotal = Math.max(...DATABASE.roster.map(p => {
+                      const c = stats.minutesCamp.find(([n])=>n===p.name)?.[1] || 0;
+                      const g = stats.minutesPorter.find(([n])=>n===p.name)?.[1] || 0;
+                      return c + g;
+                    }), 1);
+                    const campPct   = (campSecs / maxTotal) * 100;
+                    const porterPct = (porterSecs / maxTotal) * 100;
+                    return (
+                      <div key={pl.name} className="flex items-center gap-2 group">
+                        {pl.photo ? (
+                          <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                            <img src={`${BASE}${pl.photo}`} alt={pl.name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
+                            <span className="text-[8px] font-black text-[#E5C07B]/40">{pl.name[0]}</span>
+                          </div>
+                        )}
+                        <span className="w-20 text-xs text-right text-gray-500 group-hover:text-white transition-colors shrink-0 font-semibold truncate">
+                          {pl.shirtName}
+                        </span>
+                        <div className="flex-1 flex flex-col gap-0.5">
+                          {campSecs > 0 && (
+                            <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-[#C0392B] transition-all duration-700" style={{width:`${campPct}%`}}/>
+                            </div>
+                          )}
+                          {porterSecs > 0 && (
+                            <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-emerald-500 transition-all duration-700" style={{width:`${porterPct}%`}}/>
+                            </div>
+                          )}
+                        </div>
+                        <div className="w-28 text-right shrink-0 text-[10px] font-mono">
+                          <span className="text-white font-bold">{formatTime(totalSecs)}</span>
+                          {campSecs > 0 && porterSecs > 0 && (
+                            <span className="text-gray-600 ml-1">
+                              (<span className="text-[#C0392B]">{formatTime(campSecs)}</span>+<span className="text-emerald-400">{formatTime(porterSecs)}</span>)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }).filter(Boolean)}
+                </div>
+              </div>
             </div>
           )}
         </div>

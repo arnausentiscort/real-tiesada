@@ -1,6 +1,42 @@
 export const parseTime = (timeStr) => {
+  if (!timeStr) return 0;
   const [m, s] = timeStr.split(':').map(Number);
-  return m * 60 + s;
+  return m * 60 + (s || 0);
+};
+
+// ── Calcula minuts de porter per un match ─────────────────────────
+export const calcGoalkeeperStints = (match) => {
+  // Cas 1: minuts manuals (J1, J2)
+  if (match.goalkeeperMinutes) {
+    const result = {};
+    Object.entries(match.goalkeeperMinutes).forEach(([name, mins]) => {
+      result[name] = [{ start: 0, end: mins * 60, manual: true }];
+    });
+    return result;
+  }
+  // Cas 2: des de les substitucions amb camp goalkeeper
+  const subs = match.events?.substitutions || [];
+  if (subs.length < 2 || !subs[0].goalkeeper) return {};
+  const stints = {};
+  let prevGK = subs[0].goalkeeper;
+  let prevT  = parseTime(subs[0].time);
+  const finalT = parseTime(subs[subs.length-1].time);
+  for (let i = 1; i < subs.length; i++) {
+    const sub = subs[i];
+    const ts  = parseTime(sub.time);
+    if (sub.goalkeeper !== prevGK) {
+      if (prevGK) {
+        if (!stints[prevGK]) stints[prevGK] = [];
+        stints[prevGK].push({ start: prevT, end: ts });
+      }
+      prevGK = sub.goalkeeper; prevT = ts;
+    }
+  }
+  if (prevGK) {
+    if (!stints[prevGK]) stints[prevGK] = [];
+    stints[prevGK].push({ start: prevT, end: finalT });
+  }
+  return stints;
 };
 
 export const formatTime = (seconds) => {
@@ -36,12 +72,12 @@ export const calcMatchStats = (match) => {
 };
 
 export const calcGlobalStats = (database) => {
-  const goals = {}, assists = {}, minutes = {};
+  const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
   const goalsFor = {}, goalsAgainst = {}, goalsConceded = {}, yellowCards = {}, saves = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
-    goals[p] = 0; assists[p] = 0; minutes[p] = 0;
+    goals[p] = 0; assists[p] = 0; minutesCamp[p] = 0; minutesPorter[p] = 0;
     goalsFor[p] = 0; goalsAgainst[p] = 0; goalsConceded[p] = 0; yellowCards[p] = 0; saves[p] = 0;
   });
 
@@ -66,34 +102,48 @@ export const calcGlobalStats = (database) => {
       }
     });
 
-    // Parades: comptem events de la retransmissió de tipus "bona" que contenen "aturada" o "parada" o "paradon"
-    // i també els events de la retransmissió on el porter és protagonista en accions defensives
+    // Parades
     (match.events?.retransmissio || []).forEach(ev => {
       const txt = (ev.text || '').toLowerCase();
       const isSave = txt.includes('atura') || txt.includes('parad') || txt.includes('para ') ||
                      txt.includes('vola') || txt.includes('santo') || txt.includes('miracle');
       if (!isSave) return;
       (ev.players || []).forEach(p => {
-        // Només comptem com a parada si el jugador és porter (posició Porter)
         const pl = database.roster.find(r => r.name === p);
         if (pl && pl.position === 'Porter' && saves[p] !== undefined) saves[p]++;
       });
     });
 
+    // Targetes
     (match.events.cards || []).forEach(card => {
       if (card.color === 'yellow' && yellowCards[card.player] !== undefined) yellowCards[card.player]++;
     });
 
+    // Minuts de CAMP
     const { totals } = calcMatchStats(match);
-    Object.entries(totals).forEach(([p, secs]) => { if (minutes[p] !== undefined) minutes[p] += secs; });
+    Object.entries(totals).forEach(([p, secs]) => { if (minutesCamp[p] !== undefined) minutesCamp[p] += secs; });
+
+    // Minuts de PORTER
+    const gkStints = calcGoalkeeperStints(match);
+    Object.entries(gkStints).forEach(([name, stintArr]) => {
+      if (minutesPorter[name] !== undefined) {
+        stintArr.forEach(s => { minutesPorter[name] += (s.end - s.start); });
+      }
+    });
   });
+
+  // Minuts totals = camp + porter
+  const minutesTotal = {};
+  names.forEach(p => { minutesTotal[p] = (minutesCamp[p] || 0) + (minutesPorter[p] || 0); });
 
   const sortDesc = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]);
 
   return {
     topScorers:    sortDesc(goals).filter(([,v]) => v > 0),
     topAssists:    sortDesc(assists).filter(([,v]) => v > 0),
-    totalMinutes:  sortDesc(minutes),
+    totalMinutes:  sortDesc(minutesTotal).filter(([,v]) => v > 0),
+    minutesCamp:   sortDesc(minutesCamp).filter(([,v]) => v > 0),
+    minutesPorter: sortDesc(minutesPorter).filter(([,v]) => v > 0),
     goalsFor:      sortDesc(goalsFor),
     goalsAgainst:  sortDesc(goalsAgainst),
     goalsConceded: sortDesc(goalsConceded).filter(([,v]) => v > 0),
