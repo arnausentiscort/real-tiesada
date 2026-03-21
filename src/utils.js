@@ -48,15 +48,11 @@ export const formatTime = (seconds) => {
 export const calcMatchStats = (match) => {
   const subs = match.events.substitutions;
 
-  // Si hi ha fieldMinutes manuals (J1, J2) usem aquells
-  // però restem els minuts de porter per als porters (no compten com a camp)
+  // Si hi ha fieldMinutes manuals (J1, J2) usem aquells directament — ja són minuts de CAMP
   if (match.fieldMinutes) {
-    const gkMins = match.goalkeeperMinutes || {};
     const totals = {};
     Object.entries(match.fieldMinutes).forEach(([p, mins]) => {
-      const porterMins = gkMins[p] || 0;
-      const campMins = Math.max(0, mins - porterMins);
-      if (campMins > 0) totals[p] = campMins * 60;
+      totals[p] = mins * 60;
     });
     const finalTime = 40 * 60;
     const stints = Object.entries(totals).map(([player, secs]) => ({ player, start: 0, end: secs }));
@@ -73,14 +69,18 @@ export const calcMatchStats = (match) => {
 
   subs.forEach(sub => {
     const timeSec = parseTime(sub.time);
+    // Exclou el porter de onPitch per no comptar-lo com a jugador de camp
+    const goalkeeper = sub.goalkeeper || null;
+    const fieldPlayers = (sub.onPitch || []).filter(p => p !== goalkeeper);
+
     Object.keys(active).forEach(p => {
-      if (!sub.onPitch.includes(p)) {
+      if (!fieldPlayers.includes(p)) {
         totals[p] = (totals[p] || 0) + (timeSec - active[p]);
         stints.push({ player: p, start: active[p], end: timeSec });
         delete active[p];
       }
     });
-    sub.onPitch.forEach(p => { if (active[p] === undefined) active[p] = timeSec; });
+    fieldPlayers.forEach(p => { if (active[p] === undefined) active[p] = timeSec; });
   });
 
   const playerStats = Object.entries(totals)
@@ -138,31 +138,10 @@ export const calcGlobalStats = (database) => {
       if (card.color === 'yellow' && yellowCards[card.player] !== undefined) yellowCards[card.player]++;
     });
 
-    // Minuts de CAMP — excloem els períodes on el jugador era porter
+    // Minuts de CAMP (ja nets gràcies al filtre del goalkeeper a calcMatchStats)
     const { totals, stints: matchStints } = calcMatchStats(match);
-    const gkStintsAll = calcGoalkeeperStints(match);
-
     Object.entries(totals).forEach(([p, secs]) => {
-      if (minutesCamp[p] === undefined) return;
-      const gkPeriodsThisPlayer = gkStintsAll[p] || [];
-      if (gkPeriodsThisPlayer.length === 0) {
-        // No era porter → tots els seus minuts són de camp
-        minutesCamp[p] += secs;
-      } else {
-        // Era porter en alguns moments → restar la intersecció
-        const campStintsPlayer = matchStints.filter(s => s.player === p);
-        let netCamp = 0;
-        campStintsPlayer.forEach(cs => {
-          let overlap = 0;
-          gkPeriodsThisPlayer.forEach(gk => {
-            const start = Math.max(cs.start, gk.start);
-            const end   = Math.min(cs.end,   gk.end);
-            if (end > start) overlap += (end - start);
-          });
-          netCamp += (cs.end - cs.start) - overlap;
-        });
-        if (netCamp > 0) minutesCamp[p] += netCamp;
-      }
+      if (minutesCamp[p] !== undefined) minutesCamp[p] += secs;
     });
 
     // Minuts de PORTER
