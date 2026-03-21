@@ -261,27 +261,26 @@ export const DATABASE = {
           { time: "35:50", type: "contra", goalkeeper: "Pau Ibañez", onPitch: ["Arnau Sentis","Roi Seoane","Chengzhi Li","Joan Medina"], notes: "Arnau te tobogants per sabates i regala la posesió, el videocamara tambe te que millorar." },
         ],
         retransmissio: [
-          { time:"3:28",  type:"bona",    text:"L'Arnau recupera en pressió i tira un passe llarg cap al Medina que no hi arriba. Bones intencions, peus poc fiables.", players:["Arnau Sentis","Joan Medina"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=204s" },
-          { time:"4:05",  type:"bona",    text:"El Marc filtra una passada entre línies que talla la defensa per la meitat. Breu moment on semblàvem un equip de veritat.", players:["Marc Farreras"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=241s" },
-          { time:"5:10",  type:"dolenta", text:"El Medina treu malament des de porteria i l'àrbitre xiula en contra. Ni l'escalfament ha servit.", players:["Joan Medina"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=306s" },
-          { time:"5:50",  type:"bona",    text:"Combinació molt bona per la banda, l'Arnau arriba amb tot i la falla per un pam. La distància entre intentar-ho i fer-ho.", players:["Arnau Sentis"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=346s" },
-          { time:"7:45",  type:"bona",    text:"Primera sortida sèria de l'Ivan, fora de la porteria i tot. Talla una acció perillosa abans que escalés. Avui té ganes.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=461s" },
-          { time:"9:52",  type:"clip",    text:"El Roi rep la pilota i s'atura. Com una pedra. No va endavant, no va enrere. La pilota l'espera. L'equip l'espera. El temps passa.", players:["Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=588s" },
-          { time:"10:22", type:"bona",    text:"Un rival se'n va de tots i l'Ivan surt del marc i li roba la pilota. Valentia o bogeria. En tot cas, ha funcionat.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=618s" },
-          { time:"10:35", type:"bona",    text:"El Roi fa una paret. El Roi. Fent una paret. Guardeu aquest moment per a les generacions futures.", players:["Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=631s" },
-          { time:"11:00", type:"bona",    text:"L'Ivan para saltant, envia la pilota a còrner amb una mà. L'únic porter de la història que fuma i vola alhora.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=657s" },
-          { time:"11:15", type:"dolenta", text:"El Pau treu els passos prohibits. Passos. Prohibits. L'àrbitre xiula, tothom sap per quê.", players:["Pau Ibañez"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=672s" },
-          { time:"12:25", type:"bona",    text:"Parada a quatre-cents de l'Ivan. Xut a boca de canó i ell hi és. Un dels millors moments del partit.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=741s" },
-          { time:"12:40", type:"bona",    text:"Combinació espectacular que acaba en xut del Pau. Potència, trajectòria, tot bé... i el porter rival ho para. Injust.", players:["Pau Ibañez"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=756s" },
-          { time:"13:28", type:"bona",    text:"Parada de l'Ivan i contraatac ràpid pel lateral. El Miró s'hi llança a tota velocitat i es menja la reixa com un bacallà. Sense fre.", players:["Ivan Mico","Roger Miro"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=804s" },
-          { time:"14:15", type:"tactica", text:"El Miró, en lloc de treure fort cap endavant, juga enrere i conserva. Un moment de maduresa tàctica. Breu, però existeix.", players:["Roger Miro"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=852s" },
-          { time:"15:07", type:"bona",    text:"El Miró quasi la lia però la recuperem. El Roi aprofita i fa un passe de base net. Dos errors seguits que acaben en positiu.", players:["Roger Miro","Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=903s" },
-          { time:"16:12", type:"bona",    text:"Paradón de l'Ivan. Estirada llarga, pilota enviada a còrner. Si el Medina fuma, l'Ivan vola. Combinació ideal.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=969s" },
-        ],
-      }
-    },
-  ]
-};
+                  { time:"3:28",  type:"bona",    text:"L'Arnau recupera i tira un passe llarg cap al Medina que no hi arriba. Bones intencions, peus poc fiables.", players:["Arnau Sentis","Joan Medina"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=204s" },
+                  { time:"4:05",  type:"bona",    text:"El Marc filtra una passada entre línies que talla la defensa per la meitat. Breu moment on semblàvem un equip de veritat.", players:["Marc Farreras"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=241s" },
+                  { time:"5:10",  type:"dolenta", text:"El Medina treu malament de banda i l'àrbitre xiula en contra. Ni en les mans ho fem be.", players:["Joan Medina"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=306s" },
+                  { time:"5:50",  type:"bona",    text:"Combinació molt bona per la banda, llastima que la pilota li cau a l'Arnau.", players:["Arnau Sentis"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=346s" },
+                  { time:"7:45",  type:"bona",    text:"Primera sortida sèria de l'Ivan, fora de la porteria i tot. Talla una acció perillosa abans que escalés. Avui té ganes.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=461s" },
+                  { time:"9:52",  type:"clip",    text:"El Pau saca de banda com qui tira una pedra al riu. ", players:["Pau Ibañez"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=588s" },
+                  { time:"10:22", type:"bona",    text:"Un rival se'n va de tots i l'Ivan surt i li roba la pilota. Valentia o bogeria. En tot cas, ha funcionat.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=618s" },
+                  { time:"10:35", type:"bona",    text:"El Roi fa una paret. El Roi. Fent una paret. Guardeu aquest moment per a les generacions futures.", players:["Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=631s" },
+                  { time:"11:00", type:"bona",    text:"L'Ivan para saltant, com es nota que jugava a volleyball.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=657s" },
+                  { time:"11:15", type:"dolenta", text:"El Pau treu els passos prohibits. L'àrbitre pita falta, per alguna cosa son prohibits.", players:["Pau Ibañez"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=672s" },
+                  { time:"12:25", type:"bona",    text:"Parada de 400. Quin senyor porter hem descobert.", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=741s" },
+                  { time:"12:40", type:"bona",    text:"De les millors jugades de Roi mai vistes Coro no sho creuria. ", players:["Pau Ibañez"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=756s" },
+                  { time:"13:28", type:"bona",    text:"Parada de l'Ivan i contraatac ràpid pel lateral. El Miró s'hi llança a tota velocitat i es menja la red com una sardina.", players:["Ivan Mico","Roger Miro"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=804s" },
+                  { time:"15:07", type:"bona",    text:"Encara estic suant per aquesta jugada. Roi continua esplendit.", players:["Roger Miro","Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=903s" },
+                  { time:"16:12", type:"bona",    text:"Paradón de l'Ivan. Qua faria si portes guants?", players:["Ivan Mico"], videoUrl:"https://www.youtube.com/watch?v=tokKRGjQP1Q&t=969s" },
+                ],
+              }
+            },
+          ]
+        };
 
 // Helper: retorna l'objecte jugador pel nom
 export const getPlayer = (name) =>

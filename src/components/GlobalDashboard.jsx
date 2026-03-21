@@ -99,9 +99,9 @@ function CountdownHero({ onSelectMatch }) {
             <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h2 className="text-2xl font-black text-white">
                 {next.isHome ? (
-                  <><span className="text-[#C0392B]">Tiesada</span><span className="mx-2 text-gray-600 font-light">vs</span><span>{next.opponent}</span></>
+                  <><span className="text-[#C0392B]">Real Tiesada</span><span className="mx-2 text-gray-600 font-light">vs</span><span>{next.opponent}</span></>
                 ) : (
-                  <><span>{next.opponent}</span><span className="mx-2 text-gray-600 font-light">vs</span><span className="text-[#C0392B]">Tiesada</span></>
+                  <><span>{next.opponent}</span><span className="mx-2 text-gray-600 font-light">vs</span><span className="text-[#C0392B]">Real Tiesada</span></>
                 )}
               </h2>
               <span className="text-[10px] text-gray-600 bg-white/5 px-2 py-0.5 rounded-full border border-white/8">
