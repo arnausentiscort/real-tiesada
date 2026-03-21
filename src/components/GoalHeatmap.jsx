@@ -183,34 +183,41 @@ function GoalCard({ goal, idx, onClose }) {
   );
 }
 
-// ── Helper: path corb per assistència llarga ─────────────────────
-// Fa un arc que passa per sobre/sota del camp en lloc d'una línia recta
-function curvedAssistPath(x1, y1, x2, y2) {
+// ── Helper: path corb ────────────────────────────────────────────
+function curvedPath(x1, y1, x2, y2, curveFactor = 0.28) {
   const mx = (x1 + x2) / 2;
   const my = (y1 + y2) / 2;
-  // Desplaça el punt de control perpendicular a la línia
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const len = Math.sqrt(dx*dx + dy*dy);
-  // Curvatura proporcional a la distància, perpendicular cap amunt
-  const curve = Math.min(len * 0.3, 80);
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx*dx + dy*dy) || 1;
+  const curve = Math.min(len * curveFactor, 80);
   const cx = mx - (dy / len) * curve;
   const cy = my + (dx / len) * curve;
   return `M ${x1},${y1} Q ${cx},${cy} ${x2},${y2}`;
 }
 
-// ── Camp SVG — nou dibuix ─────────────────────────────────────────
+// ── Camp SVG ──────────────────────────────────────────────────────
 function PitchSVG({ goals, activeGoal, setActiveGoal }) {
-  const LONG_ASSIST_THRESH = 200;
-
   return (
     <svg viewBox="0 0 800 420" style={{ width:'100%', display:'block' }}>
       <defs>
-        <marker id="arr-short" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-          <path d="M0,0 L0,7 L7,3.5 z" fill={ACCENT} opacity="0.75"/>
+        {/* Fletxes per cada tipus */}
+        <marker id="arr-assist" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L0,7 L7,3.5 z" fill="#61AFEF" opacity="0.85"/>
         </marker>
-        <marker id="arr-long" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-          <path d="M0,0 L0,7 L7,3.5 z" fill="#61AFEF" opacity="0.75"/>
+        <marker id="arr-conduct" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L0,7 L7,3.5 z" fill="#E5C07B" opacity="0.85"/>
+        </marker>
+        <marker id="arr-shot" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L0,7 L7,3.5 z" fill="white" opacity="0.9"/>
+        </marker>
+        <marker id="arr-assist-big" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L0,9 L9,4.5 z" fill="#61AFEF"/>
+        </marker>
+        <marker id="arr-conduct-big" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L0,9 L9,4.5 z" fill="#E5C07B"/>
+        </marker>
+        <marker id="arr-shot-big" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L0,9 L9,4.5 z" fill="white"/>
         </marker>
         <style>{`
           @keyframes goalPop {
@@ -218,8 +225,8 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
             70%  { transform: scale(1.15); }
             100% { opacity:1; transform: scale(1); }
           }
-          @keyframes assistDraw {
-            from { stroke-dashoffset: 400; }
+          @keyframes lineDraw {
+            from { stroke-dashoffset: 600; }
             to   { stroke-dashoffset: 0; }
           }
         `}</style>
@@ -230,24 +237,18 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
       {[0,1,2,3,4,5,6].map(i => (
         <rect key={i} x="0" y={i*60} width="800" height="60" fill={i%2===0?'rgba(0,0,0,0.07)':'transparent'}/>
       ))}
-
-      {/* Vora */}
+      {/* Línies */}
       <rect x="18" y="18" width="764" height="384" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5"/>
-      {/* Línia centre */}
       <line x1="400" y1="18" x2="400" y2="402" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
-      {/* Cercle central gran */}
       <circle cx="400" cy="210" r="185" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2"/>
       <circle cx="400" cy="210" r="4" fill="rgba(255,255,255,0.9)"/>
-
-      {/* ÀREA ESQUERRA */}
+      {/* Àrees */}
       <path d="M 18,80 A 70,70 0 0,1 88,150 L 88,270 A 70,70 0 0,1 18,340 Z" fill="rgba(255,255,255,0.04)"/>
       <path d="M 18,80 A 70,70 0 0,1 88,150" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <line x1="88" y1="150" x2="88" y2="270" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <path d="M 88,270 A 70,70 0 0,1 18,340" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <circle cx="58" cy="210" r="3" fill="rgba(255,255,255,0.7)"/>
       <rect x="3" y="185" width="15" height="50" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.95)" strokeWidth="2.5" rx="1"/>
-
-      {/* ÀREA DRETA */}
       <path d="M 782,80 A 70,70 0 0,0 712,150 L 712,270 A 70,70 0 0,0 782,340 Z" fill="rgba(255,255,255,0.04)"/>
       <path d="M 782,80 A 70,70 0 0,0 712,150" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
       <line x1="712" y1="150" x2="712" y2="270" stroke="rgba(255,255,255,0.85)" strokeWidth="2"/>
@@ -255,66 +256,90 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
       <circle cx="742" cy="210" r="3" fill="rgba(255,255,255,0.7)"/>
       <rect x="782" y="185" width="15" height="50" fill="rgba(0,0,0,0.6)" stroke="rgba(255,255,255,0.95)" strokeWidth="2.5" rx="1"/>
 
-      {/* Gols */}
+      {/* Gols — primer les línies, després els punts per sobre */}
       {goals.map((g, idx) => {
         if (!g._sx) return null;
-        const isActive       = activeGoal === idx;
-        const assist         = g.assistPos;
-        const dorsal         = getDorsal(g.scorer);
-        const assistDist     = assist ? Math.sqrt((assist.x - g._sx)**2 + (assist.y - g._sy)**2) : 0;
-        const isLongAssist   = assistDist > LONG_ASSIST_THRESH;
-        const assistColor    = isLongAssist ? '#61AFEF' : ACCENT;
-        const assistMarker   = isLongAssist ? 'url(#arr-long)' : 'url(#arr-short)';
-        const assistDash     = isLongAssist ? '8,4' : '5,3';
-        // Path de l'assistència: corba si llarga, recta si curta
-        const assistPath     = assist
-          ? (isLongAssist
-              ? curvedAssistPath(assist.x, assist.y, g._sx, g._sy)
-              : `M ${assist.x},${assist.y} L ${g._sx},${g._sy}`)
-          : null;
-        // Longitud aproximada del path per animació
-        const pathLen        = isLongAssist ? Math.round(assistDist * 1.3) : Math.round(assistDist);
+        const isActive = activeGoal === idx;
+        const op = isActive ? 1 : 0.45;
+        const sw = isActive ? 2.5 : 1.5;
+        const A = g.assistPos;
+        const C = g.conductPos;
+        const S = { x: g._sx, y: g._sy };
+
+        // Seqüència: A→C→S o A→S o C→S
+        const segments = [];
+        if (A && C) {
+          segments.push({ from: A, to: C, color: '#61AFEF', dash: '10,5', marker: isActive?'url(#arr-assist-big)':'url(#arr-assist)', type:'assist' });
+          segments.push({ from: C, to: S, color: '#E5C07B', dash: '6,3', marker: isActive?'url(#arr-conduct-big)':'url(#arr-conduct)', type:'conduct' });
+        } else if (A && !C) {
+          const dist = Math.sqrt((A.x-S.x)**2 + (A.y-S.y)**2);
+          const isLong = dist > 200;
+          segments.push({ from: A, to: S, color: isLong?'#61AFEF':'#61AFEF', dash: isLong?'10,5':'7,3',
+            marker: isActive?'url(#arr-assist-big)':'url(#arr-assist)', curved: isLong, type:'assist' });
+        } else if (!A && C) {
+          segments.push({ from: C, to: S, color: '#E5C07B', dash: '6,3', marker: isActive?'url(#arr-conduct-big)':'url(#arr-conduct)', type:'conduct' });
+        }
 
         return (
-          <g key={idx} onClick={() => setActiveGoal(isActive ? null : idx)} style={{ cursor:'pointer' }}>
-            {/* Assistència */}
-            {assist && assistPath && (
-              <>
-                <path d={assistPath}
-                  fill="none"
-                  stroke={assistColor}
-                  strokeWidth={isActive ? 2.5 : 1.5}
-                  strokeDasharray={isActive ? `${pathLen} 0` : `${assistDash}`}
-                  opacity={isActive ? 0.95 : 0.45}
-                  markerEnd={assistMarker}
+          <g key={idx} onClick={() => setActiveGoal(isActive?null:idx)} style={{cursor:'pointer'}}>
+            {/* Línies */}
+            {segments.map((seg, si) => {
+              const d = seg.curved
+                ? curvedPath(seg.from.x, seg.from.y, seg.to.x, seg.to.y)
+                : `M ${seg.from.x},${seg.from.y} L ${seg.to.x},${seg.to.y}`;
+              const len = Math.sqrt((seg.to.x-seg.from.x)**2+(seg.to.y-seg.from.y)**2);
+              return (
+                <path key={si} d={d}
+                  fill="none" stroke={seg.color}
+                  strokeWidth={isActive?sw+0.5:sw}
+                  strokeDasharray={isActive?`${len*2} 0`:seg.dash}
+                  opacity={op}
+                  markerEnd={seg.marker}
                   style={isActive ? {
-                    strokeDasharray: `${pathLen} ${pathLen}`,
+                    strokeDasharray:`${len*2} ${len*2}`,
                     strokeDashoffset: 0,
-                    animation: `assistDraw 0.5s ease-out both`,
+                    animation:`lineDraw 0.4s ease-out ${si*0.15}s both`
                   } : {}}
                 />
-                <circle cx={assist.x} cy={assist.y} r={isActive?5.5:3.5}
-                  fill={assistColor} opacity={isActive?0.85:0.35}/>
-              </>
+              );
+            })}
+
+            {/* Punt d'assist */}
+            {A && (
+              <circle cx={A.x} cy={A.y} r={isActive?6:4}
+                fill="#61AFEF" opacity={isActive?0.9:0.4}
+                style={{animation:`goalPop 0.3s ease-out ${idx*0.1}s both`}}/>
             )}
-            {/* Aura actiu */}
-            {isActive && <circle cx={g._sx} cy={g._sy} r="22" fill={ACCENT} opacity="0.15"/>}
-            {/* Cercle gol — apareix amb pop */}
-            <circle cx={g._sx} cy={g._sy} r={isActive?13:9}
-              fill={isActive ? ACCENT : 'rgba(255,255,255,0.88)'}
-              stroke={isActive ? 'white' : 'rgba(0,0,0,0.2)'}
-              strokeWidth={isActive ? 2 : 1}
-              style={{ transformOrigin: `${g._sx}px ${g._sy}px`,
-                animation: `goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1}s both` }}/>
+            {/* Punt de conducció */}
+            {C && (
+              <rect x={C.x-4} y={C.y-4} width={isActive?10:7} height={isActive?10:7}
+                rx="2" fill="#E5C07B" opacity={isActive?0.9:0.4}
+                transform={`rotate(45,${C.x},${C.y})`}
+                style={{animation:`goalPop 0.3s ease-out ${idx*0.1+0.05}s both`}}/>
+            )}
+            {/* Aura gol actiu */}
+            {isActive && <circle cx={S.x} cy={S.y} r="24" fill="white" opacity="0.08"/>}
+            {/* Cercle gol */}
+            <circle cx={S.x} cy={S.y} r={isActive?13:9}
+              fill={isActive?'white':'rgba(255,255,255,0.88)'}
+              stroke={isActive?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.2)'}
+              strokeWidth={isActive?2:1}
+              style={{transformOrigin:`${S.x}px ${S.y}px`,
+                animation:`goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx*0.1+0.1}s both`}}/>
             {/* Dorsal */}
-            <text x={g._sx} y={g._sy} textAnchor="middle" dominantBaseline="middle"
-              fontSize={dorsal !== null && dorsal >= 10 ? (isActive?7:5.5) : (isActive?8:6.5)}
-              fontWeight="bold"
-              fill={isActive?'#1a1a1a':'#1c3d1c'}
-              style={{ pointerEvents:'none',
-                animation: `goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx * 0.1}s both` }}>
-              {dorsal ?? '?'}
-            </text>
+            {(() => {
+              const d = getDorsal(g.scorer);
+              return (
+                <text x={S.x} y={S.y} textAnchor="middle" dominantBaseline="middle"
+                  fontSize={d!==null&&d>=10?(isActive?7:5.5):(isActive?8:6.5)}
+                  fontWeight="bold"
+                  fill={isActive?'#111':'#1c3d1c'}
+                  style={{pointerEvents:'none',
+                    animation:`goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) ${idx*0.1+0.1}s both`}}>
+                  {d??'?'}
+                </text>
+              );
+            })()}
           </g>
         );
       })}
@@ -476,16 +501,20 @@ export default function GoalHeatmap() {
       {/* Llegenda */}
       <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-1">
         <div className="flex items-center gap-2">
-          <svg width="22" height="8"><line x1="0" y1="4" x2="15" y2="4" stroke={ACCENT} strokeWidth="1.5" strokeDasharray="4,2" opacity="0.7"/><polygon points="13,1 20,4 13,7" fill={ACCENT} opacity="0.7"/></svg>
-          assist curta
+          <svg width="22" height="8"><circle cx="3" cy="4" r="3" fill="#61AFEF" opacity="0.8"/><line x1="6" y1="4" x2="17" y2="4" stroke="#61AFEF" strokeWidth="1.5" strokeDasharray="4,2" opacity="0.7"/><polygon points="15,1 22,4 15,7" fill="#61AFEF" opacity="0.7"/></svg>
+          Assist
         </div>
         <div className="flex items-center gap-2">
-          <svg width="22" height="8"><line x1="0" y1="4" x2="15" y2="4" stroke="#61AFEF" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/><polygon points="13,1 20,4 13,7" fill="#61AFEF" opacity="0.7"/></svg>
-          assist llarga / llançament
+          <svg width="22" height="8">
+            <rect x="1" y="1" width="6" height="6" rx="1" fill="#E5C07B" opacity="0.8" transform="rotate(45,4,4)"/>
+            <line x1="8" y1="4" x2="17" y2="4" stroke="#E5C07B" strokeWidth="1.5" strokeDasharray="3,2" opacity="0.7"/>
+            <polygon points="15,1 22,4 15,7" fill="#E5C07B" opacity="0.7"/>
+          </svg>
+          Conducció
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3.5 h-3.5 rounded-full bg-white/75 border border-black/20 flex items-center justify-center" style={{fontSize:'5px', color:'#1c3d1c', fontWeight:'bold'}}>9</div>
-          dorsal del marcador
+          Tir (dorsal)
         </div>
       </div>
     </div>
