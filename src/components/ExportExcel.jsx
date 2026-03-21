@@ -94,6 +94,75 @@ async function generateExcel() {
 
   XLSX.utils.book_append_sheet(wb, ws2, 'Gols per Jugador');
 
+  // ── FULLS 3+: Detall gols per jornada ─────────────────────────
+  matches.forEach(match => {
+    const goals = (match.events?.goals || []).slice().sort((a,b) => {
+      const [am,as_] = a.time.split(':').map(Number);
+      const [bm,bs_] = b.time.split(':').map(Number);
+      return (am*60+as_) - (bm*60+bs_);
+    });
+    if (goals.length === 0) return;
+
+    const header = ['Min','Tipus','Marcador/Porter','Assist','Notes','Al camp quan passa'];
+    const rows = [header];
+
+    let home = 0, away = 0;
+    goals.forEach(g => {
+      const isFavor = g.type === 'favor';
+      if (isFavor) home++; else away++;
+      const marcador = isFavor ? (g.scorer || '') : (g.goalkeeper || '');
+      const assist   = isFavor ? (g.assist || '-') : '-';
+      const notes    = g.notes || '';
+      const onPitch  = (g.onPitch || []).join(', ');
+      rows.push([
+        g.time,
+        isFavor ? `⚽ FAVOR (${home}-${away})` : `❌ CONTRA (${home}-${away})`,
+        marcador,
+        assist,
+        notes,
+        onPitch,
+      ]);
+    });
+
+    // Afegim resum per jugador al final
+    rows.push([]);
+    rows.push(['', 'RESUM — qui estava en cada gol']);
+    rows.push(['Jugador', 'Gols a favor (camp)', 'Gols en contra (camp)', 'Gols encaixats (porter)', 'Gols marcats', 'Assists']);
+
+    players.forEach(name => {
+      const gf = goals.filter(g => g.type==='favor'  && (g.onPitch||[]).includes(name)).length;
+      const ga = goals.filter(g => g.type==='contra' && (g.onPitch||[]).includes(name)).length;
+      const enc = goals.filter(g => g.type==='contra' && g.goalkeeper===name).length;
+      const gols = goals.filter(g => g.type==='favor' && g.scorer===name).length;
+      const ast  = goals.filter(g => g.type==='favor' && g.assist===name).length;
+      if (gf+ga+enc+gols+ast === 0) return;
+      rows.push([name, gf||'-', ga||'-', enc||'-', gols||'-', ast||'-']);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:8},{wch:22},{wch:20},{wch:18},{wch:25},{wch:55}];
+
+    // Colors capçalera
+    for (let C = 0; C <= 5; C++) {
+      const cell = ws[XLSX.utils.encode_cell({r:0, c:C})];
+      if (cell) cell.s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1a3a6a'}}, alignment:{horizontal:'center'} };
+    }
+    // Colors files favor/contra
+    for (let R = 1; R < goals.length + 1; R++) {
+      const typeCell = ws[XLSX.utils.encode_cell({r:R, c:1})];
+      if (!typeCell) continue;
+      const isFavor = typeCell.v?.includes('FAVOR');
+      const color = isFavor ? 'e8f5e9' : 'fce4e4';
+      for (let C = 0; C <= 5; C++) {
+        const cell = ws[XLSX.utils.encode_cell({r:R, c:C})];
+        if (cell) cell.s = { fill:{fgColor:{rgb:color}} };
+      }
+    }
+
+    const sheetName = `${match.jornada} vs ${match.opponent}`.slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
   // ── Descarrega ────────────────────────────────────────────────
   const date = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `real-tiesada-stats-${date}.xlsx`);
