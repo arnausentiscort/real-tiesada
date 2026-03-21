@@ -495,13 +495,77 @@ export default function GlobalDashboard({ onSelectMatch }) {
             </div>
           </div>
 
-          {/* Porter */}
-          {(stats.goalsConceded.length > 0 || stats.saves.length > 0) && (
+          {/* Minuts de camp */}
+          {stats.minutesCamp.length > 0 && (
+            <div>
+              <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#E5C07B]"/> Minuts de Camp per Jugador
+              </h3>
+              <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-[#C0392B]/10">
+                <div className="space-y-2.5">
+                  {stats.minutesCamp.map(([name, secs]) => {
+                    const maxSecs = stats.minutesCamp[0]?.[1] || 1;
+                    const pl = DATABASE.roster.find(p => p.name === name);
+                    return (
+                      <div key={name} className="flex items-center gap-2 group">
+                        {pl?.photo ? (
+                          <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                            <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
+                            <span className="text-[8px] font-black text-[#E5C07B]/40">{name[0]}</span>
+                          </div>
+                        )}
+                        <span className="w-20 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(name)}</span>
+                        <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
+                          <div className="h-full rounded-lg bg-[#C0392B] transition-all duration-700" style={{width:`${(secs/maxSecs)*100}%`}}/>
+                        </div>
+                        <span className="w-12 text-xs font-mono text-right shrink-0 text-white">{formatTime(secs)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Porter: minuts + gols encaixats + aturades */}
+          {(stats.minutesPorter.length > 0 || stats.goalsConceded.length > 0) && (
             <div>
               <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#E5C07B]"/> Estadístiques de Porter
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {stats.minutesPorter.length > 0 && (
+                  <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-emerald-500/10">
+                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🧤 Minuts de Porter</h4>
+                    <div className="space-y-2.5">
+                      {stats.minutesPorter.map(([name, secs]) => {
+                        const maxSecs = stats.minutesPorter[0]?.[1] || 1;
+                        const pl = DATABASE.roster.find(p => p.name === name);
+                        return (
+                          <div key={name} className="flex items-center gap-2 group">
+                            {pl?.photo ? (
+                              <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                                <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-emerald-500/15 border border-white/10 flex items-center justify-center shrink-0">
+                                <span className="text-[8px] font-black text-emerald-400/50">{name[0]}</span>
+                              </div>
+                            )}
+                            <span className="w-16 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(name)}</span>
+                            <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
+                              <div className="h-full rounded-lg bg-emerald-500 transition-all duration-700" style={{width:`${(secs/maxSecs)*100}%`}}/>
+                            </div>
+                            <span className="w-12 text-xs font-mono text-right shrink-0 text-emerald-400">{formatTime(secs)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {stats.goalsConceded.length > 0 && (
                   <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-[#C0392B]/10">
                     <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🥅 Gols Encaixats</h4>
@@ -516,7 +580,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 )}
                 {stats.saves.length > 0 && (
                   <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-blue-500/10">
-                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🧤 Aturades</h4>
+                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">⛔ Aturades</h4>
                     <div className="space-y-2">
                       {stats.saves.map(([name,count],i) => (
                         <StatRow key={name} name={name} value={count}
@@ -551,71 +615,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
             </div>
           )}
 
-          {/* Minuts totals — camp + porter */}
-          {stats.totalMinutes.length > 0 && (
-            <div>
-              <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#E5C07B]"/> Minuts Totals per Jugador
-              </h3>
-              <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5">
-                <div className="flex gap-4 mb-3 text-[10px] text-gray-500">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded inline-block bg-[#C0392B]"/>Camp</span>
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded inline-block bg-emerald-500"/>Porter</span>
-                </div>
-                <div className="space-y-3">
-                  {DATABASE.roster.map(pl => {
-                    const campSecs   = stats.minutesCamp.find(([n])=>n===pl.name)?.[1] || 0;
-                    const porterSecs = stats.minutesPorter.find(([n])=>n===pl.name)?.[1] || 0;
-                    const totalSecs  = campSecs + porterSecs;
-                    if (totalSecs === 0) return null;
-                    const maxTotal = Math.max(...DATABASE.roster.map(p => {
-                      const c = stats.minutesCamp.find(([n])=>n===p.name)?.[1] || 0;
-                      const g = stats.minutesPorter.find(([n])=>n===p.name)?.[1] || 0;
-                      return c + g;
-                    }), 1);
-                    const campPct   = (campSecs / maxTotal) * 100;
-                    const porterPct = (porterSecs / maxTotal) * 100;
-                    return (
-                      <div key={pl.name} className="flex items-center gap-2 group">
-                        {pl.photo ? (
-                          <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
-                            <img src={`${BASE}${pl.photo}`} alt={pl.name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
-                          </div>
-                        ) : (
-                          <div className="w-6 h-6 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
-                            <span className="text-[8px] font-black text-[#E5C07B]/40">{pl.name[0]}</span>
-                          </div>
-                        )}
-                        <span className="w-20 text-xs text-right text-gray-500 group-hover:text-white transition-colors shrink-0 font-semibold truncate">
-                          {pl.shirtName}
-                        </span>
-                        <div className="flex-1 flex flex-col gap-0.5">
-                          {campSecs > 0 && (
-                            <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-[#C0392B] transition-all duration-700" style={{width:`${campPct}%`}}/>
-                            </div>
-                          )}
-                          {porterSecs > 0 && (
-                            <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-emerald-500 transition-all duration-700" style={{width:`${porterPct}%`}}/>
-                            </div>
-                          )}
-                        </div>
-                        <div className="w-28 text-right shrink-0 text-[10px] font-mono">
-                          <span className="text-white font-bold">{formatTime(totalSecs)}</span>
-                          {campSecs > 0 && porterSecs > 0 && (
-                            <span className="text-gray-600 ml-1">
-                              (<span className="text-[#C0392B]">{formatTime(campSecs)}</span>+<span className="text-emerald-400">{formatTime(porterSecs)}</span>)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }).filter(Boolean)}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Columna dreta — Partits */}

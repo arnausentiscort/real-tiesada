@@ -47,6 +47,19 @@ export const formatTime = (seconds) => {
 
 export const calcMatchStats = (match) => {
   const subs = match.events.substitutions;
+
+  // Si hi ha fieldMinutes manuals (J1, J2) usem aquells
+  if (match.fieldMinutes) {
+    const totals = {};
+    Object.entries(match.fieldMinutes).forEach(([p, mins]) => { totals[p] = mins * 60; });
+    const finalTime = 40 * 60;
+    const stints = Object.entries(totals).map(([player, secs]) => ({ player, start: 0, end: secs }));
+    const playerStats = Object.entries(totals)
+      .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - (match.idealMinutesPerPlayer * 60) }))
+      .sort((a, b) => b.totalSec - a.totalSec);
+    return { stints, playerStats, finalTime, totals };
+  }
+
   if (!subs || subs.length < 2) return { stints: [], playerStats: [], finalTime: 0, totals: {} };
 
   let active = {}, stints = [], totals = {};
