@@ -144,7 +144,7 @@ export default function App() {
             {view === 'clasificacion' && <Clasificacion />}
             {view === 'heatmap'       && <GoalHeatmap />}
             {view === 'galeria'       && <Galeria />}
-            {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} />}
+            {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
           </>
         )}
         {season === 's1' && <Split1Dashboard />}

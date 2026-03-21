@@ -5,6 +5,15 @@
 export const DATABASE = {
   teamName: "Real Tiesada",
 
+  // Proper partit (actualitza cada setmana)
+  nextMatch: {
+    opponent: "Dgeneración X",
+    date: "2026-03-28T19:00:00",  // ISO format per al countdown
+    dateLabel: "28 Mar 2026 · 19:00h",
+    location: "Pavelló Municipal",
+    jornada: "Jornada 5",
+  },
+
   // Plantilla amb foto, dorsal i posició
   roster: [
     { name: "Arnau Sentis",  number: 8,  shirtName: "SENTIS",      position: "Migcampista", photo: "players/arnau.png",  photoCel: "players/arnau_cel.png" },

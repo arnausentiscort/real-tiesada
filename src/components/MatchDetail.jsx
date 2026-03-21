@@ -1,9 +1,43 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { ChevronLeft, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
 
 const BASE = import.meta.env.BASE_URL;
+
+// ── Marcador animat ───────────────────────────────────────────────
+function AnimatedScore({ home, away, resultColor }) {
+  const [displayHome, setDisplayHome] = useState(0);
+  const [displayAway, setDisplayAway] = useState(0);
+  const [done, setDone] = useState(false);
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    if (home === 0 && away === 0) { setDone(true); return; }
+    let h = 0, a = 0;
+    const interval = setInterval(() => {
+      if (h < home && (h <= a || a >= away)) h++;
+      else if (a < away) a++;
+      else { h = home; a = away; }
+      setDisplayHome(h);
+      setDisplayAway(a);
+      if (h >= home && a >= away) { clearInterval(interval); setDone(true); }
+    }, 350);
+    return () => clearInterval(interval);
+  }, [home, away]);
+
+  return (
+    <div className={`relative text-4xl md:text-5xl font-black font-mono bg-[#121212] px-5 py-3 rounded-xl border border-white/5 ${resultColor}`}
+      style={{minWidth:140, textAlign:'center'}}>
+      {displayHome}
+      <span className="mx-2 opacity-40">-</span>
+      {displayAway}
+      {!done && <div className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-[#E5C07B] animate-pulse"/>}
+    </div>
+  );
+}
 
 // ── Nom de dorsal ─────────────────────────────────────────────────
 function shirtName(fullName) {
@@ -406,8 +440,16 @@ function TimelineChart({ match, matchStats }) {
 }
 
 // ── Component principal ───────────────────────────────────────────
-export default function MatchDetail({ match, onBack }) {
+export default function MatchDetail({ match, onBack, onNavigate }) {
   const [videoStart, setVideoStart] = useState(0);
+  const [swipeDir, setSwipeDir] = useState(null); // 'left' | 'right'
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const allMatches = DATABASE.matches;
+  const currentIdx = allMatches.findIndex(m => m.id === match.id);
+  const prevMatch = currentIdx > 0 ? allMatches[currentIdx - 1] : null;
+  const nextMatch = currentIdx < allMatches.length - 1 ? allMatches[currentIdx + 1] : null;
 
   const hasSubstitutions = (match.events.substitutions||[]).length > 1;
   const matchStats = useMemo(() => {
@@ -420,6 +462,22 @@ export default function MatchDetail({ match, onBack }) {
   const hasVideo = !!(match.youtubeId || match.vimeoId);
   const cronica  = useMemo(() => buildCronica(match), [match]);
 
+  // Swipe handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const handleTouchEnd = (e) => {
+    if (!touchStartX.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    if (Math.abs(dx) > 60 && dy < 80) {
+      if (dx < 0 && nextMatch && onNavigate) { setSwipeDir('left');  setTimeout(() => { onNavigate(nextMatch); setSwipeDir(null); }, 200); }
+      if (dx > 0 && prevMatch && onNavigate) { setSwipeDir('right'); setTimeout(() => { onNavigate(prevMatch); setSwipeDir(null); }, 200); }
+    }
+    touchStartX.current = null;
+  };
+
   const jumpToGoal = (timeStr) => {
     if (!hasVideo) return;
     const secs = Math.max(0, parseTime(timeStr) - 3);
@@ -428,14 +486,56 @@ export default function MatchDetail({ match, onBack }) {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in"
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+      style={{
+        transform: swipeDir === 'left' ? 'translateX(-30px)' : swipeDir === 'right' ? 'translateX(30px)' : 'translateX(0)',
+        opacity: swipeDir ? 0 : 1,
+        transition: 'transform 0.2s ease, opacity 0.2s ease'
+      }}>
 
-      <button onClick={onBack}
-        className="flex items-center gap-2 text-gray-400 hover:text-[#E5C07B] transition-colors text-sm font-medium">
-        <ChevronLeft className="w-4 h-4"/> Tornar
-      </button>
+      {/* Navegació entre jornades */}
+      <div className="flex items-center justify-between gap-3">
+        <button onClick={onBack}
+          className="flex items-center gap-2 text-gray-400 hover:text-[#E5C07B] transition-colors text-sm font-medium">
+          <ChevronLeft className="w-4 h-4"/> Tornar
+        </button>
 
-      {/* Capçalera */}
+        {/* Swipe entre jornades */}
+        <div className="flex items-center gap-1">
+          <button
+            disabled={!prevMatch}
+            onClick={() => onNavigate && onNavigate(prevMatch)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-20 disabled:cursor-default"
+            style={{background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)'}}>
+            <ChevronLeft className="w-3.5 h-3.5"/>
+            {prevMatch ? prevMatch.jornada.replace('Jornada ','J') : '—'}
+          </button>
+
+          <div className="flex gap-1">
+            {allMatches.map((m, i) => (
+              <button key={m.id}
+                onClick={() => onNavigate && onNavigate(m)}
+                className="w-2 h-2 rounded-full transition-all"
+                style={{
+                  background: m.id === match.id ? '#E5C07B' : 'rgba(255,255,255,0.15)',
+                  transform: m.id === match.id ? 'scale(1.3)' : 'scale(1)',
+                }}/>
+            ))}
+          </div>
+
+          <button
+            disabled={!nextMatch}
+            onClick={() => onNavigate && onNavigate(nextMatch)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-20 disabled:cursor-default"
+            style={{background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)'}}>
+            {nextMatch ? nextMatch.jornada.replace('Jornada ','J') : '—'}
+            <ChevronRight className="w-3.5 h-3.5"/>
+          </button>
+        </div>
+      </div>
+
+      {/* Capçalera amb marcador animat */}
       <div className="bg-[#1E1E1E] rounded-xl p-5 md:p-7 border border-[#E5C07B]/20 shadow-2xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -446,9 +546,8 @@ export default function MatchDetail({ match, onBack }) {
               <span>{match.opponent}</span>
             </h2>
           </div>
-          <div className={`text-4xl md:text-5xl font-black font-mono bg-[#121212] px-5 py-3 rounded-xl border border-white/5 ${resultColor}`}>
-            {match.result}
-          </div>
+          {/* Marcador animat */}
+          <AnimatedScore home={home} away={away} resultColor={resultColor}/>
         </div>
       </div>
 

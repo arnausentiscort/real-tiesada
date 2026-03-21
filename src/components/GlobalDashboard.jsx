@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
+import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, Clock, Calendar } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
 import ExportExcelButton from './ExportExcel.jsx';
@@ -12,6 +12,167 @@ const GARNET = '#C0392B';
 function sName(fullName) {
   const p = DATABASE.roster.find(r => r.name === fullName);
   return p?.shirtName || fullName.split(' ')[0].toUpperCase();
+}
+
+// ── Countdown al proper partit ────────────────────────────────────
+function useCountdown(targetDate) {
+  const [timeLeft, setTimeLeft] = useState(null);
+  useEffect(() => {
+    if (!targetDate) return;
+    const calc = () => {
+      const diff = new Date(targetDate) - new Date();
+      if (diff <= 0) return setTimeLeft({ past: true });
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft({ d, h, m, s, past: false });
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return timeLeft;
+}
+
+function CountdownHero({ onSelectMatch }) {
+  const next = DATABASE.nextMatch;
+  const lastMatch = DATABASE.matches[DATABASE.matches.length - 1];
+  const [lf, la] = lastMatch.result.split('-').map(s=>parseInt(s.trim()));
+  const lastRS = getRS(lf, la);
+  const t = useCountdown(next?.date);
+  const [pulse, setPulse] = useState(false);
+
+  // Pols cada segon
+  useEffect(() => {
+    if (!t || t.past) return;
+    setPulse(true);
+    const id = setTimeout(() => setPulse(false), 200);
+    return () => clearTimeout(id);
+  }, [t?.s]);
+
+  if (!next) return null;
+
+  const isToday = t && !t.past && t.d === 0;
+  const isSoon  = t && !t.past && t.d <= 2;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border"
+      style={{
+        background: isToday ? 'linear-gradient(135deg, #1a0a00, #1a1a00)' : 'linear-gradient(135deg, #0f0f14, #1a1a1a)',
+        borderColor: isToday ? 'rgba(229,192,123,0.4)' : 'rgba(255,255,255,0.07)'
+      }}>
+
+      {/* Brillo de fons si és avui */}
+      {isToday && (
+        <div className="absolute inset-0 pointer-events-none"
+          style={{background:'radial-gradient(ellipse at 50% 0%, rgba(229,192,123,0.08) 0%, transparent 70%)'}}/>
+      )}
+
+      <div className="p-5 md:p-6">
+        <div className="flex flex-col md:flex-row gap-5 md:gap-8">
+
+          {/* Proper partit — Countdown */}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-3.5 h-3.5 text-[#E5C07B]/60"/>
+              <span className="text-[10px] font-bold text-[#E5C07B]/60 uppercase tracking-widest">
+                {isToday ? '🔥 AVUI JUGUEM!' : isSoon ? '⚡ Proper Partit' : 'Proper Partit'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <h2 className="text-2xl font-black text-white">
+                <span className="text-[#C0392B]">Tiesada</span>
+                <span className="mx-2 text-gray-600 font-light">vs</span>
+                <span>{next.opponent}</span>
+              </h2>
+              <span className="text-[10px] text-gray-600 bg-white/5 px-2 py-0.5 rounded-full border border-white/8">
+                {next.jornada}
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-4">{next.dateLabel}{next.location ? ` · ${next.location}` : ''}</p>
+
+            {/* Countdown boxes */}
+            {t && !t.past && (
+              <div className="flex gap-2">
+                {[
+                  { v: t.d, l: 'dies' },
+                  { v: t.h, l: 'hores' },
+                  { v: t.m, l: 'min' },
+                  { v: t.s, l: 'seg' },
+                ].map(({ v, l }, i) => (
+                  <div key={l} className="flex flex-col items-center">
+                    <div className="relative w-14 h-14 rounded-xl flex items-center justify-center font-black font-mono text-2xl"
+                      style={{
+                        background: i === 3 && pulse ? 'rgba(229,192,123,0.15)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${i === 3 && pulse ? 'rgba(229,192,123,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                        color: i === 0 && t.d === 0 ? '#E5C07B' : 'rgba(255,255,255,0.9)',
+                        transition: 'background 0.1s, border-color 0.1s',
+                      }}>
+                      {String(v).padStart(2,'0')}
+                    </div>
+                    <span className="text-[9px] text-gray-600 mt-1 uppercase tracking-wider">{l}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {t?.past && (
+              <div className="text-sm text-gray-500">El partit ja ha passat</div>
+            )}
+          </div>
+
+          {/* Separador vertical */}
+          <div className="hidden md:block w-px bg-white/6"/>
+
+          {/* Últim resultat */}
+          <div className="flex-shrink-0 md:w-52">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Últim Resultat</span>
+            </div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`text-3xl font-black font-mono px-3 py-1.5 rounded-xl ${lastRS.color}`}
+                style={{background:'rgba(0,0,0,0.3)'}}>
+                {lastMatch.result}
+              </div>
+              <div>
+                <div className="text-sm font-bold text-white">{lastMatch.opponent}</div>
+                <div className="text-[10px] text-gray-600">{lastMatch.jornada} · {lastMatch.date}</div>
+              </div>
+            </div>
+            <button onClick={() => onSelectMatch(lastMatch)}
+              className="text-[11px] text-[#E5C07B]/60 hover:text-[#E5C07B] transition-colors flex items-center gap-1 mt-2">
+              Veure crònica <ChevronRight className="w-3 h-3"/>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Número animat (compta de 0 al valor) ─────────────────────────
+function AnimatedNumber({ value, suffix = '', duration = 800 }) {
+  const [displayed, setDisplayed] = useState(0);
+  const [ref, inView] = useInView();
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (!inView || started.current) return;
+    started.current = true;
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayed(Math.round(eased * value));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [inView, value, duration]);
+
+  return <span ref={ref}>{displayed}{suffix}</span>;
 }
 
 // ── InView hook ───────────────────────────────────────────────────
@@ -338,48 +499,25 @@ export default function GlobalDashboard({ onSelectMatch }) {
   return (
     <div className="space-y-5 animate-fade-in">
 
-      {/* ── HERO — últim partit + xifres ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Últim partit */}
-        <div className={`md:col-span-2 bg-[#1a1a1a] rounded-2xl border p-5 ${lastRS.border}`}
-          style={{borderColor: lf>la ? 'rgba(39,174,96,0.3)' : 'rgba(192,57,43,0.3)'}}>
-          <p className="text-[10px] text-[#E5C07B]/50 uppercase tracking-widest mb-2">Últim Partit</p>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h2 className="text-xl font-black text-white">
-                <span className="text-[#C0392B]">Tiesada</span>
-                <span className="mx-2 text-gray-600 font-light text-lg">vs</span>
-                {lastMatch.opponent}
-              </h2>
-              <p className="text-gray-500 text-xs mt-0.5">{lastMatch.jornada} · {lastMatch.date}</p>
-            </div>
-            <div className={`text-4xl font-black font-mono bg-black/30 px-4 py-2 rounded-xl ${lastRS.color}`}>
-              {lastMatch.result}
-            </div>
-          </div>
-          <button onClick={() => handleMatchSelect(lastMatch)}
-            className="mt-3 text-xs text-[#E5C07B]/60 hover:text-[#E5C07B] transition-colors flex items-center gap-1">
-            Veure crònica <ChevronRight className="w-3 h-3"/>
-          </button>
-        </div>
+      {/* ── HERO — Countdown + últim resultat ── */}
+      <CountdownHero onSelectMatch={handleMatchSelect}/>
 
-        {/* Xifres temporada */}
-        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-5">
-          <p className="text-[10px] text-[#E5C07B]/50 uppercase tracking-widest mb-3">Temporada</p>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              {v: `${wins}V-${losses}D`, l:'Balanç', c:'text-white'},
-              {v: DATABASE.matches.length, l:'Partits', c:'text-[#E5C07B]'},
-              {v: totalGF, l:'Gols favor', c:'text-emerald-400'},
-              {v: totalGA, l:'En contra', c:'text-[#C0392B]'},
-            ].map(({v,l,c}) => (
-              <div key={l}>
-                <p className={`text-xl font-black font-mono ${c}`}>{v}</p>
-                <p className="text-[10px] text-gray-600 uppercase tracking-wider">{l}</p>
-              </div>
-            ))}
+      {/* ── Xifres temporada animades ── */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          {v: wins,   l:'Victòries', c:'text-emerald-400', delay:0},
+          {v: losses, l:'Derrotes',  c:'text-[#C0392B]',   delay:100},
+          {v: totalGF, l:'Gols favor', c:'text-[#E5C07B]', delay:200},
+          {v: totalGA, l:'En contra',  c:'text-gray-400',  delay:300},
+        ].map(({v,l,c,delay}) => (
+          <div key={l} className="bg-[#1a1a1a] rounded-xl border border-white/5 p-3 text-center"
+            style={{animation:`fadeSlideUp 0.5s ease ${delay}ms both`}}>
+            <p className={`text-2xl font-black font-mono ${c}`}>
+              <AnimatedNumber value={v} duration={600 + delay}/>
+            </p>
+            <p className="text-[10px] text-gray-600 uppercase tracking-wider mt-0.5">{l}</p>
           </div>
-        </div>
+        ))}
       </div>
 
       {/* ── TIMELINE TEMPORADA ── */}
