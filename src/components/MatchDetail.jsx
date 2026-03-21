@@ -345,18 +345,21 @@ function TimelineChart({ match, matchStats }) {
             Ideal: {match.idealMinutesPerPlayer} min
           </span>
         </div>
-        <div className="flex gap-3 mb-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#E5C07B] inline-block"/>Ideal</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#C0392B] inline-block"/>Excés</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#4A5568] inline-block"/>Poc temps</span>
+        <div className="flex gap-3 mb-3 text-[10px] text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block bg-[#C0392B]"/>Camp</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block bg-emerald-500"/>Porter</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-[#E5C07B]/50"/>Ideal</span>
         </div>
         <div className="space-y-2.5">
           {allPlayers.map(name => {
-            const total = totalSecs(name);
-            const dev   = total - idealSecs;
-            const pl    = DATABASE.roster.find(p=>p.name===name);
-            const width = (total / finalTime) * 100;
-            const idealW = (idealSecs / finalTime) * 100;
+            const campSecs   = stints.filter(s=>s.player===name).reduce((a,s)=>a+(s.end-s.start),0);
+            const porterSecs = (goalkeeperStints[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+            const total      = campSecs + porterSecs;
+            const dev        = total - idealSecs;
+            const pl         = DATABASE.roster.find(p=>p.name===name);
+            const campW      = (campSecs   / finalTime) * 100;
+            const porterW    = (porterSecs / finalTime) * 100;
+            const idealW     = (idealSecs  / finalTime) * 100;
             return (
               <div key={name} className="flex items-center gap-2 group">
                 {pl?.photo ? (
@@ -371,14 +374,34 @@ function TimelineChart({ match, matchStats }) {
                 <span className="w-20 text-xs text-right truncate text-gray-500 group-hover:text-white transition-colors shrink-0 font-semibold">
                   {pl?.shirtName || name.split(' ')[0].toUpperCase()}
                 </span>
-                <div className="flex-1 h-5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
-                  <div className={`h-full ${barColor(dev)} transition-all duration-700 rounded`}
-                    style={{width:`${Math.max(width,1)}%`}}/>
-                  <div className="absolute top-0 bottom-0 w-px bg-white/30" style={{left:`${idealW}%`}}/>
+                <div className="flex-1 flex flex-col gap-0.5 relative">
+                  {/* Barra camp */}
+                  {campSecs > 0 && (
+                    <div className="h-2.5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
+                      <div className="h-full bg-[#C0392B] rounded transition-all duration-700"
+                        style={{width:`${Math.max(campW,1)}%`}}/>
+                      <div className="absolute top-0 bottom-0 w-px bg-white/30" style={{left:`${idealW}%`}}/>
+                    </div>
+                  )}
+                  {/* Barra porter */}
+                  {porterSecs > 0 && (
+                    <div className="h-2.5 bg-[#121212] rounded overflow-hidden border border-white/5 relative">
+                      <div className="h-full bg-emerald-500 rounded transition-all duration-700"
+                        style={{width:`${Math.max(porterW,1)}%`}}/>
+                      <div className="absolute top-0 bottom-0 w-px bg-white/30" style={{left:`${idealW}%`}}/>
+                    </div>
+                  )}
                 </div>
-                <div className="w-16 text-right shrink-0">
-                  <div className="text-xs font-mono text-white">{formatTime(total)}</div>
-                  <div className="text-[10px] font-mono" style={{color:dev>120?'#C0392B':dev<-120?'#4A5568':'#E5C07B'}}>
+                <div className="w-20 text-right shrink-0">
+                  <div className="text-xs font-mono font-bold text-white">{formatTime(total)}</div>
+                  {campSecs > 0 && porterSecs > 0 && (
+                    <div className="text-[9px] font-mono text-gray-600">
+                      <span className="text-[#C0392B]">{formatTime(campSecs)}</span>
+                      <span>+</span>
+                      <span className="text-emerald-400">{formatTime(porterSecs)}</span>
+                    </div>
+                  )}
+                  <div className="text-[9px] font-mono" style={{color:dev>120?'#C0392B':dev<-120?'#4A5568':'#E5C07B'}}>
                     {dev>=0?'+':''}{formatTime(Math.abs(dev))}
                   </div>
                 </div>
