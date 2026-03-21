@@ -317,6 +317,12 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
               {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
             </select>
           </div>
+          <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
+            className="w-full bg-[#1a1a1a] border border-emerald-500/20 rounded-lg px-2 py-2 text-sm text-white focus:border-emerald-500/40 outline-none">
+            <option value="">Porter rival (qui ha encaixat)...</option>
+            <option value="Porter rival">Porter rival (genèric)</option>
+            {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
+          </select>
           <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
           {/* Mapa 3 punts */}
           <PitchClickable
@@ -380,13 +386,14 @@ function goalToCode(g) {
   const gp  = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
   const onP = g.onPitch?.length ? `["${g.onPitch.join('","')}"]` : '[]';
   const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
+  const gk = g.goalkeeper ? `"${g.goalkeeper}"` : 'null';
   if (g.type === 'favor') {
     const ass = g.assist ? `"${g.assist}"` : 'null';
-    return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
+    return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: ${gk},
             zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp},
             onPitch: ${onP}${notes} },`;
   }
-  return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}", onPitch: ${onP}${notes} },`;
+  return `          { time: "${g.time}", type: "contra", goalkeeper: ${gk}, onPitch: ${onP}${notes} },`;
 }
 
 function subsToCode(subs) {
