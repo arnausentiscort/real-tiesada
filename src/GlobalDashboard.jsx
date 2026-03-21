@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
+import ExportExcelButton from './ExportExcel.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const ACCENT = '#E5C07B';
@@ -393,7 +394,10 @@ export default function GlobalDashboard({ onSelectMatch }) {
         {/* Columna esquerra — Stats */}
         <div className="space-y-5">
 
-          {/* Ranking golejadors + assists */}
+          {/* Botó exportar */}
+          <div className="flex justify-end">
+            <ExportExcelButton/>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {stats.topScorers.length > 0 && (
               <section>
