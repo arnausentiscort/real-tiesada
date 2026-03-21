@@ -199,6 +199,86 @@ function GoalClickable({ value, onChange, label }) {
   );
 }
 
+// ── Selector onPitch (multi-select visual) ────────────────────────
+function OnPitchSelector({ value = [], onChange }) {
+  const roster = DATABASE.roster.map(p => p.name);
+  const toggle = (name) => {
+    if (value.includes(name)) onChange(value.filter(n => n !== name));
+    else if (value.length < 4) onChange([...value, name]);
+  };
+  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  return (
+    <div>
+      <p className="text-[10px] text-gray-500 mb-1.5">
+        Al camp quan passa el gol ({value.length}/4):
+        {value.length === 4 && <span className="text-emerald-400 ml-1">✓ complet</span>}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {roster.map(name => {
+          const sel = value.includes(name);
+          return (
+            <button key={name} onClick={() => toggle(name)}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                sel ? 'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]'
+                    : 'bg-[#111] border-white/10 text-gray-500 hover:border-white/25 hover:text-white'
+              }`}>
+              {sn(name)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Formulari de substitució ──────────────────────────────────────
+function SubForm({ sub, onChange, onRemove, idx }) {
+  const roster = DATABASE.roster.map(p => p.name);
+  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  const togglePlayer = (name) => {
+    const current = sub.onPitch || [];
+    if (current.includes(name)) onChange({...sub, onPitch: current.filter(n => n !== name)});
+    else if (current.length < 4) onChange({...sub, onPitch: [...current, name]});
+  };
+  return (
+    <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold text-gray-500">Sub #{idx+1}</span>
+        <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
+      </div>
+      <div className="flex gap-2">
+        <input value={sub.time||''} onChange={e=>onChange({...sub,time:e.target.value})}
+          placeholder="Min (ex: 12:30)"
+          className="w-24 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none shrink-0"/>
+        <select value={sub.goalkeeper||''} onChange={e=>onChange({...sub,goalkeeper:e.target.value})}
+          className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-[#E5C07B]/40 outline-none">
+          <option value="">Porter...</option>
+          {roster.map(n=><option key={n} value={n}>{sn(n)}</option>)}
+        </select>
+      </div>
+      <div>
+        <p className="text-[10px] text-gray-600 mb-1">Al camp ({(sub.onPitch||[]).length}/4):</p>
+        <div className="flex flex-wrap gap-1">
+          {roster.map(name => {
+            const sel = (sub.onPitch||[]).includes(name);
+            const isGK = name === sub.goalkeeper;
+            if (isGK) return null;
+            return (
+              <button key={name} onClick={() => togglePlayer(name)}
+                className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                  sel ? 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]'
+                      : 'bg-[#0d0d0d] border-white/8 text-gray-600 hover:text-white'
+                }`}>
+                {sn(name)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Formulari de gol ───────────────────────────────────────────────
 function GoalForm({ goal, onChange, onRemove, idx }) {
   const roster = DATABASE.roster.map(p => p.name);
@@ -237,6 +317,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
               {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
             </select>
           </div>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
           {/* Mapa 3 punts */}
           <PitchClickable
             points={pts}
@@ -250,7 +331,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
           <GoalClickable value={goal.goalPos||null} label="On entra a la porteria:"
             onChange={v=>onChange({...goal,goalPos:v})}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
-            placeholder="Comentari del gol (opcional) — ex: Xut creuat des de la banda..."
+            placeholder="Comentari del gol (opcional)"
             rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
         </>
@@ -261,8 +342,9 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
             <option value="">Porter...</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
-            placeholder="Comentari del gol en contra (opcional) — ex: De falta directa, porter sense opcions..."
+            placeholder="Comentari del gol en contra (opcional)"
             rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
         </>
@@ -290,24 +372,36 @@ function MomentForm({ moment, onChange, onRemove, idx }) {
   );
 }
 
-// ── Generador de codi ─────────────────────────────────────────────
+// ── Generadors de codi ───────────────────────────────────────────
+function goalToCode(g) {
+  const sp  = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
+  const ap  = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
+  const cp  = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
+  const gp  = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
+  const onP = g.onPitch?.length ? `["${g.onPitch.join('","')}"]` : '[]';
+  const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
+  if (g.type === 'favor') {
+    const ass = g.assist ? `"${g.assist}"` : 'null';
+    return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
+            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp},
+            onPitch: ${onP}${notes} },`;
+  }
+  return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}", onPitch: ${onP}${notes} },`;
+}
+
+function subsToCode(subs) {
+  if (!subs || subs.length === 0) return '';
+  return subs.map(s => {
+    const op = s.onPitch?.length ? `["${s.onPitch.join('","')}"]` : '[]';
+    const gk = s.goalkeeper ? `"${s.goalkeeper}"` : 'null';
+    return `          { time: "${s.time}", goalkeeper: ${gk}, onPitch: ${op} },`;
+  }).join('\n');
+}
+
 function generateMatchCode(match) {
   const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
-  const n = (v) => v === null || v === undefined ? 'null' : JSON.stringify(v);
-
-  const goalsCode = match.goals.map(g => {
-    if (g.type==='favor') {
-      const sp  = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
-      const ap  = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
-      const cp  = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
-      const gp  = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
-      const ass = g.assist ? `"${g.assist}"` : 'null';
-      return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
-            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp} },`;
-    }
-    return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}" },`;
-  }).join('\n');
-
+  const goalsCode   = match.goals.map(goalToCode).join('\n');
+  const subsCode    = subsToCode(match.subs || []);
   const momentsCode = match.moments.map(m => {
     const [min,sec] = (m.time||'0:0').split(':').map(Number);
     const secs = Math.max(0, min*60+(sec||0)-3);
@@ -315,10 +409,8 @@ function generateMatchCode(match) {
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
     return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
   }).join('\n');
-
   const ytStr = ytId ? `"${ytId}"` : 'null';
   const id = `j${DATABASE.matches.length+1}-${(match.opponent||'rival').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20)}`;
-
   return `
     // ── ${match.jornada||'Jornada ?'} — ${match.opponent||'Rival'} ──────────────────────────
     {
@@ -331,7 +423,9 @@ function generateMatchCode(match) {
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       events: {
-        substitutions: [],
+        substitutions: [
+${subsCode}
+        ],
         cards: [],
         goals: [
 ${goalsCode}
@@ -377,22 +471,17 @@ function replaceMatchInDataJs(currentJs, matchId, newMatchCode) {
 function matchToForm(m) {
   const ytUrl = m.youtubeId ? `https://www.youtube.com/watch?v=${m.youtubeId}` : '';
   const goals = (m.events?.goals || []).map(g => ({
-    type: g.type,
-    time: g.time,
-    scorer: g.scorer || '',
-    assist: g.assist || null,
+    type: g.type, time: g.time,
+    scorer: g.scorer || '', assist: g.assist || null,
     goalkeeper: g.goalkeeper || '',
-    shotPos: g.shotPos || null,
-    assistPos: g.assistPos || null,
-    conductPos: g.conductPos || null,
-    goalPos: g.goalPos || null,
-    zone: g.zone || '',
-    notes: g.notes || '',
-    pts: {
-      assist: g.assistPos ? { x: g.assistPos.x, y: g.assistPos.y, zone: '' } : null,
-      conduct: g.conductPos ? { x: g.conductPos.x, y: g.conductPos.y, zone: '' } : null,
-      shot: g.shotPos ? { x: g.shotPos.x, y: g.shotPos.y, zone: g.zone || '' } : null,
-    }
+    onPitch: g.onPitch || [],
+    shotPos: g.shotPos || null, assistPos: g.assistPos || null,
+    conductPos: g.conductPos || null, goalPos: g.goalPos || null,
+    zone: g.zone || '', notes: g.notes || '',
+    pts: { shot: g.shotPos?{...g.shotPos,zone:g.zone||''}:null, assist:g.assistPos?{...g.assistPos,zone:''}:null, conduct:g.conductPos?{...g.conductPos,zone:''}:null }
+  }));
+  const subs = (m.events?.substitutions || []).map(s => ({
+    time: s.time, goalkeeper: s.goalkeeper || '', onPitch: s.onPitch || []
   }));
   const moments = (m.events?.retransmissio || []).map(r => ({
     time: r.time, text: r.text,
@@ -405,29 +494,15 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
-    goals, moments,
+    goals, subs, moments,
   };
 }
 
 // Genera codi per editar (amb id original)
 function generateEditCode(match) {
   const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
-
-  const goalsCode = match.goals.map(g => {
-    if (g.type === 'favor') {
-      const sp = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
-      const ap = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
-      const cp = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
-      const gp = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
-      const ass = g.assist ? `"${g.assist}"` : 'null';
-      const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
-      return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: null,
-            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp}${notes} },`;
-    }
-    const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
-    return `          { time: "${g.time}", type: "contra", goalkeeper: "${g.goalkeeper||''}"${notes} },`;
-  }).join('\n');
-
+  const goalsCode   = match.goals.map(goalToCode).join('\n');
+  const subsCode    = subsToCode(match.subs || []);
   const momentsCode = match.moments.map(m => {
     const [min, sec] = (m.time || '0:0').split(':').map(Number);
     const secs = Math.max(0, min * 60 + (sec || 0) - 3);
@@ -435,9 +510,7 @@ function generateEditCode(match) {
     const txt = (m.text || '').replace(/\\/g, '\\\\').replace(/"/g, "'");
     return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
   }).join('\n');
-
   const ytStr = ytId ? `"${ytId}"` : 'null';
-
   return `{
       id: "${match._id}",
       jornada: "${match.jornada || ''}",
@@ -448,7 +521,9 @@ function generateEditCode(match) {
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       events: {
-        substitutions: [],
+        substitutions: [
+${subsCode}
+        ],
         cards: [],
         goals: [
 ${goalsCode}
@@ -490,12 +565,15 @@ function MatchSelector({ onSelect, onNew }) {
 
 // ── Formulari complet (nou o edició) ─────────────────────────────
 function MatchForm({ match, setMatch, onPreview }) {
-  const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',pts:{assist:null,conduct:null,shot:null}}]}));
+  const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',onPitch:[],shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',notes:'',pts:{assist:null,conduct:null,shot:null}}]}));
   const addMoment = () => setMatch(m => ({...m, moments: [...m.moments, {time:'',text:''}]}));
+  const addSub    = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:'',onPitch:[]}]}));
   const updateGoal   = (i, g) => setMatch(m => ({...m, goals:   m.goals.map((x,j)=>j===i?g:x)}));
   const updateMoment = (i, g) => setMatch(m => ({...m, moments: m.moments.map((x,j)=>j===i?g:x)}));
+  const updateSub    = (i, s) => setMatch(m => ({...m, subs:    (m.subs||[]).map((x,j)=>j===i?s:x)}));
   const removeGoal   = (i) => setMatch(m => ({...m, goals:   m.goals.filter((_,j)=>j!==i)}));
   const removeMoment = (i) => setMatch(m => ({...m, moments: m.moments.filter((_,j)=>j!==i)}));
+  const removeSub    = (i) => setMatch(m => ({...m, subs:    (m.subs||[]).filter((_,j)=>j!==i)}));
 
   return (
     <>
@@ -514,6 +592,20 @@ function MatchForm({ match, setMatch, onPreview }) {
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
         <input value={match.youtubeUrl} onChange={e=>setMatch(m=>({...m,youtubeUrl:e.target.value}))} placeholder="URL YouTube (opcional)"
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+      </div>
+
+      {/* Substitucions */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-[#E5C07B]">🔄 Substitucions ({(match.subs||[]).length})</p>
+          <button onClick={addSub} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
+            <Plus className="w-3 h-3"/> Afegir
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-600">Per calcular minuts de joc. Posa el porter de cada moment i els 4 jugadors de camp.</p>
+        {(match.subs||[]).map((s,i) => (
+          <SubForm key={i} sub={s} idx={i} onChange={s=>updateSub(i,s)} onRemove={()=>removeSub(i)}/>
+        ))}
       </div>
 
       {/* Gols */}
@@ -563,7 +655,7 @@ export default function AdminPanel({ onClose }) {
   const emptyMatch = {
     jornada: `Jornada ${DATABASE.matches.length + 1}`,
     opponent: '', date: '', result: '', youtubeUrl: '',
-    goals: [], moments: [],
+    goals: [], subs: [], moments: [],
   };
   const [match, setMatch] = useState(emptyMatch);
 
@@ -622,7 +714,12 @@ export default function AdminPanel({ onClose }) {
           🔧 Admin — {screen === 'select' ? 'Partits' : isEdit ? `Editant ${match.jornada}` : 'Nou Partit'}
         </span>
         <div className="ml-auto flex items-center gap-3">
-          {tokenSaved && <span className="text-[10px] text-emerald-400 flex items-center gap-1"><Check className="w-3 h-3"/>Token ✓</span>}
+          {tokenSaved && (
+            <button onClick={() => { localStorage.removeItem('gh_token'); setTokenSaved(false); setToken(''); }}
+              className="text-[10px] text-emerald-400 flex items-center gap-1 hover:text-yellow-400 transition-colors">
+              <Check className="w-3 h-3"/>Token ✓ <span className="text-gray-600 ml-0.5">(canviar)</span>
+            </button>
+          )}
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center">
             <X className="w-4 h-4 text-gray-400"/>
           </button>
