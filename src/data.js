@@ -305,20 +305,26 @@ export const DATABASE = {
       },
       events: {
         substitutions: [
-          { time: "00:00", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez","Oriol Tomas","Paco Montero","Roger Miro"] },
-          { time: "05:56", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas","Paco Montero","Roger Miro","Andreu Cases"] },
-          { time: "07:35", goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis","Joan Medina","Roi Seoane","Andreu Cases"] },
-          { time: "14:42", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez","Joan Medina","Roi Seoane","Andreu Cases"] },
-          { time: "16:16", goalkeeper: "Ivan Mico", onPitch: ["Paco Montero","Andreu Cases","Joan Medina","Pau Ibañez"] },
-          { time: "17:26", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas","Paco Montero","Pau Ibañez","Roger Miro"] },
-          { time: "18:41", goalkeeper: "Joan Medina", onPitch: ["Roger Miro","Pau Ibañez","Paco Montero","Oriol Tomas"] },
-          { time: "21:07", goalkeeper: "Joan Medina", onPitch: ["Ivan Mico","Paco Montero","Oriol Tomas","Roger Miro"] },
-          { time: "25:04", goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas","Roger Miro","Andreu Cases","Ivan Mico"] },
-          { time: "25:24", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis","Oriol Tomas","Andreu Cases","Ivan Mico"] },
-          { time: "25:50", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis","Andreu Cases","Roi Seoane","Ivan Mico"] },
-          { time: "26:37", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis","Pau Ibañez","Roi Seoane","Andreu Cases"] },
-          { time: "29:55", goalkeeper: "Ivan Mico", onPitch: ["Joan Medina","Paco Montero","Andreu Cases","Roi Seoane"] },
-          { time: "32:00", goalkeeper: "Ivan Mico", onPitch: ["Andreu Cases","Paco Montero","Oriol Tomas","Joan Medina"] }
+          { time: "00:00", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Oriol Tomas", "Paco Montero", "Roger Miro"] },
+          { time: "05:56", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas", "Paco Montero", "Roger Miro", "Andreu Cases"] },
+          { time: "07:35", goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Andreu Cases"] },
+          { time: "14:42", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Joan Medina", "Roi Seoane", "Andreu Cases"] },
+          { time: "16:16", goalkeeper: "Ivan Mico", onPitch: ["Paco Montero", "Andreu Cases", "Joan Medina", "Pau Ibañez"] },
+          { time: "17:26", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas", "Paco Montero", "Pau Ibañez", "Roger Miro"] },
+          // Pausa per la mitja part
+          { time: "18:13", goalkeeper: "Ivan Mico", onPitch: [] },
+          { time: "18:41", goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Pau Ibañez", "Paco Montero", "Oriol Tomas"] },
+          { time: "21:07", goalkeeper: "Joan Medina", onPitch: ["Ivan Mico", "Paco Montero", "Oriol Tomas", "Roger Miro"] },
+          { time: "25:04", goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Roger Miro", "Andreu Cases", "Ivan Mico"] },
+          { time: "25:24", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Oriol Tomas", "Andreu Cases", "Ivan Mico"] },
+          { time: "25:50", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Andreu Cases", "Roi Seoane", "Ivan Mico"] },
+          { time: "26:37", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Pau Ibañez", "Roi Seoane", "Andreu Cases"] },
+          // Pausa pel temps mort
+          { time: "29:10", goalkeeper: "Joan Medina", onPitch: [] },
+          { time: "29:55", goalkeeper: "Ivan Mico", onPitch: ["Joan Medina", "Paco Montero", "Andreu Cases", "Roi Seoane"] },
+          { time: "32:00", goalkeeper: "Ivan Mico", onPitch: ["Andreu Cases", "Paco Montero", "Oriol Tomas", "Joan Medina"] },
+          // Final del partit
+          { time: "35:48", goalkeeper: "Ivan Mico", onPitch: [] }
         ],
         cards: [],
         goals: [
