@@ -105,20 +105,11 @@ export const DATABASE = {
         goals: [
           { time: "17:00", type: "favor", scorer: "Andreu Cases", assist: null, goalkeeper: null,
             zone: "B6S", shotPos: { x: 745, y: 187 }, assistPos: null, goalPos: { x: 125, y: 193 },
-            onPitch: ["Andreu Cases","Chengzhi Li","Paco Montero","Ivan Mico"] },
+            onPitch: ["Andreu Cases"] },
           { time: "31:00", type: "favor", scorer: "Andreu Cases", assist: null, goalkeeper: null,
             zone: "B4E", shotPos: { x: 519, y: 162 }, assistPos: null, goalPos: { x: 225, y: 75 },
-            onPitch: ["Andreu Cases","Roger Miro","Marc Farreras","Pau Ibañez"] },
-          { time: "03:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Luis D.",     onPitch: ["Chengzhi Li","Ivan Mico","Paco Montero","Roi Seoane"] },
-          { time: "05:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Carles B.",   onPitch: ["Chengzhi Li","Ivan Mico","Roi Seoane","Oriol Tomas"] },
-          { time: "14:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Albert C.",   onPitch: ["Arnau Sentis","Ivan Mico","Joan Medina","Roi Seoane"] },
-          { time: "16:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Pròpia porta del Miró", onPitch: ["Roger Miro","Arnau Sentis","Oriol Tomas","Joan Medina"] },
-          { time: "18:00", type: "contra", goalkeeper: "Pau Ibañez",  notes: "Carles B.",   onPitch: ["Roger Miro","Arnau Sentis","Oriol Tomas","Andreu Cases"] },
-          { time: "22:00", type: "contra", goalkeeper: "Joan Medina", notes: "Carles B.",   onPitch: ["Roger Miro","Chengzhi Li","Andreu Cases","Pau Ibañez"] },
-          { time: "25:00", type: "contra", goalkeeper: "Joan Medina", notes: "Carles B.",   onPitch: ["Roger Miro","Arnau Sentis","Andreu Cases","Paco Montero"] },
-          { time: "26:00", type: "contra", goalkeeper: "Joan Medina", notes: "Fernando P.", onPitch: ["Roi Seoane","Ivan Mico","Andreu Cases","Pau Ibañez"] },
-          { time: "29:00", type: "contra", goalkeeper: "Joan Medina", notes: "Fernando P.", onPitch: ["Oriol Tomas","Paco Montero","Pau Ibañez","Joan Medina"] },
-        ]
+            onPitch: ["Andreu Cases"] },
+          ]
       }
     },
 
