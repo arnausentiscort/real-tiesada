@@ -299,23 +299,30 @@ export const DATABASE = {
           { time: "14:42", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Joan Medina", "Roi Seoane", "Andreu Cases"] },
           { time: "16:16", goalkeeper: "Ivan Mico", onPitch: ["Paco Montero", "Andreu Cases", "Joan Medina", "Pau Ibañez"] },
           { time: "17:26", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas", "Paco Montero", "Pau Ibañez", "Roger Miro"] },
+          
           // Pausa por la media parte
           { time: "18:13", goalkeeper: "Ivan Mico", onPitch: [] },
           { time: "18:41", goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Pau Ibañez", "Paco Montero", "Oriol Tomas"] },
+          
           { time: "21:07", goalkeeper: "Joan Medina", onPitch: ["Ivan Mico", "Paco Montero", "Oriol Tomas", "Roger Miro"] },
           { time: "25:04", goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Roger Miro", "Andreu Cases", "Ivan Mico"] },
           { time: "25:24", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Oriol Tomas", "Andreu Cases", "Ivan Mico"] },
           { time: "25:50", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Andreu Cases", "Roi Seoane", "Ivan Mico"] },
           
-          // --- AQUÍ EMPIEZA LA MAGIA DEL MINUTO EXTRA ---
+          // Entran justo antes del corte de vídeo
           { time: "26:37", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Pau Ibañez", "Roi Seoane", "Andreu Cases"] },
-          // Pausa por el tiempo muerto (Era 29:10 -> Ahora 30:10)
+          
+          // Pausa por el tiempo muerto (+1 MINUTO AÑADIDO MAGÍCAMENTE AQUÍ)
+          // Antes era 29:10, ahora es 30:10. Esto les regala 1 minuto de estadística.
           { time: "30:10", goalkeeper: "Joan Medina", onPitch: [] },
-          // Reanudamos después del tiempo muerto (Era 29:55 -> Ahora 30:55)
+          
+          // Reanudamos después del tiempo muerto
           { time: "30:55", goalkeeper: "Ivan Mico", onPitch: ["Joan Medina", "Paco Montero", "Andreu Cases", "Roi Seoane"] },
-          // Último cambio (Era 32:00 -> Ahora 33:00)
+          
+          // Último cambio
           { time: "33:00", goalkeeper: "Ivan Mico", onPitch: ["Andreu Cases", "Paco Montero", "Oriol Tomas", "Joan Medina"] },
-          // Final del partido (Era 35:48 -> Ahora 36:48)
+          
+          // Final del partido
           { time: "36:48", goalkeeper: "Ivan Mico", onPitch: [] }
         ],
         cards: [],
