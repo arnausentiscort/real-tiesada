@@ -280,51 +280,43 @@ export const DATABASE = {
       }
     },
 
-    // ── JORNADA 5 — Dgeneración ──────────────────────────────────────
+// ── JORNADA 5 — Dgeneración ──────────────────────────────────────
     {
       id: "j5-dgeneracion",
       jornada: "Jornada 5",
       opponent: "Dgeneración X",
       result: "1 - 3",
       date: "23 Mar 2026",
-      youtubeId: "cOzSYdAtNQg",
+      youtubeId: "7CV-4Fjj7tw",
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       savesManual: { "Ivan Mico": 8, "Joan Medina": 5 },
-      goalkeeperMinutes: { "Ivan Mico": 24.1, "Joan Medina": 11.48 },
-      fieldMinutes: { 
-        "Oriol Tomas": 19.32, 
-        "Paco Montero": 21.8, 
-        "Pau Ibañez": 15.43, 
-        "Roger Miro": 15.08, 
-        "Andreu Cases": 22.48, 
-        "Arnau Sentis": 11.88, 
-        "Joan Medina": 15.73, 
-        "Roi Seoane": 15.1, 
-        "Ivan Mico": 5.5 
-      },
       events: {
-        substitutions: [
+       substitutions: [
           { time: "00:00", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Oriol Tomas", "Paco Montero", "Roger Miro"] },
           { time: "05:56", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas", "Paco Montero", "Roger Miro", "Andreu Cases"] },
           { time: "07:35", goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Andreu Cases"] },
           { time: "14:42", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Joan Medina", "Roi Seoane", "Andreu Cases"] },
           { time: "16:16", goalkeeper: "Ivan Mico", onPitch: ["Paco Montero", "Andreu Cases", "Joan Medina", "Pau Ibañez"] },
           { time: "17:26", goalkeeper: "Ivan Mico", onPitch: ["Oriol Tomas", "Paco Montero", "Pau Ibañez", "Roger Miro"] },
-          // Pausa per la mitja part
+          // Pausa por la media parte
           { time: "18:13", goalkeeper: "Ivan Mico", onPitch: [] },
           { time: "18:41", goalkeeper: "Joan Medina", onPitch: ["Roger Miro", "Pau Ibañez", "Paco Montero", "Oriol Tomas"] },
           { time: "21:07", goalkeeper: "Joan Medina", onPitch: ["Ivan Mico", "Paco Montero", "Oriol Tomas", "Roger Miro"] },
           { time: "25:04", goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Roger Miro", "Andreu Cases", "Ivan Mico"] },
           { time: "25:24", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Oriol Tomas", "Andreu Cases", "Ivan Mico"] },
           { time: "25:50", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Andreu Cases", "Roi Seoane", "Ivan Mico"] },
+          
+          // --- AQUÍ EMPIEZA LA MAGIA DEL MINUTO EXTRA ---
           { time: "26:37", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Pau Ibañez", "Roi Seoane", "Andreu Cases"] },
-          // Pausa pel temps mort
-          { time: "29:10", goalkeeper: "Joan Medina", onPitch: [] },
-          { time: "29:55", goalkeeper: "Ivan Mico", onPitch: ["Joan Medina", "Paco Montero", "Andreu Cases", "Roi Seoane"] },
-          { time: "32:00", goalkeeper: "Ivan Mico", onPitch: ["Andreu Cases", "Paco Montero", "Oriol Tomas", "Joan Medina"] },
-          // Final del partit
-          { time: "35:48", goalkeeper: "Ivan Mico", onPitch: [] }
+          // Pausa por el tiempo muerto (Era 29:10 -> Ahora 30:10)
+          { time: "30:10", goalkeeper: "Joan Medina", onPitch: [] },
+          // Reanudamos después del tiempo muerto (Era 29:55 -> Ahora 30:55)
+          { time: "30:55", goalkeeper: "Ivan Mico", onPitch: ["Joan Medina", "Paco Montero", "Andreu Cases", "Roi Seoane"] },
+          // Último cambio (Era 32:00 -> Ahora 33:00)
+          { time: "33:00", goalkeeper: "Ivan Mico", onPitch: ["Andreu Cases", "Paco Montero", "Oriol Tomas", "Joan Medina"] },
+          // Final del partido (Era 35:48 -> Ahora 36:48)
+          { time: "36:48", goalkeeper: "Ivan Mico", onPitch: [] }
         ],
         cards: [],
         goals: [
