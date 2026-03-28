@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
+import MvpVoting from './MvpVoting.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -588,6 +589,9 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* MVP Voting */}
+      <MvpVoting match={match} />
 
       {/* Gràfics de temps */}
       {(hasSubstitutions || match.id === 'j4-touchlas') && (
