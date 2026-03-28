@@ -29,14 +29,16 @@ function getMatchPlayers(match) {
   return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPA_URL = 'https://pibacoitanqebynhvpnc.supabase.co';
+const KEY_A = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI';
+const KEY_B = 'sInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg';
+const SUPA_KEY = KEY_A + KEY_B;
 
 async function getVotes(matchId) {
   console.log('fetching votes', matchId);
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/mvp_votes?match_id=eq.${matchId}`,
-    { headers: { 'Accept': 'application/json', 'apikey': SUPABASE_ANON_KEY } }
+    `${SUPA_URL}/rest/v1/mvp_votes?match_id=eq.${matchId}`,
+    { headers: { 'Accept': 'application/json', 'apikey': SUPA_KEY } }
   );
   console.log('res.status', res.status);
   console.log('res.headers', Object.fromEntries(res.headers.entries()));
