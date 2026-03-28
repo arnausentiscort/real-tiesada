@@ -29,6 +29,13 @@ function getMatchPlayers(match) {
   return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
 }
 
+async function getVotes(matchId) {
+  console.log('fetching votes', matchId);
+  const data = null; // TODO: Supabase fetch
+  console.log('votes response', data);
+  return data;
+}
+
 export default function MvpVoting({ match }) {
   const storageKey = `mvp_${match.id}`;
   const [voted, setVoted] = useState(() => localStorage.getItem(storageKey));
@@ -39,15 +46,22 @@ export default function MvpVoting({ match }) {
   const [hovered, setHovered] = useState(null);
   const [justVoted, setJustVoted] = useState(false);
 
+  useEffect(() => {
+    getVotes(match.id);
+  }, [match.id]);
+
   const players = getMatchPlayers(match);
 
-  function handleVote(name) {
+  function handleVote(voterName, votedFor) {
     if (voted) return;
-    const newVotes = { ...votes, [name]: (votes[name] || 0) + 1 };
+    console.log('inserting vote', match.id, voterName, votedFor);
+    const ok = true; // TODO: Supabase insert
+    console.log('insert result', ok);
+    const newVotes = { ...votes, [votedFor]: (votes[votedFor] || 0) + 1 };
     setVotes(newVotes);
-    setVoted(name);
+    setVoted(votedFor);
     setJustVoted(true);
-    localStorage.setItem(storageKey, name);
+    localStorage.setItem(storageKey, votedFor);
     localStorage.setItem(`${storageKey}_votes`, JSON.stringify(newVotes));
     setTimeout(() => setJustVoted(false), 1800);
   }
@@ -84,7 +98,7 @@ export default function MvpVoting({ match }) {
           return (
             <button
               key={name}
-              onClick={() => handleVote(name)}
+              onClick={() => handleVote('anon', name)}
               onMouseEnter={() => setHovered(name)}
               onMouseLeave={() => setHovered(null)}
               disabled={!!voted}
