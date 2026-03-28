@@ -3,8 +3,9 @@ import { Star } from 'lucide-react';
 import { DATABASE } from '../data.js';
 
 const BASE = import.meta.env.BASE_URL;
+const SUPA_URL = 'https://pibacoitanqebynhvpnc.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg';
 
-// Obté la llista de jugadors que van participar al partit
 function getMatchPlayers(match) {
   const names = new Set();
   const subs = match.events?.substitutions || [];
@@ -22,17 +23,11 @@ function getMatchPlayers(match) {
   if (match.savesManual) {
     Object.keys(match.savesManual).forEach(n => names.add(n));
   }
-  // Si no hi ha dades de jugadors, mostra tota la plantilla
   if (names.size === 0) {
     DATABASE.roster.forEach(p => names.add(p.name));
   }
   return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
 }
-
-const SUPA_URL = 'https://pibacoitanqebynhvpnc.supabase.co';
-const KEY_A = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI';
-const KEY_B = 'sInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg';
-const SUPA_KEY = KEY_A + KEY_B;
 
 async function getVotes(matchId) {
   console.log('fetching votes', matchId);
@@ -66,7 +61,7 @@ export default function MvpVoting({ match }) {
   function handleVote(voterName, votedFor) {
     if (voted) return;
     console.log('inserting vote', match.id, voterName, votedFor);
-    const ok = true; // TODO: Supabase insert
+    const ok = true;
     console.log('insert result', ok);
     const newVotes = { ...votes, [votedFor]: (votes[votedFor] || 0) + 1 };
     setVotes(newVotes);
@@ -78,11 +73,9 @@ export default function MvpVoting({ match }) {
   }
 
   const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0);
-  const maxVotes = Math.max(...Object.values(votes), 1);
 
   return (
     <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 overflow-hidden">
-      {/* Capçalera */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
         <Star className="w-5 h-5 text-[#E5C07B]" fill="#E5C07B" />
         <div>
@@ -96,7 +89,6 @@ export default function MvpVoting({ match }) {
         )}
       </div>
 
-      {/* Llista jugadors */}
       <div className="p-4 space-y-2">
         {players.map(name => {
           const player = DATABASE.roster.find(r => r.name === name);
@@ -119,20 +111,15 @@ export default function MvpVoting({ match }) {
               `}
             >
               <div className="relative flex items-center gap-3 px-3 py-2.5">
-                {/* Barra de progrés de fons */}
                 {voted && (
                   <div
                     className="absolute inset-0 rounded-xl transition-all duration-700"
                     style={{
-                      background: isVoted
-                        ? 'rgba(229,192,123,0.08)'
-                        : 'rgba(255,255,255,0.02)',
+                      background: isVoted ? 'rgba(229,192,123,0.08)' : 'rgba(255,255,255,0.02)',
                       width: `${pct}%`,
                     }}
                   />
                 )}
-
-                {/* Foto */}
                 <div className="relative flex-shrink-0">
                   {photo ? (
                     <img
@@ -151,8 +138,6 @@ export default function MvpVoting({ match }) {
                     </div>
                   )}
                 </div>
-
-                {/* Nom i dorsal */}
                 <div className="relative flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className={`font-semibold text-sm truncate ${isVoted ? 'text-[#E5C07B]' : 'text-white'}`}>
@@ -166,8 +151,6 @@ export default function MvpVoting({ match }) {
                     <p className="text-xs text-gray-600">{player.position}</p>
                   )}
                 </div>
-
-                {/* Percentatge / icona votar */}
                 <div className="relative flex-shrink-0 text-right">
                   {voted ? (
                     <div>
@@ -189,7 +172,6 @@ export default function MvpVoting({ match }) {
         })}
       </div>
 
-      {/* Feedback de vot */}
       {justVoted && (
         <div className="mx-4 mb-4 text-center py-2 rounded-lg bg-[#E5C07B]/10 border border-[#E5C07B]/20 text-[#E5C07B] text-sm font-semibold animate-pulse">
           Vot registrat!
