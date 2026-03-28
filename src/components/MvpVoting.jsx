@@ -29,11 +29,14 @@ function getMatchPlayers(match) {
   return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 async function getVotes(matchId) {
   console.log('fetching votes', matchId);
   const res = await fetch(
-    `https://pibacoitanqebynhvpnc.supabase.co/rest/v1/mvp_votes?match_id=eq.${matchId}`,
-    { headers: { 'Accept': 'application/json' } }
+    `${SUPABASE_URL}/rest/v1/mvp_votes?match_id=eq.${matchId}`,
+    { headers: { 'Accept': 'application/json', 'apikey': SUPABASE_ANON_KEY } }
   );
   console.log('res.status', res.status);
   console.log('res.headers', Object.fromEntries(res.headers.entries()));
