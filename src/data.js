@@ -43,7 +43,7 @@ export const DATABASE = {
     { name: "Andreu Cases",  number: 80, shirtName: "TELICO",      position: "Migcampista", photo: "players/andreu.png", photoCel: "players/andreu_cel.png" },
     { name: "Chengzhi Li",   number: 12, shirtName: "CHENGZHI LI", position: "Davanter",    photo: null,                 photoCel: null },
     { name: "Ivan Mico",     number: 4,  shirtName: "QUATRE",      position: "Defensa",     photo: null,                 photoCel: null },
-    { name: "Marc Farreras", number: 77, shirtName: "FARRERAS",    position: "Davanter",    photo: null,                 photoCel: null },
+    { name: "Marc Farreras", number: 77, shirtName: "FARRERAS",    position: "Davanter",    photo: "players/marc.png",   photoCel: "players/marc_cel.png" },
   ],
 
   matches: [
