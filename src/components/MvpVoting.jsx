@@ -31,9 +31,15 @@ function getMatchPlayers(match) {
 
 async function getVotes(matchId) {
   console.log('fetching votes', matchId);
-  const data = null; // TODO: Supabase fetch
+  const res = await fetch(
+    `https://pibacoitanqebynhvpnc.supabase.co/rest/v1/mvp_votes?match_id=eq.${matchId}`,
+    { headers: { 'Accept': 'application/json' } }
+  );
+  console.log('res.status', res.status);
+  console.log('res.headers', Object.fromEntries(res.headers.entries()));
+  const data = res.ok ? await res.json() : null;
   console.log('votes response', data);
-  return data;
+  return data ?? [];
 }
 
 export default function MvpVoting({ match }) {
