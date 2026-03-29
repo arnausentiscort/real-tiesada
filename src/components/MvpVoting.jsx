@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import { DATABASE } from '../data.js';
 
 const BASE = import.meta.env.BASE_URL;
-const SUPA_URL = 'https://pibacoitanqebynhvpnc.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg';
+
+const supabase = createClient(
+  'https://pibacoitanqebynhvpnc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg'
+);
 
 function getMatchPlayers(match) {
   const names = new Set();
@@ -29,46 +33,42 @@ function getMatchPlayers(match) {
   return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
 }
 
-async function getVotes(matchId) {
-  console.log('fetching votes', matchId);
-  const res = await fetch(
-    `${SUPA_URL}/rest/v1/mvp_votes?match_id=eq.${matchId}`,
-    { headers: { 'Accept': 'application/json', 'apikey': SUPA_KEY } }
-  );
-  console.log('res.status', res.status);
-  console.log('res.headers', Object.fromEntries(res.headers.entries()));
-  const data = res.ok ? await res.json() : null;
-  console.log('votes response', data);
-  return data ?? [];
-}
-
 export default function MvpVoting({ match }) {
   const storageKey = `mvp_${match.id}`;
   const [voted, setVoted] = useState(() => localStorage.getItem(storageKey));
-  const [votes, setVotes] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(`${storageKey}_votes`) || '{}'); }
-    catch { return {}; }
-  });
+  const [votes, setVotes] = useState({});
   const [hovered, setHovered] = useState(null);
   const [justVoted, setJustVoted] = useState(false);
 
   useEffect(() => {
-    getVotes(match.id);
+    async function fetchVotes() {
+      const { data, error } = await supabase
+        .from('mvp_votes')
+        .select('voted_for')
+        .eq('match_id', match.id);
+      if (error) { console.error('getVotes error', error); return; }
+      const tally = {};
+      (data || []).forEach(row => {
+        tally[row.voted_for] = (tally[row.voted_for] || 0) + 1;
+      });
+      setVotes(tally);
+    }
+    fetchVotes();
   }, [match.id]);
 
   const players = getMatchPlayers(match);
 
-  function handleVote(voterName, votedFor) {
+  async function handleVote(votedFor) {
     if (voted) return;
-    console.log('inserting vote', match.id, voterName, votedFor);
-    const ok = true;
-    console.log('insert result', ok);
+    const { error } = await supabase
+      .from('mvp_votes')
+      .insert({ match_id: match.id, voter_name: 'anon', voted_for: votedFor });
+    if (error) { console.error('insert error', error); return; }
     const newVotes = { ...votes, [votedFor]: (votes[votedFor] || 0) + 1 };
     setVotes(newVotes);
     setVoted(votedFor);
     setJustVoted(true);
     localStorage.setItem(storageKey, votedFor);
-    localStorage.setItem(`${storageKey}_votes`, JSON.stringify(newVotes));
     setTimeout(() => setJustVoted(false), 1800);
   }
 
@@ -101,7 +101,7 @@ export default function MvpVoting({ match }) {
           return (
             <button
               key={name}
-              onClick={() => handleVote('anon', name)}
+              onClick={() => handleVote(name)}
               onMouseEnter={() => setHovered(name)}
               onMouseLeave={() => setHovered(null)}
               disabled={!!voted}
