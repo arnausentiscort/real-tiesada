@@ -27,17 +27,6 @@ function dorsal(name) {
   return pl?.shirtName || name.split(' ')[0].toUpperCase();
 }
 
-function calcRanking(rows) {
-  const pts = {};
-  rows.forEach(row => {
-    if (row.gold)   pts[row.gold]   = (pts[row.gold]   || 0) + 3;
-    if (row.silver) pts[row.silver] = (pts[row.silver] || 0) + 2;
-    if (row.bronze) pts[row.bronze] = (pts[row.bronze] || 0) + 1;
-  });
-  return Object.entries(pts).sort((a, b) => b[1] - a[1]);
-}
-
-const MEDAL = ['🥇', '🥈', '🥉'];
 
 export default function MvpVoting({ match }) {
   const voterKey = `mvp_voter_${match.id}`;
@@ -148,14 +137,13 @@ export default function MvpVoting({ match }) {
     const { error } = await supabase
       .from('mvp_votes')
       .insert({ match_id: match.id, voter_name: voterName, gold, silver, bronze: b });
-    if (error) { console.error('insert error', error); return; }
+    if (error) { console.error('insert error', error); flashMessage(`Error: ${error.message}`); return; }
     setBronze(b);
     setAlreadyVoted({ voter_name: voterName, gold, silver, bronze: b });
     setStep(4);
     await fetchRows();
   }
 
-  const ranking = calcRanking(rows);
   const totalVoters = rows.length;
 
   const availableForSilver = players.filter(n => n !== gold);
@@ -258,27 +246,17 @@ export default function MvpVoting({ match }) {
           </>
         )}
 
-        {/* PAS 4: Votat — mostra selecció + rànquing */}
+        {/* PAS 4: Votat — mostra selecció compacta */}
         {step === 4 && alreadyVoted && (
           <>
+            <span className="text-[11px] font-bold text-emerald-400 shrink-0">✓</span>
             <span className="text-[11px] text-gray-600 shrink-0">{dorsal(voterName)}</span>
             <div className="flex gap-1 shrink-0">
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">🥇 {dorsal(alreadyVoted.gold)}</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/20 text-gray-300">🥈 {dorsal(alreadyVoted.silver)}</span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-700/10 border border-amber-700/20 text-amber-500">🥉 {dorsal(alreadyVoted.bronze)}</span>
             </div>
-            <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar items-center">
-              {ranking.map(([name, pts], i) => (
-                <span key={name}
-                  className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap
-                    ${i === 0 ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                    : i === 1 ? 'bg-gray-400/10 border-gray-400/20 text-gray-300'
-                    : i === 2 ? 'bg-amber-700/10 border-amber-700/20 text-amber-500'
-                    : 'bg-white/3 border-white/8 text-gray-600'}`}>
-                  {MEDAL[i] || ''}{dorsal(name)} {pts}p
-                </span>
-              ))}
-            </div>
+            <div className="flex-1" />
             <span className="text-[10px] text-gray-700 shrink-0">{totalVoters}v</span>
           </>
         )}

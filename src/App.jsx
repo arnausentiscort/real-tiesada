@@ -6,6 +6,7 @@ import Split1Dashboard  from './components/Split1Dashboard.jsx';
 import Clasificacion    from './components/Clasificacion.jsx';
 import GoalHeatmap      from './components/GoalHeatmap.jsx';
 import Galeria          from './components/Galeria.jsx';
+import MvpPage          from './components/MvpPage.jsx';
 import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
 import AdminPanel       from './components/AdminPanel.jsx';
@@ -70,6 +71,7 @@ export default function App() {
     { id: 'dashboard',     icon: '📊', label: 'Stats'         },
     { id: 'squad',         icon: '👥', label: 'Plantilla'     },
     { id: 'clasificacion', icon: '🏆', label: 'Classificació' },
+    { id: 'mvp',           icon: '⭐', label: 'MVP'           },
     { id: 'heatmap',       icon: '🎯', label: 'Mapa de Gols'  },
     { id: 'galeria',       icon: '📸', label: 'Galeria'       },
   ];
@@ -142,6 +144,7 @@ export default function App() {
             {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
             {view === 'squad'         && <Squad />}
             {view === 'clasificacion' && <Clasificacion />}
+            {view === 'mvp'           && <MvpPage />}
             {view === 'heatmap'       && <GoalHeatmap />}
             {view === 'galeria'       && <Galeria />}
             {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
