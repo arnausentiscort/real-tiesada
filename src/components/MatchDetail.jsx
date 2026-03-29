@@ -552,6 +552,11 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
         </div>
       </div>
 
+      {/* MVP Voting — prominent, just sota el marcador */}
+      <div className="border border-[#E5C07B]/20 rounded-2xl shadow-lg shadow-[#E5C07B]/5">
+        <MvpVoting match={match} />
+      </div>
+
       {/* Vídeo */}
       {hasVideo && (
         <div id="match-video" className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-xl">
@@ -589,9 +594,6 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           </div>
         </div>
       )}
-
-      {/* MVP Voting */}
-      <MvpVoting match={match} />
 
       {/* Gràfics de temps */}
       {(hasSubstitutions || match.id === 'j4-touchlas') && (
