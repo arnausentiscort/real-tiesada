@@ -256,14 +256,16 @@ export default function MvpVoting({ match }) {
                 </button>
               ))}
             </div>
-            {bronze && (
-              <button
-                onClick={handleVote}
-                className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 hover:bg-emerald-500/25 transition-all whitespace-nowrap"
-              >
-                Votar
-              </button>
-            )}
+            <button
+              onClick={handleVote}
+              disabled={!bronze}
+              className={`shrink-0 px-2.5 py-1 rounded-full border text-[11px] font-bold transition-all whitespace-nowrap
+                ${bronze
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                  : 'bg-white/3 border-white/8 text-gray-700 cursor-default'}`}
+            >
+              Votar
+            </button>
           </>
         )}
 
