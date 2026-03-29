@@ -128,8 +128,9 @@ export default function MvpVoting({ match }) {
     await checkVoted(name);
   }
 
-  async function handleVote() {
-    if (!gold || !silver || !bronze) { flashMessage('Selecciona els 3 jugadors'); return; }
+  async function handleVote(bronzeVal) {
+    const b = bronzeVal ?? bronze;
+    if (!gold || !silver || !b) { flashMessage('Selecciona els 3 jugadors'); return; }
 
     const { data: existing, error: checkErr } = await supabase
       .from('mvp_votes')
@@ -146,9 +147,10 @@ export default function MvpVoting({ match }) {
 
     const { error } = await supabase
       .from('mvp_votes')
-      .insert({ match_id: match.id, voter_name: voterName, gold, silver, bronze });
+      .insert({ match_id: match.id, voter_name: voterName, gold, silver, bronze: b });
     if (error) { console.error('insert error', error); return; }
-    setAlreadyVoted({ voter_name: voterName, gold, silver, bronze });
+    setBronze(b);
+    setAlreadyVoted({ voter_name: voterName, gold, silver, bronze: b });
     setStep(4);
     await fetchRows();
   }
@@ -234,38 +236,25 @@ export default function MvpVoting({ match }) {
           </>
         )}
 
-        {/* PAS 3: Coure (1pt) + botó Votar */}
+        {/* PAS 3: Coure (1pt) — clicar envia el vot */}
         {step === 3 && (
           <>
             <div className="flex gap-1 shrink-0">
               <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/25 text-[10px] font-bold text-yellow-400">🥇 {dorsal(gold)}</button>
               <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/25 text-[10px] font-bold text-gray-400">🥈 {dorsal(silver)}</button>
             </div>
-            <span className="text-xs text-gray-500 shrink-0">🥉 Coure</span>
+            <span className="text-xs text-gray-500 shrink-0">🥉 i vota</span>
             <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">
               {availableForBronze.map(name => (
                 <button
                   key={name}
-                  onClick={() => setBronze(name)}
-                  className={`shrink-0 px-2 py-1 rounded-full border text-[11px] font-bold transition-all whitespace-nowrap
-                    ${bronze === name
-                      ? 'bg-amber-700/20 border-amber-700/40 text-amber-500'
-                      : 'bg-white/5 hover:bg-amber-700/15 border-white/10 hover:border-amber-700/30 text-gray-400 hover:text-amber-500'}`}
+                  onClick={() => handleVote(name)}
+                  className="shrink-0 px-2 py-1 rounded-full bg-white/5 hover:bg-amber-700/15 border border-white/10 hover:border-amber-700/30 text-[11px] font-bold text-gray-400 hover:text-amber-500 transition-all whitespace-nowrap"
                 >
                   {dorsal(name)}
                 </button>
               ))}
             </div>
-            <button
-              onClick={handleVote}
-              disabled={!bronze}
-              className={`shrink-0 px-2.5 py-1 rounded-full border text-[11px] font-bold transition-all whitespace-nowrap
-                ${bronze
-                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
-                  : 'bg-white/3 border-white/8 text-gray-700 cursor-default'}`}
-            >
-              Votar
-            </button>
           </>
         )}
 
