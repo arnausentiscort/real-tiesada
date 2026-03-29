@@ -35,40 +35,40 @@ function getMatchPlayers(match) {
 
 export default function MvpVoting({ match }) {
   const storageKey = `mvp_${match.id}`;
+  const voterKey = `mvp_voter_${match.id}`;
   const [voted, setVoted] = useState(() => localStorage.getItem(storageKey));
+  const [voterName, setVoterName] = useState(() => localStorage.getItem(voterKey));
   const [votes, setVotes] = useState({});
   const [hovered, setHovered] = useState(null);
   const [justVoted, setJustVoted] = useState(false);
 
-  useEffect(() => {
-    async function fetchVotes() {
-      const { data, error } = await supabase
-        .from('mvp_votes')
-        .select('voted_for')
-        .eq('match_id', match.id);
-      if (error) { console.error('getVotes error', error); return; }
-      const tally = {};
-      (data || []).forEach(row => {
-        tally[row.voted_for] = (tally[row.voted_for] || 0) + 1;
-      });
-      setVotes(tally);
-    }
-    fetchVotes();
-  }, [match.id]);
-
   const players = getMatchPlayers(match);
 
+  async function fetchVotes() {
+    const { data, error } = await supabase
+      .from('mvp_votes')
+      .select('voted_for')
+      .eq('match_id', match.id);
+    if (error) { console.error('getVotes error', error); return; }
+    const tally = {};
+    (data || []).forEach(row => {
+      tally[row.voted_for] = (tally[row.voted_for] || 0) + 1;
+    });
+    setVotes(tally);
+  }
+
+  useEffect(() => { fetchVotes(); }, [match.id]);
+
   async function handleVote(votedFor) {
-    if (voted) return;
+    if (voted || !voterName) return;
     const { error } = await supabase
       .from('mvp_votes')
-      .insert({ match_id: match.id, voter_name: 'anon', voted_for: votedFor });
+      .insert({ match_id: match.id, voter_name: voterName, voted_for: votedFor });
     if (error) { console.error('insert error', error); return; }
-    const newVotes = { ...votes, [votedFor]: (votes[votedFor] || 0) + 1 };
-    setVotes(newVotes);
     setVoted(votedFor);
     setJustVoted(true);
     localStorage.setItem(storageKey, votedFor);
+    await fetchVotes();
     setTimeout(() => setJustVoted(false), 1800);
   }
 
@@ -88,6 +88,23 @@ export default function MvpVoting({ match }) {
           </span>
         )}
       </div>
+
+      {!voterName && (
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs text-gray-400 mb-2">Qui ets tu?</p>
+          <div className="grid grid-cols-2 gap-2">
+            {players.map(name => (
+              <button
+                key={name}
+                onClick={() => { setVoterName(name); localStorage.setItem(voterKey, name); }}
+                className="text-left px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="p-4 space-y-2">
         {players.map(name => {
