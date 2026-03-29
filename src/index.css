@@ -17,6 +17,10 @@
 }
 
 @layer utilities {
+  /* ── Scrollbar ocult ── */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   /* ── Animacions d'entrada ── */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out both;

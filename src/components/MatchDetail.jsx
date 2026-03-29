@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
@@ -443,9 +443,6 @@ function TimelineChart({ match, matchStats }) {
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack, onNavigate }) {
   const [videoStart, setVideoStart] = useState(0);
-  const [swipeDir, setSwipeDir] = useState(null); // 'left' | 'right'
-  const touchStartX = useRef(null);
-  const touchStartY = useRef(null);
 
   const allMatches = DATABASE.matches;
   const currentIdx = allMatches.findIndex(m => m.id === match.id);
@@ -463,22 +460,6 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   const hasVideo = !!(match.youtubeId || match.vimeoId);
   const cronica  = useMemo(() => buildCronica(match), [match]);
 
-  // Swipe handlers
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-  const handleTouchEnd = (e) => {
-    if (!touchStartX.current) return;
-    const dx = e.changedTouches[0].clientX - touchStartX.current;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-    if (Math.abs(dx) > 60 && dy < 80) {
-      if (dx < 0 && nextMatch && onNavigate) { setSwipeDir('left');  setTimeout(() => { onNavigate(nextMatch); setSwipeDir(null); }, 200); }
-      if (dx > 0 && prevMatch && onNavigate) { setSwipeDir('right'); setTimeout(() => { onNavigate(prevMatch); setSwipeDir(null); }, 200); }
-    }
-    touchStartX.current = null;
-  };
-
   const jumpToGoal = (timeStr) => {
     if (!hasVideo) return;
     const secs = Math.max(0, parseTime(timeStr) - 3);
@@ -487,13 +468,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in"
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
-      style={{
-        transform: swipeDir === 'left' ? 'translateX(-30px)' : swipeDir === 'right' ? 'translateX(30px)' : 'translateX(0)',
-        opacity: swipeDir ? 0 : 1,
-        transition: 'transform 0.2s ease, opacity 0.2s ease'
-      }}>
+    <div className="space-y-6 animate-fade-in">
 
       {/* Navegació entre jornades */}
       <div className="flex items-center justify-between gap-3">
@@ -552,10 +527,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
         </div>
       </div>
 
-      {/* MVP Voting — prominent, just sota el marcador */}
-      <div className="border border-[#E5C07B]/20 rounded-2xl shadow-lg shadow-[#E5C07B]/5">
-        <MvpVoting match={match} />
-      </div>
+      {/* MVP Voting — just sota el marcador */}
+      <MvpVoting match={match} />
 
       {/* Vídeo */}
       {hasVideo && (
