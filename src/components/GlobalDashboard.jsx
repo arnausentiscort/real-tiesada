@@ -3,6 +3,7 @@ import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft
 import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
 import ExportExcelButton from './ExportExcel.jsx';
+import DuoStats from './DuoStats.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const ACCENT = '#E5C07B';
@@ -665,6 +666,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </div>
             </div>
           </div>
+
+          <DuoStats />
 
           {/* Minuts de camp */}
           {stats.minutesCamp.length > 0 && (
