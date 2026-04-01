@@ -44,7 +44,7 @@ export default function MvpVoting({ match }) {
   const clickTimerRef = useRef(null);
   const [showReset, setShowReset] = useState(false);
 
-  const players = getMatchPlayers(match);
+  const players = DATABASE.roster.map(p => p.name);
 
   async function fetchRows() {
     const { data, error } = await supabase
