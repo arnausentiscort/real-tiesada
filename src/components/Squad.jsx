@@ -169,7 +169,7 @@ function PlayerCard({ player, stats, onClick }) {
 
         {/* ── CARA FRONTAL ── */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
-          style={{backfaceVisibility:'hidden', background: '#0a0a0a',
+          style={{backfaceVisibility:'hidden', background: '#0a0a0a', pointerEvents: flipped ? 'none' : 'auto',
             boxShadow: flipped ? 'none' : `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)`}}>
 
           <div className={`absolute inset-0 bg-gradient-to-b ${pos.gradient} opacity-40`}/>
@@ -241,7 +241,7 @@ function PlayerCard({ player, stats, onClick }) {
 
         {/* ── CARA POSTERIOR ── */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl p-4 flex flex-col"
-          style={{backfaceVisibility:'hidden', transform:'rotateY(180deg)',
+          style={{backfaceVisibility:'hidden', transform:'rotateY(180deg)', pointerEvents: flipped ? 'auto' : 'none',
             background:'#0f0f0f',
             boxShadow:'0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)'}}>
 
