@@ -83,6 +83,12 @@ export const calcMatchStats = (match) => {
     fieldPlayers.forEach(p => { if (active[p] === undefined) active[p] = timeSec; });
   });
 
+  // Tanca els stints dels jugadors que queden al camp al final del partit
+  Object.keys(active).forEach(p => {
+    totals[p] = (totals[p] || 0) + (finalTime - active[p]);
+    stints.push({ player: p, start: active[p], end: finalTime });
+  });
+
   const playerStats = Object.entries(totals)
     .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - (match.idealMinutesPerPlayer * 60) }))
     .sort((a, b) => b.totalSec - a.totalSec);
