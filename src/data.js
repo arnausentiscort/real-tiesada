@@ -360,7 +360,7 @@ export const DATABASE = {
       date: "31 Mar 2026",
       youtubeId: "e3C1MCuXFQY",
       vimeoId: null,
-      idealMinutesPerPlayer: 22.86,
+      idealMinutesPerPlayer: 20.0,
       savesManual: { "Ivan Mico": 11, "Joan Medina": 3 },
       events: {
         substitutions: [
