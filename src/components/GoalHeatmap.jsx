@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { DATABASE } from '../data.js';
 
 const ACCENT = '#E5C07B';
+const BASE = import.meta.env.BASE_URL;
 
 const PLAYER_COLORS = {
   'Arnau Sentis': '#E5C07B', 'Roger Miro':   '#61AFEF',
@@ -392,9 +393,17 @@ function GoalCard({ goal, idx, onClose }) {
         )}
       </div>
 
-      {(videoUrl || goal.goalPos) && <div className="h-px bg-white/5"/>}
+      {(goal.localVideoUrl || videoUrl || goal.goalPos) && <div className="h-px bg-white/5"/>}
 
-      {videoUrl && (
+      {goal.localVideoUrl && (
+        <video
+          src={`${BASE}${goal.localVideoUrl}`}
+          controls
+          className="w-full rounded-xl border border-white/10"
+          style={{maxHeight:160}}
+        />
+      )}
+      {!goal.localVideoUrl && videoUrl && (
         <a href={videoUrl} target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border transition-all hover:opacity-80"
           style={{borderColor:`${color}30`, background:`${color}10`, color}}>

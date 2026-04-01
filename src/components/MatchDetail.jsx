@@ -72,7 +72,8 @@ function buildCronica(match) {
   };
   (match.events?.goals || []).forEach(g => {
     items.push({ time: g.time, kind: g.type === 'favor' ? 'goal_favor' : 'goal_contra',
-      scorer: g.scorer, assist: g.assist, notes: g.notes, jumpUrl: makeUrl(g.time) });
+      scorer: g.scorer, assist: g.assist, notes: g.notes, jumpUrl: makeUrl(g.time),
+      localVideoUrl: g.localVideoUrl || null });
   });
   (match.events?.retransmissio || []).forEach(r => {
     items.push({ time: r.time, kind: 'moment', text: r.text, players: r.players,
@@ -89,6 +90,7 @@ function buildCronica(match) {
 
 // ── Targeta gran de gol ───────────────────────────────────────────
 function GoalCard({ item, onJump }) {
+  const [showLocalVideo, setShowLocalVideo] = useState(false);
   const isFavor = item.kind === 'goal_favor';
   const accent  = isFavor ? '#27AE60' : '#C0392B';
   const bg      = isFavor ? 'rgba(39,174,96,0.08)' : 'rgba(192,57,43,0.08)';
@@ -105,13 +107,22 @@ function GoalCard({ item, onJump }) {
               {isFavor ? '⚽ GOL A FAVOR' : '❌ EN CONTRA'}
             </span>
           </div>
-          {item.jumpUrl && (
-            <button onClick={() => onJump(item.time)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
-                bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white">
-              ▶ Veure
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {item.localVideoUrl && (
+              <button onClick={() => setShowLocalVideo(p=>!p)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
+                  bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B] hover:bg-[#E5C07B]/25">
+                {showLocalVideo ? '▼ Tancar' : '▶ Clip'}
+              </button>
+            )}
+            {item.jumpUrl && (
+              <button onClick={() => onJump(item.time)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
+                  bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white">
+                ▶ Veure
+              </button>
+            )}
+          </div>
         </div>
         {isFavor ? (
           <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -120,6 +131,11 @@ function GoalCard({ item, onJump }) {
           </div>
         ) : (
           item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
+        )}
+        {showLocalVideo && item.localVideoUrl && (
+          <div className="mt-3">
+            <video src={`${BASE}${item.localVideoUrl}`} controls className="w-full rounded-xl border border-white/10"/>
+          </div>
         )}
       </div>
     </div>
