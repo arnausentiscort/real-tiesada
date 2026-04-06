@@ -162,14 +162,15 @@ function PlayerCard({ player, stats, onClick }) {
   return (
     <div className="relative cursor-pointer select-none group"
       style={{perspective: '1000px', aspectRatio: '2/3'}}
-      onClick={() => setFlipped(f => !f)}>
+      onClick={() => setFlipped(f => !f)}
+      onDoubleClick={(e) => { e.stopPropagation(); setFlipped(false); onClick(); }}>
 
       <div className="absolute inset-0 transition-transform duration-500"
-        style={{transformStyle:'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}}>
+        style={{transformStyle:'preserve-3d', WebkitTransformStyle:'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}}>
 
         {/* ── CARA FRONTAL ── */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
-          style={{backfaceVisibility:'hidden', background: '#0a0a0a', pointerEvents: flipped ? 'none' : 'auto',
+          style={{backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', background: '#0a0a0a', pointerEvents: flipped ? 'none' : 'auto',
             boxShadow: flipped ? 'none' : `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)`}}>
 
           <div className={`absolute inset-0 bg-gradient-to-b ${pos.gradient} opacity-40`}/>
@@ -241,7 +242,7 @@ function PlayerCard({ player, stats, onClick }) {
 
         {/* ── CARA POSTERIOR ── */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl p-4 flex flex-col"
-          style={{backfaceVisibility:'hidden', transform:'rotateY(180deg)', pointerEvents: flipped ? 'auto' : 'none',
+          style={{backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', transform:'rotateY(180deg)', WebkitTransform:'rotateY(180deg)', pointerEvents: flipped ? 'auto' : 'none',
             background:'#0f0f0f',
             boxShadow:'0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)'}}>
 
@@ -709,7 +710,7 @@ export default function Squad() {
     <div className="animate-fade-in">
       <div className="mb-6">
         <h2 className="text-3xl font-black text-white mb-1">La Plantilla</h2>
-        <p className="text-gray-500 text-sm">{DATABASE.roster.length} jugadors · Clica una carta per girar-la · Doble clic per veure el perfil complet</p>
+        <p className="text-gray-500 text-sm">{DATABASE.roster.length} jugadors · Clica per girar · Doble clic per obrir perfil directament</p>
       </div>
 
       {/* Filtre per posició */}
@@ -749,7 +750,7 @@ export default function Squad() {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs text-gray-700 mt-1">← Llisca · Toca per girar · Botó per veure perfil</p>
+        <p className="text-center text-xs text-gray-700 mt-1">← Llisca · Toca per girar · Doble toc per obrir perfil</p>
       </div>
 
       {/* Modal perfil */}
