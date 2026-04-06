@@ -390,7 +390,7 @@ export const DATABASE = {
           { time: "39:26", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis","Roger Miro","Oriol Tomas","Chengzhi Li"] },
         ],
         cards: [
-          { time: "5:00", type: "yellow", player: "Pau Ibañez" },
+          { time: "5:00", color: "yellow", player: "Pau Ibañez" },
         ],
         goals: [
           { time: "3:50",  type: "contra", goalkeeper: "Joan Medina",
