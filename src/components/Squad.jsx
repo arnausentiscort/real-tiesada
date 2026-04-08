@@ -240,55 +240,61 @@ function PlayerCard({ player, stats, onClick }) {
         </div>
 
         {/* ── CARA POSTERIOR ── */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl p-4 flex flex-col"
+        <div className="absolute inset-0 rounded-2xl shadow-2xl flex flex-col"
           style={{backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', transform:'rotateY(180deg)', WebkitTransform:'rotateY(180deg)', pointerEvents: flipped ? 'auto' : 'none',
             background:'#0f0f0f',
             boxShadow:'0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)'}}>
 
           <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{background: pos.accent}}/>
 
-          <div className="flex items-start justify-between mb-3 mt-1">
-            <div>
-              <div className="text-sm font-black truncate" style={{color: pos.accent}}>{player.shirtName}</div>
-              <div className="text-[9px]" style={{color:'rgba(255,255,255,0.3)'}}>{player.position}</div>
+          {/* Contingut scrollable */}
+          <div className="flex-1 overflow-y-auto p-4 pb-2">
+            <div className="flex items-start justify-between mb-3 mt-1">
+              <div>
+                <div className="text-sm font-black truncate" style={{color: pos.accent}}>{player.shirtName}</div>
+                <div className="text-[9px]" style={{color:'rgba(255,255,255,0.3)'}}>{player.position}</div>
+              </div>
+              <div className="text-3xl font-black" style={{color:'rgba(255,255,255,0.06)'}}>{player.number}</div>
             </div>
-            <div className="text-3xl font-black" style={{color:'rgba(255,255,255,0.06)'}}>{player.number}</div>
-          </div>
 
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{background:'rgba(255,255,255,0.04)'}}>
-            <div className="text-4xl font-black" style={{color: rColor, textShadow:`0 0 30px ${rColor}50`}}>{rating}</div>
-            <div>
-              <div className="text-[9px] font-bold" style={{color:'rgba(255,255,255,0.4)'}}>RATING</div>
-              <div className="flex gap-0.5 mt-1">
-                {[...Array(5)].map((_,i) => (
-                  <div key={i} className="w-4 h-1 rounded-full" style={{
-                    background: i < Math.ceil(((rating-50)/49)*5) ? rColor : 'rgba(255,255,255,0.1)'
-                  }}/>
-                ))}
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{background:'rgba(255,255,255,0.04)'}}>
+              <div className="text-4xl font-black" style={{color: rColor, textShadow:`0 0 30px ${rColor}50`}}>{rating}</div>
+              <div>
+                <div className="text-[9px] font-bold" style={{color:'rgba(255,255,255,0.4)'}}>RATING</div>
+                <div className="flex gap-0.5 mt-1">
+                  {[...Array(5)].map((_,i) => (
+                    <div key={i} className="w-4 h-1 rounded-full" style={{
+                      background: i < Math.ceil(((rating-50)/49)*5) ? rColor : 'rgba(255,255,255,0.1)'
+                    }}/>
+                  ))}
+                </div>
               </div>
             </div>
+
+            <div className="space-y-2">
+              {isGK ? <>
+                <StatBar label="PAR" value={saves||0}   max={10}    color="#10B981"/>
+                <StatBar label="GC"  value={conceded||0} max={15}   color="#EF4444"/>
+                <StatBar label="MIN" value={Math.floor(minSecs/60)} max={Math.floor(maxMin/60)} color={pos.accent}/>
+              </> : <>
+                <StatBar label="GOL" value={goals}   max={maxGoals}   color="#F59E0B"/>
+                <StatBar label="ASS" value={assists} max={maxAssists} color="#61AFEF"/>
+                <StatBar label="GF"  value={gf}      max={maxGF}      color="#10B981"/>
+                <StatBar label="GC"  value={ga}      max={maxGA}      color="#EF4444"/>
+                <StatBar label="MIN" value={Math.floor(minSecs/60)} max={Math.floor(maxMin/60)} color={pos.accent}/>
+              </>}
+            </div>
           </div>
 
-          <div className="space-y-2 flex-1">
-            {isGK ? <>
-              <StatBar label="PAR" value={saves||0}   max={10}    color="#10B981"/>
-              <StatBar label="GC"  value={conceded||0} max={15}   color="#EF4444"/>
-              <StatBar label="MIN" value={Math.floor(minSecs/60)} max={Math.floor(maxMin/60)} color={pos.accent}/>
-            </> : <>
-              <StatBar label="GOL" value={goals}   max={maxGoals}   color="#F59E0B"/>
-              <StatBar label="ASS" value={assists} max={maxAssists} color="#61AFEF"/>
-              <StatBar label="GF"  value={gf}      max={maxGF}      color="#10B981"/>
-              <StatBar label="GC"  value={ga}      max={maxGA}      color="#EF4444"/>
-              <StatBar label="MIN" value={Math.floor(minSecs/60)} max={Math.floor(maxMin/60)} color={pos.accent}/>
-            </>}
+          {/* Botó sempre visible a baix */}
+          <div className="p-3 shrink-0">
+            <button
+              onClick={(e) => { e.stopPropagation(); onClick(); }}
+              className="w-full py-2.5 rounded-xl text-xs font-black tracking-wider transition-all active:opacity-70"
+              style={{background: pos.accent, color:'#000'}}>
+              VEURE PERFIL →
+            </button>
           </div>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className="mt-3 w-full py-2 rounded-xl text-xs font-black tracking-wider transition-all hover:opacity-80"
-            style={{background: pos.accent, color:'#000'}}>
-            VEURE PERFIL →
-          </button>
         </div>
       </div>
     </div>
@@ -356,7 +362,7 @@ function PlayerProfile({ player, stats, onClose }) {
       style={{background:'rgba(0,0,0,0.92)'}} onClick={onClose}>
       <div className="w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col sm:flex-row"
         style={{background:'#0f0f0f', border:'1px solid rgba(255,255,255,0.07)',
-          maxHeight:'92vh'}}
+          height:'92vh', maxHeight:'92vh'}}
         onClick={e=>e.stopPropagation()}>
 
         {/* ── Indicador drag mòbil ── */}
