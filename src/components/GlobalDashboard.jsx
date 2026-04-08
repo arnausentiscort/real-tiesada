@@ -501,6 +501,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
   const totalGF = matchHistory.reduce((a,m) => a+m.for, 0);
   const totalGA = matchHistory.reduce((a,m) => a+m.against, 0);
   const wins    = matchHistory.filter(m => m.for > m.against).length;
+  const draws   = matchHistory.filter(m => m.for === m.against).length;
   const losses  = matchHistory.filter(m => m.for < m.against).length;
   const lastMatch = matchHistory[matchHistory.length - 1];
   const [lf, la] = lastMatch.result.split('-').map(s=>parseInt(s.trim()));
@@ -533,19 +534,20 @@ export default function GlobalDashboard({ onSelectMatch }) {
       <CountdownHero onSelectMatch={handleMatchSelect}/>
 
       {/* ── Xifres temporada animades ── */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-5 gap-2">
         {[
-          {v: wins,   l:'Victòries', c:'text-emerald-400', delay:0},
-          {v: losses, l:'Derrotes',  c:'text-[#C0392B]',   delay:100},
-          {v: totalGF, l:'Gols favor', c:'text-[#E5C07B]', delay:200},
-          {v: totalGA, l:'En contra',  c:'text-gray-400',  delay:300},
+          {v: wins,    l:'Victòries', c:'text-emerald-400', delay:0},
+          {v: draws,   l:'Empats',    c:'text-yellow-400',  delay:80},
+          {v: losses,  l:'Derrotes',  c:'text-[#C0392B]',   delay:160},
+          {v: totalGF, l:'G. favor',  c:'text-[#E5C07B]',   delay:240},
+          {v: totalGA, l:'En contra', c:'text-gray-400',    delay:320},
         ].map(({v,l,c,delay}) => (
-          <div key={l} className="bg-[#1a1a1a] rounded-xl border border-white/5 p-3 text-center"
+          <div key={l} className="bg-[#1a1a1a] rounded-xl border border-white/5 p-2 sm:p-3 text-center"
             style={{animation:`fadeSlideUp 0.5s ease ${delay}ms both`}}>
-            <p className={`text-2xl font-black font-mono ${c}`}>
+            <p className={`text-xl sm:text-2xl font-black font-mono ${c}`}>
               <AnimatedNumber value={v} duration={600 + delay}/>
             </p>
-            <p className="text-[10px] text-gray-600 uppercase tracking-wider mt-0.5">{l}</p>
+            <p className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-wider mt-0.5 leading-tight">{l}</p>
           </div>
         ))}
       </div>

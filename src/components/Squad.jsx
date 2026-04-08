@@ -162,8 +162,7 @@ function PlayerCard({ player, stats, onClick }) {
   return (
     <div className="relative cursor-pointer select-none group"
       style={{perspective: '1000px', aspectRatio: '2/3'}}
-      onClick={() => setFlipped(f => !f)}
-      onDoubleClick={(e) => { e.stopPropagation(); setFlipped(false); onClick(); }}>
+      onClick={() => setFlipped(f => !f)}>
 
       <div className="absolute inset-0 transition-transform duration-500"
         style={{transformStyle:'preserve-3d', WebkitTransformStyle:'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}}>
@@ -355,41 +354,56 @@ function PlayerProfile({ player, stats, onClose }) {
   return (
     <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{background:'rgba(0,0,0,0.92)'}} onClick={onClose}>
-      <div className="w-full sm:max-w-2xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col"
+      <div className="w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col sm:flex-row"
         style={{background:'#0f0f0f', border:'1px solid rgba(255,255,255,0.07)',
-          maxHeight:'96vh', height:'96vh'}}
+          maxHeight:'92vh'}}
         onClick={e=>e.stopPropagation()}>
 
-        {/* ── Hero ── */}
-        <div className="relative h-52 sm:h-64 shrink-0 overflow-hidden">
-          <div className={`absolute inset-0 bg-gradient-to-b ${pos.gradient} opacity-60`}/>
+        {/* ── Indicador drag mòbil ── */}
+        <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full z-10"
+          style={{background:'rgba(255,255,255,0.15)'}}/>
+
+        {/* ── Panell esquerre: Hero (columna a desktop, header a mòbil) ── */}
+        <div className={`relative sm:w-56 sm:shrink-0 h-52 sm:h-auto overflow-hidden bg-gradient-to-b ${pos.gradient}`}>
+          <div className="absolute inset-0 opacity-60" style={{background:`linear-gradient(160deg, transparent 40%, #0f0f0f 100%)`}}/>
           {player.photo
             ? <img src={`${BASE}${player.photo}`} alt={player.name} className="absolute inset-0 w-full h-full object-cover object-top"/>
             : <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-9xl font-black" style={{color:'rgba(255,255,255,0.04)'}}>{player.number}</div>
+                <div className="text-9xl font-black" style={{color:'rgba(255,255,255,0.06)'}}>{player.number}</div>
               </div>
           }
-          <div className="absolute inset-0" style={{background:'linear-gradient(to top, #0f0f0f 0%, rgba(15,15,15,0.5) 50%, transparent 100%)'}}/>
+          {/* Gradient bottom per mòbil */}
+          <div className="sm:hidden absolute inset-0" style={{background:'linear-gradient(to top, #0f0f0f 0%, rgba(15,15,15,0.3) 60%, transparent 100%)'}}/>
+          {/* Gradient dreta per desktop */}
+          <div className="hidden sm:block absolute inset-0" style={{background:'linear-gradient(to right, transparent 60%, #0f0f0f 100%)'}}/>
 
+          {/* Rating badge */}
           <div className="absolute top-4 left-4 flex flex-col items-center px-3 py-2 rounded-2xl"
-            style={{background:'rgba(0,0,0,0.7)', border:`1px solid ${rColor}40`, backdropFilter:'blur(10px)'}}>
+            style={{background:'rgba(0,0,0,0.75)', border:`1px solid ${rColor}50`, backdropFilter:'blur(12px)'}}>
             <span className="text-3xl font-black leading-none" style={{color:rColor}}>{rating}</span>
             <span className="text-[8px] font-bold mt-0.5" style={{color:pos.accent}}>{pos.badge}</span>
           </div>
 
-          <button onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all hover:bg-white/20"
-            style={{background:'rgba(0,0,0,0.6)'}}>✕</button>
-
-          <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{color:pos.accent}}>{player.position}</div>
-              <div className="text-3xl font-black leading-none" style={{color:'white'}}>{player.shirtName}</div>
-              <div className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.45)'}}>{player.name}</div>
-            </div>
-            <div className="text-6xl font-black" style={{color:'rgba(255,255,255,0.08)'}}>#{player.number}</div>
+          {/* Info jugador (visible a mòbil sota la foto, a desktop a baix del panel) */}
+          <div className="absolute bottom-4 left-4 right-4 sm:right-2">
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{color:pos.accent}}>{player.position}</div>
+            <div className="text-2xl sm:text-3xl font-black leading-none" style={{color:'white'}}>{player.shirtName}</div>
+            <div className="text-sm mt-0.5" style={{color:'rgba(255,255,255,0.45)'}}>{player.name}</div>
+            <div className="text-4xl font-black mt-1" style={{color:'rgba(255,255,255,0.07)'}}>#{player.number}</div>
           </div>
         </div>
+
+        {/* ── Panell dret: Tabs + contingut ── */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+
+          {/* Botó tancar (desktop) */}
+          <button onClick={onClose}
+            className="hidden sm:flex absolute top-4 right-4 w-9 h-9 rounded-full items-center justify-center text-white transition-all hover:bg-white/20 z-20"
+            style={{background:'rgba(0,0,0,0.6)'}}>✕</button>
+          {/* Botó tancar (mòbil) */}
+          <button onClick={onClose}
+            className="sm:hidden absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-white z-20"
+            style={{background:'rgba(0,0,0,0.6)'}}>✕</button>
 
         {/* ── Tabs ── */}
         <div className="flex shrink-0" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
@@ -687,6 +701,7 @@ function PlayerProfile({ player, stats, onClose }) {
             </div>
           )}
         </div>
+        </div>{/* fi panell dret */}
       </div>
     </div>
   );
@@ -710,7 +725,7 @@ export default function Squad() {
     <div className="animate-fade-in">
       <div className="mb-6">
         <h2 className="text-3xl font-black text-white mb-1">La Plantilla</h2>
-        <p className="text-gray-500 text-sm">{DATABASE.roster.length} jugadors · Clica per girar · Doble clic per obrir perfil directament</p>
+        <p className="text-gray-500 text-sm">{DATABASE.roster.length} jugadors · Clica per girar · Usa el botó per veure el perfil</p>
       </div>
 
       {/* Filtre per posició */}
@@ -750,7 +765,7 @@ export default function Squad() {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs text-gray-700 mt-1">← Llisca · Toca per girar · Doble toc per obrir perfil</p>
+        <p className="text-center text-xs text-gray-700 mt-1">← Llisca · Toca per girar · Botó per veure perfil</p>
       </div>
 
       {/* Modal perfil */}
