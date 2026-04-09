@@ -360,7 +360,7 @@ function PlayerProfile({ player, stats, onClose }) {
   return (
     <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{background:'rgba(0,0,0,0.92)'}} onClick={onClose}>
-      <div className="w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col sm:flex-row"
+      <div className="relative w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col sm:flex-row"
         style={{background:'#0f0f0f', border:'1px solid rgba(255,255,255,0.07)',
           height:'92vh', maxHeight:'92vh'}}
         onClick={e=>e.stopPropagation()}>
@@ -402,17 +402,8 @@ function PlayerProfile({ player, stats, onClose }) {
         {/* ── Panell dret: Tabs + contingut ── */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-          {/* Botó tancar (desktop) */}
-          <button onClick={onClose}
-            className="hidden sm:flex absolute top-4 right-4 w-9 h-9 rounded-full items-center justify-center text-white transition-all hover:bg-white/20 z-20"
-            style={{background:'rgba(0,0,0,0.6)'}}>✕</button>
-          {/* Botó tancar (mòbil) */}
-          <button onClick={onClose}
-            className="sm:hidden absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center text-white z-20"
-            style={{background:'rgba(0,0,0,0.6)'}}>✕</button>
-
-        {/* ── Tabs ── */}
-        <div className="flex shrink-0" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+        {/* ── Tabs + botó tancar ── */}
+        <div className="flex shrink-0 items-stretch" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
           {TABS.map(tab => (
             <button key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -425,6 +416,13 @@ function PlayerProfile({ player, stats, onClose }) {
               {tab.label}
             </button>
           ))}
+          <button onClick={onClose}
+            className="w-12 flex items-center justify-center shrink-0 transition-colors"
+            style={{color:'rgba(255,255,255,0.25)', borderLeft:'1px solid rgba(255,255,255,0.06)'}}
+            onMouseEnter={e=>e.currentTarget.style.color='rgba(255,255,255,0.7)'}
+            onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.25)'}>
+            ✕
+          </button>
         </div>
 
         {/* ── Contingut tabs ── */}
