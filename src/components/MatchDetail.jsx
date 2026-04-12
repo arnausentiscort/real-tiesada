@@ -97,82 +97,93 @@ function GoalCard({ item, onJump }) {
   const bg      = isFavor ? 'rgba(39,174,96,0.08)' : 'rgba(192,57,43,0.08)';
   const border  = isFavor ? 'rgba(39,174,96,0.3)'  : 'rgba(192,57,43,0.3)';
 
-  // Foto de celebració del golejador
-  const scorer   = isFavor ? DATABASE.roster.find(r => r.name === item.scorer) : null;
-  const celPhoto = scorer?.photoCel;
+  const scorer    = isFavor ? DATABASE.roster.find(r => r.name === item.scorer) : null;
+  const celPhoto  = scorer?.photoCel;
   const normPhoto = scorer?.photo;
-  const hasBoth  = !!(celPhoto && normPhoto);
+  const hasBoth   = !!(celPhoto && normPhoto);
+  const hasAny    = !!(celPhoto || normPhoto);
 
-  // Loop entre foto normal i celebració
+  // Loop entre foto normal i celebració cada 2.5 s
   useEffect(() => {
     if (!hasBoth) return;
     const t = setInterval(() => setShowCel(v => !v), 2500);
     return () => clearInterval(t);
   }, [hasBoth]);
 
-  const activeSrc = hasBoth
-    ? (showCel ? celPhoto : normPhoto)
-    : (celPhoto || normPhoto);
+  const activeSrc = hasBoth ? (showCel ? celPhoto : normPhoto) : (celPhoto || normPhoto);
 
   return (
     <div className="relative rounded-2xl overflow-hidden border" style={{background:bg, borderColor:border}}>
       <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{background:accent}}/>
 
-      {/* Foto centrada com a fons — darrere del contingut */}
-      {activeSrc && isFavor && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <img
-            key={activeSrc}
-            src={`${BASE}${activeSrc}`}
-            alt=""
-            className="absolute top-0 bottom-0 right-4 h-full object-contain object-right"
-            style={{opacity: 0.18, animation: 'fadeIn 0.6s ease'}}/>
-          {/* Gradient per protegir el text a l'esquerra */}
-          <div className="absolute inset-0"
-            style={{background:`linear-gradient(to right, ${bg} 35%, transparent 75%, ${bg} 100%)`}}/>
-        </div>
-      )}
+      {/* Layout: contingut esquerra + foto dreta (columnes separades, sense superposició) */}
+      <div className="flex">
 
-      <div className="pl-5 pr-4 py-4 relative z-10">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10 text-gray-300">{item.time}</span>
-            <span className="font-black font-mono text-2xl" style={{color:accent}}>{item.score}</span>
-            <span className="text-sm font-bold uppercase tracking-wider" style={{color:accent}}>
-              {isFavor ? '⚽ GOL A FAVOR' : '❌ EN CONTRA'}
-            </span>
+        {/* Contingut — ocupa tot l'espai llevat de la foto */}
+        <div className="flex-1 min-w-0 pl-5 pr-4 py-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-mono text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10 text-gray-300">{item.time}</span>
+              <span className="font-black font-mono text-2xl" style={{color:accent}}>{item.score}</span>
+              <span className="text-sm font-bold uppercase tracking-wider" style={{color:accent}}>
+                {isFavor ? '⚽ GOL' : '❌ EN CONTRA'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {item.localVideoUrl && (
+                <button onClick={() => setShowLocalVideo(p=>!p)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
+                    bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B] hover:bg-[#E5C07B]/25">
+                  {showLocalVideo ? '▼ Tancar' : '▶ Clip'}
+                </button>
+              )}
+              {item.jumpUrl && (
+                <button onClick={() => onJump(item.time)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
+                    bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white">
+                  ▶ Veure
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {item.localVideoUrl && (
-              <button onClick={() => setShowLocalVideo(p=>!p)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
-                  bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B] hover:bg-[#E5C07B]/25">
-                {showLocalVideo ? '▼ Tancar' : '▶ Clip'}
-              </button>
+          {isFavor ? (
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <span className="text-white font-black text-xl">{shirtName(item.scorer)}</span>
+              {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{shirtName(item.assist)}</span></span>}
+            </div>
+          ) : (
+            item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
+          )}
+          {showLocalVideo && item.localVideoUrl && (
+            <div className="mt-3">
+              <video src={`${BASE}${item.localVideoUrl}`} controls className="w-full rounded-xl border border-white/10"/>
+            </div>
+          )}
+        </div>{/* fi contingut */}
+
+        {/* Franja foto dreta — completament separada del contingut */}
+        {hasAny && isFavor && (
+          <div className="relative shrink-0 overflow-hidden rounded-r-2xl" style={{width: 72}}>
+            <img
+              key={activeSrc}
+              src={`${BASE}${activeSrc}`}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-top"
+              style={{animation: 'fadeIn 0.7s ease'}}/>
+            {/* Gradient esquerra per fusionar amb el fons */}
+            <div className="absolute inset-0"
+              style={{background: `linear-gradient(to right, ${bg} 0%, transparent 50%)`}}/>
+            {/* Indicador si hi ha loop */}
+            {hasBoth && (
+              <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-0.5">
+                <div className="w-1 h-1 rounded-full transition-all" style={{background: !showCel ? 'white' : 'rgba(255,255,255,0.3)'}}/>
+                <div className="w-1 h-1 rounded-full transition-all" style={{background: showCel ? 'white' : 'rgba(255,255,255,0.3)'}}/>
+              </div>
             )}
-            {item.jumpUrl && (
-              <button onClick={() => onJump(item.time)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all
-                  bg-red-600/15 border-red-500/30 text-red-400 hover:bg-red-600 hover:text-white">
-                ▶ Veure
-              </button>
-            )}
-          </div>
-        </div>
-        {isFavor ? (
-          <div className="mt-2 flex items-center gap-2 flex-wrap">
-            <span className="text-white font-black text-xl">{shirtName(item.scorer)}</span>
-            {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{shirtName(item.assist)}</span></span>}
-          </div>
-        ) : (
-          item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
-        )}
-        {showLocalVideo && item.localVideoUrl && (
-          <div className="mt-3">
-            <video src={`${BASE}${item.localVideoUrl}`} controls className="w-full rounded-xl border border-white/10"/>
           </div>
         )}
-      </div>
+
+      </div>{/* fi flex */}
     </div>
   );
 }
