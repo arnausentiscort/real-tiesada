@@ -169,7 +169,7 @@ function GoalCard({ item, onJump }) {
               src={`${BASE}${activeSrc}`}
               alt=""
               className="absolute inset-0 w-full h-full object-cover object-top"
-              style={{animation: 'fadeIn 0.7s ease'}}/>
+              style={{animation: 'fadeIn 0.7s ease', mixBlendMode: 'lighten'}}/>
             {/* Gradient esquerra per fusionar amb el fons */}
             <div className="absolute inset-0"
               style={{background: `linear-gradient(to right, ${bg} 0%, transparent 50%)`}}/>
