@@ -4,6 +4,36 @@ import { calcGlobalStats, calcGoalkeeperStints, calcMatchStats, formatTime, pars
 
 const BASE = import.meta.env.BASE_URL;
 
+// ── GitHub helpers (edició jugador) ───────────────────────────────
+const REPO_OWNER = 'arnausentiscort';
+const REPO_NAME  = 'real-tiesada';
+const GH_FILE    = 'src/data.js';
+
+async function ghGetFile(token) {
+  const r = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GH_FILE}`,
+    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } }
+  );
+  if (!r.ok) throw new Error(`GitHub error ${r.status}`);
+  const d = await r.json();
+  const binary = atob(d.content.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return { sha: d.sha, content: new TextDecoder('utf-8').decode(bytes) };
+}
+
+async function ghPushFile(token, sha, content, message) {
+  const r = await fetch(
+    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GH_FILE}`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, content: btoa(unescape(encodeURIComponent(content))), sha }),
+    }
+  );
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message || `Error ${r.status}`); }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 function getVideoUrl(matchId, time) {
   const match = DATABASE.matches.find(m => m.id === matchId);
@@ -304,6 +334,20 @@ function PlayerCard({ player, stats, onClick }) {
 // ── Perfil complet (modal) ────────────────────────────────────────
 function PlayerProfile({ player, stats, onClose }) {
   const [activeTab, setActiveTab] = useState('stats');
+
+  // Edició jugador
+  const [editData, setEditData] = useState({
+    name:      player.name,
+    number:    player.number,
+    shirtName: player.shirtName || '',
+    position:  player.position  || 'Migcampista',
+    photo:     player.photo     || '',
+    photoCel:  player.photoCel  || '',
+  });
+  const [ghToken, setGhToken]   = useState(() => localStorage.getItem('gh_token') || '');
+  const [ghStatus, setGhStatus] = useState(null); // null | 'saving' | 'ok' | 'error'
+  const [ghError,  setGhError]  = useState('');
+
   const pos = POS_CONFIG[player.position] || POS_CONFIG['Migcampista'];
   const isGK = player.position === 'Porter';
   const rating = calcRating(player, stats);
@@ -351,10 +395,34 @@ function PlayerProfile({ player, stats, onClose }) {
   // Duos
   const duos = useMemo(() => calcPlayerDuos(player.name), [player.name]);
 
+  // Desa canvis del jugador a GitHub
+  const handleSave = async () => {
+    if (!ghToken) { setGhError('Cal un token de GitHub'); setGhStatus('error'); return; }
+    localStorage.setItem('gh_token', ghToken);
+    setGhStatus('saving'); setGhError('');
+    try {
+      const { sha, content } = await ghGetFile(ghToken);
+      const photoStr    = editData.photo    ? `"${editData.photo}"`    : 'null';
+      const photoCelStr = editData.photoCel ? `"${editData.photoCel}"` : 'null';
+      const newEntry = `{ name: "${editData.name}", number: ${editData.number}, shirtName: "${editData.shirtName}", position: "${editData.position}", photo: ${photoStr}, photoCel: ${photoCelStr} }`;
+      // Substitueix la línia del roster d'aquest jugador
+      const escaped = player.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex   = new RegExp(`\\{ name: "${escaped}"[^\\n}]+\\}`, 'g');
+      const updated = content.replace(regex, newEntry);
+      if (updated === content) throw new Error('No s\'ha trobat l\'entrada del jugador al fitxer');
+      await ghPushFile(ghToken, sha, updated, `Edita jugador ${editData.name}`);
+      setGhStatus('ok');
+    } catch (err) {
+      setGhStatus('error');
+      setGhError(err.message);
+    }
+  };
+
   const TABS = [
-    { id: 'stats', label: 'Stats' },
-    { id: 'moments', label: 'Moments' },
-    { id: 'duos', label: 'Duos' },
+    { id: 'stats',   label: 'Stats'    },
+    { id: 'moments', label: 'Moments'  },
+    { id: 'duos',    label: 'Duos'     },
+    { id: 'editar',  label: 'Editar'   },
   ];
 
   return (
@@ -704,6 +772,113 @@ function PlayerProfile({ player, stats, onClose }) {
               )}
             </div>
           )}
+          {/* ─── TAB: EDITAR ─── */}
+          {activeTab === 'editar' && (
+            <div className="p-5 space-y-4" style={{animation:'fadeIn 0.2s ease'}}>
+
+              <p className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">
+                ✏️ Editar dades del jugador
+              </p>
+
+              {/* Camps del formulari */}
+              {[
+                { key: 'name',      label: 'Nom complet',  type: 'text', placeholder: 'Arnau Sentis' },
+                { key: 'shirtName', label: 'Nom dorsal',   type: 'text', placeholder: 'SENTIS' },
+                { key: 'number',    label: 'Dorsal',       type: 'number', placeholder: '8' },
+              ].map(({ key, label, type, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>{label}</label>
+                  <input
+                    type={type}
+                    value={editData[key]}
+                    onChange={e => setEditData(d => ({ ...d, [key]: type === 'number' ? Number(e.target.value) : e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                    style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'white'}}
+                  />
+                </div>
+              ))}
+
+              {/* Posició */}
+              <div>
+                <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>Posició</label>
+                <select
+                  value={editData.position}
+                  onChange={e => setEditData(d => ({ ...d, position: e.target.value }))}
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                  style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'white'}}>
+                  {['Porter','Defensa','Migcampista','Davanter'].map(p => (
+                    <option key={p} value={p} style={{background:'#1a1a1a'}}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Fotos */}
+              {[
+                { key: 'photo',    label: 'Foto perfil (ruta)', placeholder: 'players/arnau.png' },
+                { key: 'photoCel', label: 'Foto cel (ruta)',    placeholder: 'players/arnau_cel.png' },
+              ].map(({ key, label, placeholder }) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>{label}</label>
+                  <input
+                    type="text"
+                    value={editData[key]}
+                    onChange={e => setEditData(d => ({ ...d, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full rounded-xl px-3 py-2 text-sm font-mono outline-none"
+                    style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.7)'}}
+                  />
+                </div>
+              ))}
+
+              {/* Separador */}
+              <div style={{borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:'12px'}}>
+                <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>Token GitHub</label>
+                <input
+                  type="password"
+                  value={ghToken}
+                  onChange={e => setGhToken(e.target.value)}
+                  placeholder="ghp_..."
+                  className="w-full rounded-xl px-3 py-2 text-sm font-mono outline-none"
+                  style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.7)'}}
+                />
+                {ghToken && (
+                  <p className="text-[9px] mt-1" style={{color:'rgba(255,255,255,0.25)'}}>
+                    Token guardat localment
+                  </p>
+                )}
+              </div>
+
+              {/* Botó guardar */}
+              <button
+                onClick={handleSave}
+                disabled={ghStatus === 'saving'}
+                className="w-full py-3 rounded-xl text-sm font-black tracking-wider transition-all"
+                style={{
+                  background: ghStatus === 'ok' ? '#10B981' : ghStatus === 'error' ? '#EF4444' : '#E5C07B',
+                  color: '#000',
+                  opacity: ghStatus === 'saving' ? 0.6 : 1,
+                }}>
+                {ghStatus === 'saving' ? '⏳ Guardant...'
+                  : ghStatus === 'ok'   ? '✓ Guardat! (refresca la pàgina)'
+                  : ghStatus === 'error' ? '✕ Error — reintenta'
+                  : '⬆ Guardar a GitHub'}
+              </button>
+
+              {ghError && (
+                <p className="text-xs rounded-xl px-3 py-2" style={{background:'rgba(239,68,68,0.1)', color:'#EF4444', border:'1px solid rgba(239,68,68,0.2)'}}>
+                  {ghError}
+                </p>
+              )}
+
+              {ghStatus === 'ok' && (
+                <p className="text-[10px] text-center" style={{color:'rgba(255,255,255,0.3)'}}>
+                  Els canvis s'han pujat a GitHub. Espera ~2 min per al deploy automàtic.
+                </p>
+              )}
+            </div>
+          )}
+
         </div>
         </div>{/* fi panell dret */}
       </div>
