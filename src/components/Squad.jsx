@@ -426,11 +426,11 @@ function PlayerProfile({ player, stats, onClose }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4"
+    <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center p-0 sm:p-4 sm:pt-16"
       style={{background:'rgba(0,0,0,0.92)'}} onClick={onClose}>
       <div className="relative w-full sm:max-w-3xl sm:rounded-2xl rounded-t-3xl overflow-hidden flex flex-col sm:flex-row"
         style={{background:'#0f0f0f', border:'1px solid rgba(255,255,255,0.07)',
-          height:'92vh', maxHeight:'92vh'}}
+          height:'92vh', maxHeight:'calc(92vh - 4rem)'}}
         onClick={e=>e.stopPropagation()}>
 
         {/* ── Indicador drag mòbil ── */}
