@@ -91,28 +91,45 @@ function buildCronica(match) {
 // ── Targeta gran de gol ───────────────────────────────────────────
 function GoalCard({ item, onJump }) {
   const [showLocalVideo, setShowLocalVideo] = useState(false);
+  const [showCel, setShowCel] = useState(false);
   const isFavor = item.kind === 'goal_favor';
   const accent  = isFavor ? '#27AE60' : '#C0392B';
   const bg      = isFavor ? 'rgba(39,174,96,0.08)' : 'rgba(192,57,43,0.08)';
   const border  = isFavor ? 'rgba(39,174,96,0.3)'  : 'rgba(192,57,43,0.3)';
 
   // Foto de celebració del golejador
-  const scorer  = isFavor ? DATABASE.roster.find(r => r.name === item.scorer) : null;
+  const scorer   = isFavor ? DATABASE.roster.find(r => r.name === item.scorer) : null;
   const celPhoto = scorer?.photoCel;
+  const normPhoto = scorer?.photo;
+  const hasBoth  = !!(celPhoto && normPhoto);
+
+  // Loop entre foto normal i celebració
+  useEffect(() => {
+    if (!hasBoth) return;
+    const t = setInterval(() => setShowCel(v => !v), 2500);
+    return () => clearInterval(t);
+  }, [hasBoth]);
+
+  const activeSrc = hasBoth
+    ? (showCel ? celPhoto : normPhoto)
+    : (celPhoto || normPhoto);
 
   return (
     <div className="relative rounded-2xl overflow-hidden border" style={{background:bg, borderColor:border}}>
       <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{background:accent}}/>
 
-      {/* Foto celebració — fons decoratiu dreta */}
-      {celPhoto && (
-        <div className="absolute right-0 top-0 bottom-0 w-32 pointer-events-none overflow-hidden"
-          style={{animation:'goalPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both'}}>
-          <div className="absolute inset-0 z-10"
-            style={{background:`linear-gradient(to right, ${bg} 0%, transparent 60%)`}}/>
-          <img src={`${BASE}${celPhoto}`} alt=""
-            className="absolute bottom-0 right-0 h-full w-full object-cover object-top"
-            style={{opacity:0.25}}/>
+      {/* Foto centrada com a fons — darrere del contingut */}
+      {activeSrc && isFavor && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <img
+            key={activeSrc}
+            src={`${BASE}${activeSrc}`}
+            alt=""
+            className="absolute top-0 bottom-0 right-4 h-full object-contain object-right"
+            style={{opacity: 0.18, animation: 'fadeIn 0.6s ease'}}/>
+          {/* Gradient per protegir el text a l'esquerra */}
+          <div className="absolute inset-0"
+            style={{background:`linear-gradient(to right, ${bg} 35%, transparent 75%, ${bg} 100%)`}}/>
         </div>
       )}
 
@@ -476,8 +493,7 @@ function TimelineChart({ match, matchStats }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack, onNavigate }) {
-  const [videoStart,      setVideoStart]      = useState(0);
-  const [transitionPhoto, setTransitionPhoto] = useState(null);
+  const [videoStart, setVideoStart] = useState(0);
 
   const allMatches = DATABASE.matches;
   const currentIdx = allMatches.findIndex(m => m.id === match.id);
@@ -502,32 +518,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
     document.getElementById('match-video')?.scrollIntoView({ behavior:'smooth', block:'start' });
   };
 
-  // Transició amb photoCel quan es canvia de jornada
-  const handleNavigate = (target) => {
-    if (!target || !onNavigate) return;
-    const scorer = (target.events?.goals || []).find(g => g.type === 'favor')?.scorer;
-    const pl     = scorer ? DATABASE.roster.find(r => r.name === scorer) : null;
-    if (pl?.photoCel) {
-      setTransitionPhoto(`${BASE}${pl.photoCel}`);
-      setTimeout(() => { onNavigate(target); }, 420);
-      setTimeout(() => { setTransitionPhoto(null); }, 750);
-    } else {
-      onNavigate(target);
-    }
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
-
-      {/* Flash de transició entre jornades */}
-      {transitionPhoto && (
-        <div className="fixed inset-0 z-[350] pointer-events-none flex items-center justify-center"
-          style={{background:'rgba(0,0,0,0.75)', animation:'celebrationFlash 0.75s ease forwards'}}>
-          <img src={transitionPhoto} alt=""
-            className="h-full max-w-full object-contain object-center"
-            style={{maxHeight:'85vh', filter:'drop-shadow(0 0 60px rgba(229,192,123,0.4))'}}/>
-        </div>
-      )}
 
       {/* Navegació entre jornades */}
       <div className="flex items-center justify-between gap-3">
@@ -540,7 +532,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
         <div className="flex items-center gap-1">
           <button
             disabled={!prevMatch}
-            onClick={() => handleNavigate(prevMatch)}
+            onClick={() => onNavigate && onNavigate(prevMatch)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-20 disabled:cursor-default"
             style={{background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)'}}>
             <ChevronLeft className="w-3.5 h-3.5"/>
@@ -550,7 +542,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           <div className="flex gap-1">
             {allMatches.map((m, i) => (
               <button key={m.id}
-                onClick={() => handleNavigate(m)}
+                onClick={() => onNavigate && onNavigate(m)}
                 className="w-2 h-2 rounded-full transition-all"
                 style={{
                   background: m.id === match.id ? '#E5C07B' : 'rgba(255,255,255,0.15)',
@@ -561,7 +553,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
 
           <button
             disabled={!nextMatch}
-            onClick={() => handleNavigate(nextMatch)}
+            onClick={() => onNavigate && onNavigate(nextMatch)}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-20 disabled:cursor-default"
             style={{background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.5)'}}>
             {nextMatch ? nextMatch.jornada.replace('Jornada ','J') : '—'}
