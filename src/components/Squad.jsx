@@ -170,7 +170,8 @@ function PlayerAvatar({ name, size = 36 }) {
 
 // ── Targeta carta ─────────────────────────────────────────────────
 function PlayerCard({ player, stats, onClick }) {
-  const [flipped, setFlipped] = useState(false);
+  const [flipped,  setFlipped]  = useState(false);
+  const [hovered,  setHovered]  = useState(false);
   const pos = POS_CONFIG[player.position] || POS_CONFIG['Migcampista'];
   const rating = useMemo(() => calcRating(player, stats), [player, stats]);
   const rColor = ratingColor(rating);
@@ -192,7 +193,9 @@ function PlayerCard({ player, stats, onClick }) {
   return (
     <div className="relative cursor-pointer select-none group"
       style={{perspective: '1000px', aspectRatio: '2/3'}}
-      onClick={() => setFlipped(f => !f)}>
+      onClick={() => setFlipped(f => !f)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}>
 
       <div className="absolute inset-0 transition-transform duration-500"
         style={{transformStyle:'preserve-3d', WebkitTransformStyle:'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}}>
@@ -207,8 +210,11 @@ function PlayerCard({ player, stats, onClick }) {
             style={{backgroundImage:'radial-gradient(circle at 50% 0%, white 1px, transparent 1px)', backgroundSize:'20px 20px'}}/>
 
           {player.photo ? (
-            <img src={`${BASE}${player.photo}`} alt={player.name}
-              className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"/>
+            <img
+              src={`${BASE}${hovered && player.photoCel ? player.photoCel : player.photo}`}
+              alt={player.name}
+              className="absolute inset-0 w-full h-full object-cover object-top transition-all duration-500"
+              style={{transform: hovered && !player.photoCel ? 'scale(1.05)' : 'scale(1)'}}/>
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="text-6xl mb-2 opacity-20">{pos.emoji}</div>

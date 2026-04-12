@@ -30,16 +30,17 @@ const playedMatches = DATABASE.matches.filter(m => {
 });
 
 // ── Avatar jugador ────────────────────────────────────────────────
-function PlayerAvatar({ name, size = 56, ring }) {
+function PlayerAvatar({ name, size = 56, ring, cel = false }) {
   const pl = DATABASE.roster.find(r => r.name === name);
+  const src = cel && pl?.photoCel ? pl.photoCel : pl?.photo;
   const style = {
     width: size, height: size, flexShrink: 0,
     border: `2px solid ${ring || 'rgba(255,255,255,0.12)'}`,
     borderRadius: '50%', overflow: 'hidden',
   };
-  if (pl?.photo) return (
+  if (src) return (
     <div style={style}>
-      <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover object-top"/>
+      <img src={`${BASE}${src}`} alt={name} className="w-full h-full object-cover object-top"/>
     </div>
   );
   return (
@@ -74,7 +75,7 @@ function Podium({ ranking }) {
             {/* Avatar + info */}
             <div className="flex flex-col items-center gap-1.5">
               <div className="relative">
-                <PlayerAvatar name={name} size={avatarSize} ring={cfg.color}/>
+                <PlayerAvatar name={name} size={avatarSize} ring={cfg.color} cel={true}/>
                 <span className="absolute -bottom-1 -right-1 text-base leading-none">{cfg.medal}</span>
               </div>
               <div className="text-center">
