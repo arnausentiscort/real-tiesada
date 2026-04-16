@@ -395,6 +395,13 @@ function SeasonTimeline({ matches, onSelectMatch }) {
     scrollRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
   };
 
+  // Scroll al final per mostrar els últims partits en carregar
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, []);
+
   return (
     <div className="relative">
       <button onClick={() => scroll(-1)}

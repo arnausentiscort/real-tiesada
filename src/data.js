@@ -388,6 +388,8 @@ export const DATABASE = {
           { time: "35:29", goalkeeper: "Ivan Mico",   onPitch: ["Roger Miro","Pau Ibañez","Paco Montero","Chengzhi Li"] },
           { time: "38:29", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis","Roger Miro","Pau Ibañez","Chengzhi Li"] },
           { time: "39:26", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis","Roger Miro","Oriol Tomas","Chengzhi Li"] },
+          // Final del partit
+          { time: "40:04", goalkeeper: "Ivan Mico",   onPitch: [] },
         ],
         cards: [
           { time: "5:00", color: "yellow", player: "Pau Ibañez" },
@@ -441,7 +443,7 @@ export const DATABASE = {
       date: "13/04/2026",
       youtubeId: "Z-ekVxfBgn8",
       vimeoId: null,
-      idealMinutesPerPlayer: 16.0,
+      idealMinutesPerPlayer: 20.0,
       savesManual: { "Ivan Mico": 0, "Oriol Tomas": 0 },
       events: {
         substitutions: [
@@ -454,6 +456,9 @@ export const DATABASE = {
           { time: "15:02", goalkeeper: "Ivan Mico",    onPitch: ["Arnau Sentis","Roger Miro","Joan Medina","Oriol Tomas"] },
           { time: "18:27", goalkeeper: "Ivan Mico",    onPitch: ["Arnau Sentis","Joan Medina","Pau Ibañez","Oriol Tomas"] },
           { time: "19:38", goalkeeper: "Ivan Mico",    onPitch: ["Arnau Sentis","Pau Ibañez","Oriol Tomas","Chengzhi Li"] },
+          // Descans de la mitja part (~1 min, no comptem aquest temps als jugadors)
+          { time: "19:48", goalkeeper: "Ivan Mico",    onPitch: [] },
+          // Comença la 2a part
           { time: "21:24", goalkeeper: "Ivan Mico",    onPitch: ["Arnau Sentis","Pau Ibañez","Roi Seoane","Chengzhi Li"] },
           { time: "23:55", goalkeeper: "Ivan Mico",    onPitch: ["Roger Miro","Pau Ibañez","Roi Seoane","Chengzhi Li"] },
           { time: "25:40", goalkeeper: "Ivan Mico",    onPitch: ["Roger Miro","Joan Medina","Pau Ibañez","Chengzhi Li"] },
@@ -464,6 +469,8 @@ export const DATABASE = {
           { time: "33:32", goalkeeper: "Oriol Tomas",  onPitch: ["Arnau Sentis","Pau Ibañez","Roi Seoane","Chengzhi Li"] },
           { time: "37:24", goalkeeper: "Oriol Tomas",  onPitch: ["Arnau Sentis","Roger Miro","Pau Ibañez","Chengzhi Li"] },
           { time: "38:21", goalkeeper: "Oriol Tomas",  onPitch: ["Roger Miro","Pau Ibañez","Chengzhi Li","Ivan Mico"] },
+          // Final del partit
+          { time: "40:22", goalkeeper: "Oriol Tomas",  onPitch: [] },
         ],
         cards: [],
         goals: [
