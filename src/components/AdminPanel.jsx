@@ -14,7 +14,6 @@ async function getFileSha(token) {
   });
   if (!r.ok) throw new Error(`GitHub error ${r.status}`);
   const d = await r.json();
-  // Decodifica correctament UTF-8 (accents, caràcters especials)
   const binary = atob(d.content.replace(/\n/g,''));
   const bytes = new Uint8Array(binary.length);
   for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
@@ -31,22 +30,19 @@ async function pushFile(token, sha, newContent, message) {
   return r.json();
 }
 
-// ── Conversió click SVG precisa (usa CTM) ─────────────────────────
+// ── SVG helpers ───────────────────────────────────────────────────
 function svgPoint(svgEl, clientX, clientY) {
   const pt = svgEl.createSVGPoint();
   pt.x = clientX; pt.y = clientY;
   const ctm = svgEl.getScreenCTM();
   if (!ctm) return null;
-  const inv = ctm.inverse();
-  const p = pt.matrixTransform(inv);
-  return { x: Math.round(p.x), y: Math.round(p.y) };
+  return pt.matrixTransform(ctm.inverse());
 }
 
-// ── Camp clickable — suporta fins a 3 punts (assist, conducció, tir) ──
+// ── Camp clickable ────────────────────────────────────────────────
 function PitchClickable({ points, onChange }) {
-  // points: { assist, conduct, shot } — cadascun pot ser null o {x,y,zone}
   const svgRef = useRef(null);
-  const [mode, setMode] = useState('shot'); // 'assist' | 'conduct' | 'shot'
+  const [mode, setMode] = useState('shot');
 
   const zoneFromXY = (x, y) => {
     const col  = Math.min(6, Math.max(1, Math.ceil((x - 18) / (764/6))));
@@ -57,38 +53,27 @@ function PitchClickable({ points, onChange }) {
   const handleClick = useCallback((e) => {
     const p = svgPoint(svgRef.current, e.clientX, e.clientY);
     if (!p) return;
-    const zone = zoneFromXY(p.x, p.y);
-    onChange({ ...points, [mode]: { x: p.x, y: p.y, zone } });
+    const px = Math.round(p.x), py = Math.round(p.y);
+    onChange({ ...points, [mode]: { x: px, y: py, zone: zoneFromXY(px, py) } });
   }, [mode, points, onChange]);
 
   const clear = (key) => onChange({ ...points, [key]: null });
-
   const btnCls = (m, color) => `flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all ${
     mode === m ? `${color} opacity-100` : 'border-white/10 text-gray-600 opacity-60 hover:opacity-100'
   }`;
 
   return (
     <div className="space-y-2">
-      {/* Selector de mode */}
       <div className="flex gap-1.5">
-        <button onClick={() => setMode('assist')}  className={btnCls('assist',  'bg-blue-500/20 border-blue-500/40 text-blue-400')}>
-          👟 Assist {points.assist ? '✓' : ''}
-        </button>
-        <button onClick={() => setMode('conduct')} className={btnCls('conduct', 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400')}>
-          🏃 Conducció {points.conduct ? '✓' : ''}
-        </button>
-        <button onClick={() => setMode('shot')}    className={btnCls('shot',    'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]')}>
-          ⚽ Tir {points.shot ? '✓' : ''}
-        </button>
+        <button onClick={() => setMode('assist')}  className={btnCls('assist',  'bg-blue-500/20 border-blue-500/40 text-blue-400')}>👟 Assist {points.assist ? '✓' : ''}</button>
+        <button onClick={() => setMode('conduct')} className={btnCls('conduct', 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400')}>🏃 Conducció {points.conduct ? '✓' : ''}</button>
+        <button onClick={() => setMode('shot')}    className={btnCls('shot',    'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]')}>⚽ Tir {points.shot ? '✓' : ''}</button>
       </div>
       <p className="text-[10px] text-gray-600">
-        Mode: <span className="text-white font-bold">{mode === 'assist' ? 'Punt assistència' : mode === 'conduct' ? 'Fi conducció (on rep el tir)' : 'Punt de tir'}</span>
-        {' — '}clica al camp per marcar
+        Mode: <span className="text-white font-bold">{mode === 'assist' ? 'Punt assistència' : mode === 'conduct' ? 'Fi conducció' : 'Punt de tir'}</span> — clica al camp
       </p>
-
       <svg ref={svgRef} viewBox="0 0 800 420" onClick={handleClick}
-        className="w-full rounded-xl cursor-crosshair border border-white/10"
-        style={{display:'block', maxHeight:220}}>
+        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{display:'block', maxHeight:220}}>
         <rect width="800" height="420" fill="#1c3d1c"/>
         {[0,2,4,6].map(i=><rect key={i} x="0" y={i*60} width="800" height="60" fill="rgba(0,0,0,0.07)"/>)}
         <rect x="18" y="18" width="764" height="384" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2"/>
@@ -105,54 +90,20 @@ function PitchClickable({ points, onChange }) {
         {[1,2,3,4,5].map(c=><line key={c} x1={18+c*764/6} y1="18" x2={18+c*764/6} y2="402" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
         {[1,2,3].map(r=><line key={r} x1="18" y1={18+r*384/4} x2="782" y2={18+r*384/4} stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
         {['A','B','C','D'].map((row,ri)=>[1,2,3,4,5,6].map(col=>(
-          <text key={`${row}${col}`} x={18+(col-0.5)*764/6} y={18+(ri+0.5)*384/4}
-            textAnchor="middle" dominantBaseline="middle" fontSize="9"
-            fill="rgba(255,255,255,0.3)" fontWeight="bold">{row}{col}</text>
+          <text key={`${row}${col}`} x={18+(col-0.5)*764/6} y={18+(ri+0.5)*384/4} textAnchor="middle" dominantBaseline="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontWeight="bold">{row}{col}</text>
         )))}
-
-        {/* Línia assist → conduct */}
-        {points.assist && points.conduct && (
-          <line x1={points.assist.x} y1={points.assist.y} x2={points.conduct.x} y2={points.conduct.y}
-            stroke="#61AFEF" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/>
-        )}
-        {/* Línia conduct → shot (o assist → shot si no hi ha conduct) */}
-        {(() => {
-          const from = points.conduct || points.assist;
-          const to   = points.shot;
-          if (!from || !to) return null;
-          return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-            stroke="#E5C07B" strokeWidth="1.5" strokeDasharray="5,3" opacity="0.7"/>;
-        })()}
-
-        {/* Punts */}
-        {points.assist && <>
-          <circle cx={points.assist.x} cy={points.assist.y} r="10" fill="#61AFEF" opacity="0.2"/>
-          <circle cx={points.assist.x} cy={points.assist.y} r="5" fill="#61AFEF" stroke="white" strokeWidth="1.5"/>
-          <text x={points.assist.x} y={points.assist.y-10} textAnchor="middle" fontSize="8" fill="#61AFEF">A</text>
-        </>}
-        {points.conduct && <>
-          <circle cx={points.conduct.x} cy={points.conduct.y} r="10" fill="#facc15" opacity="0.2"/>
-          <circle cx={points.conduct.x} cy={points.conduct.y} r="5" fill="#facc15" stroke="white" strokeWidth="1.5"/>
-          <text x={points.conduct.x} y={points.conduct.y-10} textAnchor="middle" fontSize="8" fill="#facc15">C</text>
-        </>}
-        {points.shot && <>
-          <circle cx={points.shot.x} cy={points.shot.y} r="12" fill="#E5C07B" opacity="0.2"/>
-          <circle cx={points.shot.x} cy={points.shot.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="2"/>
-          <text x={points.shot.x} y={points.shot.y-12} textAnchor="middle" fontSize="8" fill="#E5C07B">T</text>
-        </>}
+        {points.assist && points.conduct && <line x1={points.assist.x} y1={points.assist.y} x2={points.conduct.x} y2={points.conduct.y} stroke="#61AFEF" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/>}
+        {(() => { const from = points.conduct || points.assist; const to = points.shot; if (!from || !to) return null; return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="#E5C07B" strokeWidth="1.5" strokeDasharray="5,3" opacity="0.7"/>; })()}
+        {points.assist && <><circle cx={points.assist.x} cy={points.assist.y} r="10" fill="#61AFEF" opacity="0.2"/><circle cx={points.assist.x} cy={points.assist.y} r="5" fill="#61AFEF" stroke="white" strokeWidth="1.5"/><text x={points.assist.x} y={points.assist.y-10} textAnchor="middle" fontSize="8" fill="#61AFEF">A</text></>}
+        {points.conduct && <><circle cx={points.conduct.x} cy={points.conduct.y} r="10" fill="#facc15" opacity="0.2"/><circle cx={points.conduct.x} cy={points.conduct.y} r="5" fill="#facc15" stroke="white" strokeWidth="1.5"/><text x={points.conduct.x} y={points.conduct.y-10} textAnchor="middle" fontSize="8" fill="#facc15">C</text></>}
+        {points.shot && <><circle cx={points.shot.x} cy={points.shot.y} r="12" fill="#E5C07B" opacity="0.2"/><circle cx={points.shot.x} cy={points.shot.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="2"/><text x={points.shot.x} y={points.shot.y-12} textAnchor="middle" fontSize="8" fill="#E5C07B">T</text></>}
         <text x="10" y="213" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.25)" transform="rotate(-90,10,213)">nostra</text>
         <text x="793" y="213" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.25)" transform="rotate(90,793,213)">rival →</text>
       </svg>
-
-      {/* Resum punts + esborrar */}
       <div className="flex gap-1.5 flex-wrap">
-        {[
-          {key:'assist', label:'A', color:'text-blue-400', desc:points.assist?.zone},
-          {key:'conduct',label:'C', color:'text-yellow-400', desc:points.conduct?.zone},
-          {key:'shot',   label:'T', color:'text-[#E5C07B]', desc:points.shot?.zone},
-        ].map(({key,label,color,desc}) => desc && (
+        {[{key:'assist',label:'A',color:'text-blue-400'},{key:'conduct',label:'C',color:'text-yellow-400'},{key:'shot',label:'T',color:'text-[#E5C07B]'}].map(({key,label,color}) => points[key] && (
           <div key={key} className="flex items-center gap-1 bg-[#111] border border-white/8 rounded-lg px-2 py-0.5 text-[10px]">
-            <span className={`font-bold ${color}`}>{label}: {desc}</span>
+            <span className={`font-bold ${color}`}>{label}: {points[key].zone}</span>
             <button onClick={() => clear(key)} className="text-gray-600 hover:text-red-400 ml-0.5">×</button>
           </div>
         ))}
@@ -167,44 +118,33 @@ function GoalClickable({ value, onChange, label }) {
   const handleClick = useCallback((e) => {
     const p = svgPoint(svgRef.current, e.clientX, e.clientY);
     if (!p) return;
-    const x = Math.max(0, Math.min(300, p.x));
-    const y = Math.max(0, Math.min(200, p.y));
-    const col  = Math.min(6, Math.max(1, Math.ceil(x / 50)));
-    const rowN = Math.min(4, Math.max(1, Math.ceil(y / 50)));
-    onChange({ x, y, zone: ['A','B','C','D'][rowN-1] + col });
+    const x = Math.max(0, Math.min(300, Math.round(p.x)));
+    const y = Math.max(0, Math.min(200, Math.round(p.y)));
+    onChange({ x, y, zone: ['A','B','C','D'][Math.min(3,Math.max(0,Math.ceil(y/50)-1))] + Math.min(6,Math.max(1,Math.ceil(x/50))) });
   }, [onChange]);
 
   return (
     <div>
-      <p className="text-[10px] text-gray-500 mb-1">
-        {label}{value && <span className="text-[#E5C07B] ml-1">→ {value.zone} ({value.x},{value.y})</span>}
-      </p>
+      <p className="text-[10px] text-gray-500 mb-1">{label}{value && <span className="text-[#E5C07B] ml-1">→ {value.zone}</span>}</p>
       <svg ref={svgRef} viewBox="-18 -18 336 230" onClick={handleClick}
-        className="w-full rounded-xl cursor-crosshair border border-white/10"
-        style={{display:'block', maxHeight:130}}>
+        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{display:'block', maxHeight:130}}>
         <rect x="0" y="0" width="300" height="200" fill="#0d0d0d"/>
         {[1,2,3,4,5].map(c=><line key={c} x1={c*50} y1="0" x2={c*50} y2="200" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>)}
         {[1,2,3].map(r=><line key={r} x1="0" y1={r*50} x2="300" y2={r*50} stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>)}
         {['A','B','C','D'].map((row,ri)=>[1,2,3,4,5,6].map(col=>(
-          <text key={`${row}${col}`} x={(col-0.5)*50} y={(ri+0.5)*50}
-            textAnchor="middle" dominantBaseline="middle" fontSize="10"
-            fill="rgba(255,255,255,0.35)" fontWeight="bold">{row}{col}</text>
+          <text key={`${row}${col}`} x={(col-0.5)*50} y={(ri+0.5)*50} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="rgba(255,255,255,0.35)" fontWeight="bold">{row}{col}</text>
         )))}
         <rect x="-9" y="-9" width="11" height="212" rx="2" fill="#e8e8e8"/>
         <rect x="298" y="-9" width="11" height="212" rx="2" fill="#e8e8e8"/>
         <rect x="-9" y="-9" width="318" height="11" rx="2" fill="#e8e8e8"/>
         <rect x="-18" y="200" width="336" height="12" fill="#1c3d1c"/>
-        {value && <>
-          <circle cx={value.x} cy={value.y} r="12" fill="#E5C07B" opacity="0.25"/>
-          <circle cx={value.x} cy={value.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="1.5"/>
-        </>}
-        <text x="150" y="-10" textAnchor="middle" fontSize="8" fill="rgba(255,255,255,0.25)">A=alt · D=baix · 1=esq · 6=dreta</text>
+        {value && <><circle cx={value.x} cy={value.y} r="12" fill="#E5C07B" opacity="0.25"/><circle cx={value.x} cy={value.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="1.5"/></>}
       </svg>
     </div>
   );
 }
 
-// ── Selector onPitch (multi-select visual) ────────────────────────
+// ── Selector onPitch ──────────────────────────────────────────────
 function OnPitchSelector({ value = [], onChange }) {
   const roster = DATABASE.roster.map(p => p.name);
   const toggle = (name) => {
@@ -214,19 +154,13 @@ function OnPitchSelector({ value = [], onChange }) {
   const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
     <div>
-      <p className="text-[10px] text-gray-500 mb-1.5">
-        Al camp quan passa el gol ({value.length}/4):
-        {value.length === 4 && <span className="text-emerald-400 ml-1">✓ complet</span>}
-      </p>
+      <p className="text-[10px] text-gray-500 mb-1.5">Al camp ({value.length}/4):{value.length === 4 && <span className="text-emerald-400 ml-1">✓</span>}</p>
       <div className="flex flex-wrap gap-1.5">
         {roster.map(name => {
           const sel = value.includes(name);
           return (
             <button key={name} onClick={() => toggle(name)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                sel ? 'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]'
-                    : 'bg-[#111] border-white/10 text-gray-500 hover:border-white/25 hover:text-white'
-              }`}>
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${sel ? 'bg-[#E5C07B]/20 border-[#E5C07B]/40 text-[#E5C07B]' : 'bg-[#111] border-white/10 text-gray-500 hover:border-white/25 hover:text-white'}`}>
               {sn(name)}
             </button>
           );
@@ -240,17 +174,32 @@ function OnPitchSelector({ value = [], onChange }) {
 function SubForm({ sub, onChange, onRemove, idx }) {
   const roster = DATABASE.roster.map(p => p.name);
   const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  const isBreak = !sub.onPitch || sub.onPitch.length === 0;
+
   const togglePlayer = (name) => {
     const current = sub.onPitch || [];
     if (current.includes(name)) onChange({...sub, onPitch: current.filter(n => n !== name)});
     else if (current.length < 4) onChange({...sub, onPitch: [...current, name]});
   };
+
   return (
-    <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
+    <div className={`rounded-xl p-3 border space-y-2 ${isBreak ? 'bg-blue-500/5 border-blue-500/20' : 'bg-[#111] border-white/8'}`}>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-gray-500">Sub #{idx+1}</span>
-        <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-gray-500">#{idx+1}</span>
+          {isBreak && <span className="text-[10px] font-black text-blue-400 px-2 py-0.5 bg-blue-500/15 rounded-full border border-blue-500/25">⏸ DESCANS / FINAL</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onChange({...sub, onPitch: isBreak ? [] : []})}
+            title={isBreak ? "Convertir a canvi normal" : "Marcar com a descans/final"}
+            className={`text-[9px] px-2 py-0.5 rounded-full border transition-all ${isBreak ? 'border-blue-500/30 text-blue-400 hover:bg-blue-500/10' : 'border-white/10 text-gray-600 hover:text-blue-400 hover:border-blue-500/30'}`}>
+            {isBreak ? '↩ Canvi normal' : '⏸'}
+          </button>
+          <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
+        </div>
       </div>
+
       <div className="flex gap-2">
         <input value={sub.time||''} onChange={e=>onChange({...sub,time:e.target.value})}
           placeholder="Min (ex: 12:30)"
@@ -261,30 +210,67 @@ function SubForm({ sub, onChange, onRemove, idx }) {
           {roster.map(n=><option key={n} value={n}>{sn(n)}</option>)}
         </select>
       </div>
-      <div>
-        <p className="text-[10px] text-gray-600 mb-1">Al camp ({(sub.onPitch||[]).length}/4):</p>
-        <div className="flex flex-wrap gap-1">
-          {roster.map(name => {
-            const sel = (sub.onPitch||[]).includes(name);
-            const isGK = name === sub.goalkeeper;
-            if (isGK) return null;
-            return (
-              <button key={name} onClick={() => togglePlayer(name)}
-                className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                  sel ? 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]'
-                      : 'bg-[#0d0d0d] border-white/8 text-gray-600 hover:text-white'
-                }`}>
-                {sn(name)}
-              </button>
-            );
-          })}
+
+      {isBreak ? (
+        <p className="text-[10px] text-blue-400/60 italic">Cap jugador de camp — el cronòmetre s'atura aquí</p>
+      ) : (
+        <div>
+          <p className="text-[10px] text-gray-600 mb-1">Al camp ({(sub.onPitch||[]).length}/4):</p>
+          <div className="flex flex-wrap gap-1">
+            {roster.map(name => {
+              const sel = (sub.onPitch||[]).includes(name);
+              const isGK = name === sub.goalkeeper;
+              if (isGK) return null;
+              return (
+                <button key={name} onClick={() => togglePlayer(name)}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${sel ? 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]' : 'bg-[#0d0d0d] border-white/8 text-gray-600 hover:text-white'}`}>
+                  {sn(name)}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-// ── Formulari de gol ───────────────────────────────────────────────
+// ── Formulari de targeta ──────────────────────────────────────────
+function CardForm({ card, onChange, onRemove, idx }) {
+  const roster = DATABASE.roster.map(p => p.name);
+  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  return (
+    <div className={`rounded-xl p-3 border space-y-2 ${card.color === 'red' ? 'bg-red-600/5 border-red-600/20' : 'bg-yellow-500/5 border-yellow-500/20'}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold text-gray-500">Targeta #{idx+1}</span>
+        <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
+      </div>
+      <div className="flex gap-2">
+        <input value={card.time||''} onChange={e=>onChange({...card,time:e.target.value})}
+          placeholder="Min (ex: 15:30)"
+          className="w-24 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none shrink-0"/>
+        <div className="flex gap-1 flex-1">
+          {['yellow','red'].map(color => (
+            <button key={color} onClick={() => onChange({...card, color})}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                card.color === color
+                  ? color === 'yellow' ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-300' : 'bg-red-600/20 border-red-600/40 text-red-400'
+                  : 'border-white/10 text-gray-600 hover:text-white'}`}>
+              {color === 'yellow' ? '🟨 Groga' : '🟥 Vermella'}
+            </button>
+          ))}
+        </div>
+      </div>
+      <select value={card.player||''} onChange={e=>onChange({...card,player:e.target.value})}
+        className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-[#E5C07B]/40 outline-none">
+        <option value="">Jugador...</option>
+        {roster.map(n=><option key={n} value={n}>{sn(n)}</option>)}
+      </select>
+    </div>
+  );
+}
+
+// ── Formulari de gol ──────────────────────────────────────────────
 function GoalForm({ goal, onChange, onRemove, idx }) {
   const roster = DATABASE.roster.map(p => p.name);
   const emptyPts = { assist: null, conduct: null, shot: null };
@@ -299,8 +285,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
       <div className="flex gap-2">
         {['favor','contra'].map(t => (
           <button key={t} onClick={() => onChange({...goal, type: t})}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all
-              ${goal.type===t ? (t==='favor'?'bg-emerald-500/20 border-emerald-500/40 text-emerald-400':'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]') : 'border-white/10 text-gray-600'}`}>
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all ${goal.type===t ? (t==='favor'?'bg-emerald-500/20 border-emerald-500/40 text-emerald-400':'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]') : 'border-white/10 text-gray-600'}`}>
             {t==='favor'?'⚽ A favor':'❌ En contra'}
           </button>
         ))}
@@ -329,34 +314,29 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
           <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
-          {/* Mapa 3 punts */}
-          <PitchClickable
-            points={pts}
+          <PitchClickable points={pts}
             onChange={newPts => onChange({...goal, pts: newPts,
               shotPos:   newPts.shot    ? {x:newPts.shot.x,   y:newPts.shot.y}   : null,
               assistPos: newPts.assist  ? {x:newPts.assist.x, y:newPts.assist.y} : null,
               conductPos:newPts.conduct ? {x:newPts.conduct.x,y:newPts.conduct.y}: null,
               zone:      newPts.shot?.zone || newPts.conduct?.zone || '',
-            })}
-          />
+            })}/>
           <GoalClickable value={goal.goalPos||null} label="On entra a la porteria:"
             onChange={v=>onChange({...goal,goalPos:v})}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
-            placeholder="Comentari del gol (opcional)"
-            rows={2}
+            placeholder="Comentari del gol (opcional)" rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
         </>
       ) : (
         <>
           <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:border-[#E5C07B]/40 outline-none">
-            <option value="">Porter...</option>
+            <option value="">Porter nostre...</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
           <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
-            placeholder="Comentari del gol en contra (opcional)"
-            rows={2}
+            placeholder="Comentari (opcional)" rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
         </>
       )}
@@ -364,7 +344,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
   );
 }
 
-// ── Formulari de moment ────────────────────────────────────────────
+// ── Formulari de moment ───────────────────────────────────────────
 function MomentForm({ moment, onChange, onRemove, idx }) {
   return (
     <div className="bg-[#111] rounded-xl p-3 border border-white/8">
@@ -383,7 +363,24 @@ function MomentForm({ moment, onChange, onRemove, idx }) {
   );
 }
 
-// ── Generadors de codi ───────────────────────────────────────────
+// ── Botó d'afegir (reutilitzable) ─────────────────────────────────
+function AddBtn({ onClick, label, color = 'gold' }) {
+  const cls = color === 'gold'
+    ? 'bg-[#E5C07B]/10 border-[#E5C07B]/25 text-[#E5C07B] hover:bg-[#E5C07B]/20'
+    : color === 'blue'
+    ? 'bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20'
+    : color === 'red'
+    ? 'bg-[#C0392B]/10 border-[#C0392B]/25 text-[#C0392B] hover:bg-[#C0392B]/20'
+    : 'bg-white/5 border-white/15 text-gray-400 hover:bg-white/10';
+  return (
+    <button onClick={onClick}
+      className={`flex items-center justify-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all ${cls}`}>
+      <Plus className="w-3 h-3"/>{label}
+    </button>
+  );
+}
+
+// ── Generadors de codi ────────────────────────────────────────────
 function goalToCode(g) {
   const sp  = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
   const ap  = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
@@ -410,10 +407,16 @@ function subsToCode(subs) {
   }).join('\n');
 }
 
-function generateMatchCode(match) {
+function cardsToCode(cards) {
+  if (!cards || cards.length === 0) return '';
+  return cards.map(c => `          { time: "${c.time}", color: "${c.color}", player: "${c.player}" },`).join('\n');
+}
+
+function buildMatchCode(match, originalId) {
   const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
   const goalsCode   = match.goals.map(goalToCode).join('\n');
   const subsCode    = subsToCode(match.subs || []);
+  const cardsCode   = cardsToCode(match.cards || []);
   const momentsCode = match.moments.map(m => {
     const [min,sec] = (m.time||'0:0').split(':').map(Number);
     const secs = Math.max(0, min*60+(sec||0)-3);
@@ -423,25 +426,27 @@ function generateMatchCode(match) {
   }).join('\n');
   const savesCode = Object.keys(match.savesManual||{}).length > 0
     ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
-
   const ytStr = ytId ? `"${ytId}"` : 'null';
-  const id = `j${DATABASE.matches.length+1}-${(match.opponent||'rival').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20)}`;
-  return `
-    // ── ${match.jornada||'Jornada ?'} — ${match.opponent||'Rival'} ──────────────────────────
-    {
-      id: "${id}",
-      jornada: "${match.jornada||''}",
-      opponent: "${match.opponent||''}",
-      result: "${match.result||''}",
-      date: "${match.date||''}",
+  const ideal = match.idealMinutesPerPlayer || 16.0;
+
+  if (originalId) {
+    // edició
+    return `{
+      id: "${originalId}",
+      jornada: "${match.jornada || ''}",
+      opponent: "${match.opponent || ''}",
+      result: "${match.result || ''}",
+      date: "${match.date || ''}",
       youtubeId: ${ytStr},
       vimeoId: null,
-      idealMinutesPerPlayer: 16.0,
+      idealMinutesPerPlayer: ${ideal},
 ${savesCode}      events: {
         substitutions: [
 ${subsCode}
         ],
-        cards: [],
+        cards: [
+${cardsCode}
+        ],
         goals: [
 ${goalsCode}
         ],
@@ -450,6 +455,36 @@ ${momentsCode}
         ],
       }
     },`;
+  } else {
+    // nou
+    const id = `j${DATABASE.matches.length+1}-${(match.opponent||'rival').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20)}`;
+    return `
+    // ── ${match.jornada||'Jornada ?'} — ${match.opponent||'Rival'} ──────────────────────────────────────────
+    {
+      id: "${id}",
+      jornada: "${match.jornada||''}",
+      opponent: "${match.opponent||''}",
+      result: "${match.result||''}",
+      date: "${match.date||''}",
+      youtubeId: ${ytStr},
+      vimeoId: null,
+      idealMinutesPerPlayer: ${ideal},
+${savesCode}      events: {
+        substitutions: [
+${subsCode}
+        ],
+        cards: [
+${cardsCode}
+        ],
+        goals: [
+${goalsCode}
+        ],
+        retransmissio: [
+${momentsCode}
+        ],
+      }
+    },`;
+  }
 }
 
 function injectMatchIntoDataJs(currentJs, matchCode) {
@@ -459,30 +494,23 @@ function injectMatchIntoDataJs(currentJs, matchCode) {
   return currentJs.slice(0, idx) + matchCode + '\n' + currentJs.slice(idx);
 }
 
-// Substitueix el bloc d'un partit existent pel seu id
 function replaceMatchInDataJs(currentJs, matchId, newMatchCode) {
-  // Cerca "id: \"matchId\"" i agafa tot el bloc { ... }, del match
   const idStr = `id: "${matchId}"`;
   const start = currentJs.indexOf(idStr);
   if (start === -1) throw new Error(`No he trobat el partit "${matchId}" al data.js`);
-  // Retrocedeix fins al { que obre el match
   let braceStart = currentJs.lastIndexOf('{', start);
   if (braceStart === -1) throw new Error('Error localitzant el bloc del partit');
-  // Avança fins a trobar el }, tancador del match (compta claus)
   let depth = 0, i = braceStart;
   while (i < currentJs.length) {
     if (currentJs[i] === '{') depth++;
     else if (currentJs[i] === '}') { depth--; if (depth === 0) break; }
     i++;
   }
-  // Inclou la coma i el salt de línia que venen després
   let end = i + 1;
   if (currentJs[end] === ',') end++;
-  // newMatchCode ja ve amb la coma final inclosa
   return currentJs.slice(0, braceStart) + newMatchCode.trimStart() + currentJs.slice(end);
 }
 
-// Converteix un match de DATABASE al format del formulari
 function matchToForm(m) {
   const ytUrl = m.youtubeId ? `https://www.youtube.com/watch?v=${m.youtubeId}` : '';
   const goals = (m.events?.goals || []).map(g => ({
@@ -498,9 +526,10 @@ function matchToForm(m) {
   const subs = (m.events?.substitutions || []).map(s => ({
     time: s.time, goalkeeper: s.goalkeeper || '', onPitch: s.onPitch || []
   }));
-  const moments = (m.events?.retransmissio || []).map(r => ({
-    time: r.time, text: r.text,
+  const cards = (m.events?.cards || []).map(c => ({
+    time: c.time, color: c.color || 'yellow', player: c.player || ''
   }));
+  const moments = (m.events?.retransmissio || []).map(r => ({ time: r.time, text: r.text }));
   const savesManual = m.savesManual ? {...m.savesManual} : {};
   return {
     _id: m.id,
@@ -510,50 +539,12 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
-    goals, subs, moments, savesManual,
+    idealMinutesPerPlayer: m.idealMinutesPerPlayer || 16.0,
+    goals, subs, cards, moments, savesManual,
   };
 }
 
-// Genera codi per editar (amb id original)
-function generateEditCode(match) {
-  const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
-  const goalsCode   = match.goals.map(goalToCode).join('\n');
-  const subsCode    = subsToCode(match.subs || []);
-  const momentsCode = match.moments.map(m => {
-    const [min, sec] = (m.time || '0:0').split(':').map(Number);
-    const secs = Math.max(0, min * 60 + (sec || 0) - 3);
-    const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
-    const txt = (m.text || '').replace(/\\/g, '\\\\').replace(/"/g, "'");
-    return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
-  }).join('\n');
-  const savesCode = Object.keys(match.savesManual||{}).length > 0
-    ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
-  const ytStr = ytId ? `"${ytId}"` : 'null';
-  return `{
-      id: "${match._id}",
-      jornada: "${match.jornada || ''}",
-      opponent: "${match.opponent || ''}",
-      result: "${match.result || ''}",
-      date: "${match.date || ''}",
-      youtubeId: ${ytStr},
-      vimeoId: null,
-      idealMinutesPerPlayer: 16.0,
-${savesCode}      events: {
-        substitutions: [
-${subsCode}
-        ],
-        cards: [],
-        goals: [
-${goalsCode}
-        ],
-        retransmissio: [
-${momentsCode}
-        ],
-      }
-    },`;
-}
-
-// ── Pantalla de selecció de partit per editar ─────────────────────
+// ── Pantalla de selecció ──────────────────────────────────────────
 function MatchSelector({ onSelect, onNew }) {
   const getRS = (f, a) => f > a ? 'text-emerald-400' : f < a ? 'text-[#C0392B]' : 'text-yellow-400';
   return (
@@ -581,17 +572,36 @@ function MatchSelector({ onSelect, onNew }) {
   );
 }
 
-// ── Formulari complet (nou o edició) ─────────────────────────────
+// ── Formulari complet ─────────────────────────────────────────────
 function MatchForm({ match, setMatch, onPreview }) {
-  const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',onPitch:[],shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',notes:'',pts:{assist:null,conduct:null,shot:null}}]}));
-  const addMoment = () => setMatch(m => ({...m, moments: [...m.moments, {time:'',text:''}]}));
+  const lastGK = () => {
+    const subs = match.subs || [];
+    for (let i = subs.length - 1; i >= 0; i--) {
+      if (subs[i].goalkeeper) return subs[i].goalkeeper;
+    }
+    return '';
+  };
+
   const addSub    = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:'',onPitch:[]}]}));
-  const updateGoal   = (i, g) => setMatch(m => ({...m, goals:   m.goals.map((x,j)=>j===i?g:x)}));
-  const updateMoment = (i, g) => setMatch(m => ({...m, moments: m.moments.map((x,j)=>j===i?g:x)}));
+  const addBreak  = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:lastGK(),onPitch:[],_label:'descans'}]}));
+  const addFinal  = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:lastGK(),onPitch:[],_label:'final'}]}));
+  const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',onPitch:[],shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',notes:'',pts:{assist:null,conduct:null,shot:null}}]}));
+  const addCard   = () => setMatch(m => ({...m, cards: [...(m.cards||[]), {time:'',color:'yellow',player:''}]}));
+  const addMoment = () => setMatch(m => ({...m, moments: [...m.moments, {time:'',text:''}]}));
+
   const updateSub    = (i, s) => setMatch(m => ({...m, subs:    (m.subs||[]).map((x,j)=>j===i?s:x)}));
-  const removeGoal   = (i) => setMatch(m => ({...m, goals:   m.goals.filter((_,j)=>j!==i)}));
-  const removeMoment = (i) => setMatch(m => ({...m, moments: m.moments.filter((_,j)=>j!==i)}));
+  const updateGoal   = (i, g) => setMatch(m => ({...m, goals:   m.goals.map((x,j)=>j===i?g:x)}));
+  const updateCard   = (i, c) => setMatch(m => ({...m, cards:   (m.cards||[]).map((x,j)=>j===i?c:x)}));
+  const updateMoment = (i, v) => setMatch(m => ({...m, moments: m.moments.map((x,j)=>j===i?v:x)}));
+
   const removeSub    = (i) => setMatch(m => ({...m, subs:    (m.subs||[]).filter((_,j)=>j!==i)}));
+  const removeGoal   = (i) => setMatch(m => ({...m, goals:   m.goals.filter((_,j)=>j!==i)}));
+  const removeCard   = (i) => setMatch(m => ({...m, cards:   (m.cards||[]).filter((_,j)=>j!==i)}));
+  const removeMoment = (i) => setMatch(m => ({...m, moments: m.moments.filter((_,j)=>j!==i)}));
+
+  const subs    = match.subs || [];
+  const cards   = match.cards || [];
+  const moments = match.moments || [];
 
   return (
     <>
@@ -606,109 +616,104 @@ function MatchForm({ match, setMatch, onPreview }) {
         </div>
         <input value={match.opponent} onChange={e=>setMatch(m=>({...m,opponent:e.target.value}))} placeholder="Nom del rival"
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
-        <input value={match.result} onChange={e=>setMatch(m=>({...m,result:e.target.value}))} placeholder="Resultat (ex: 3 - 2)"
-          className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={match.result} onChange={e=>setMatch(m=>({...m,result:e.target.value}))} placeholder="Resultat (ex: 3 - 2)"
+            className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+          <div className="relative">
+            <input type="number" step="0.5" min="1" max="40"
+              value={match.idealMinutesPerPlayer||''} onChange={e=>setMatch(m=>({...m,idealMinutesPerPlayer:parseFloat(e.target.value)||16}))}
+              placeholder="Min ideals/jugador"
+              className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600">min ideal</span>
+          </div>
+        </div>
         <input value={match.youtubeUrl} onChange={e=>setMatch(m=>({...m,youtubeUrl:e.target.value}))} placeholder="URL YouTube (opcional)"
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
       </div>
 
-      {/* Aturades per porter (intern) */}
+      {/* Aturades */}
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
-          <span className="text-[10px] text-gray-600">(intern)</span>
-        </div>
+        <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
         <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
-          {/* Tots els jugadors que tenen aturades registrades */}
           {DATABASE.roster.map(pl => {
             const hasSave = (match.savesManual||{})[pl.name] !== undefined;
             const isPorter = pl.position === 'Porter';
             if (!isPorter && !hasSave) return null;
             return (
               <div key={pl.name} className="flex items-center gap-3">
-                <span className="text-xs w-28 shrink-0 flex items-center gap-1"
-                  style={{color: isPorter ? '#10B981' : '#E5C07B'}}>
-                  {pl.shirtName}
-                  {!isPorter && <span className="text-[9px] text-gray-600">(camp)</span>}
-                </span>
+                <span className="text-xs w-28 shrink-0" style={{color: isPorter ? '#10B981' : '#E5C07B'}}>{pl.shirtName}</span>
                 <input type="number" min="0" max="30"
                   value={(match.savesManual||{})[pl.name] ?? ''}
                   onChange={e => {
                     const v = parseInt(e.target.value);
                     const s = {...(match.savesManual||{})};
-                    if (isNaN(v) || e.target.value === '') delete s[pl.name];
-                    else s[pl.name] = v;
+                    if (isNaN(v) || e.target.value === '') delete s[pl.name]; else s[pl.name] = v;
                     setMatch(m=>({...m, savesManual: s}));
                   }}
                   placeholder="0"
                   className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white text-center focus:border-emerald-500/40 outline-none"/>
-                {!isPorter && hasSave && (
-                  <button onClick={() => {
-                    const s = {...(match.savesManual||{})};
-                    delete s[pl.name];
-                    setMatch(m=>({...m, savesManual: s}));
-                  }} className="text-gray-700 hover:text-red-400 text-xs transition-colors">✕</button>
-                )}
+                {!isPorter && <button onClick={() => { const s={...(match.savesManual||{})}; delete s[pl.name]; setMatch(m=>({...m,savesManual:s})); }} className="text-gray-700 hover:text-red-400 text-xs">✕</button>}
               </div>
             );
           }).filter(Boolean)}
-          {/* Selector per afegir jugador de camp com a porter esporàdic */}
-          <select onChange={e => {
-            if (!e.target.value) return;
-            setMatch(m=>({...m, savesManual:{...(m.savesManual||{}), [e.target.value]:0}}));
-            e.target.value='';
-          }} className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-gray-500 focus:border-emerald-500/40 outline-none mt-1">
+          <select onChange={e => { if (!e.target.value) return; setMatch(m=>({...m,savesManual:{...(m.savesManual||{}),[e.target.value]:0}})); e.target.value=''; }}
+            className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-gray-500 focus:border-emerald-500/40 outline-none mt-1">
             <option value="">+ Afegir jugador de camp que ha fet de porter...</option>
-            {DATABASE.roster
-              .filter(p => p.position !== 'Porter' && (match.savesManual||{})[p.name] === undefined)
-              .map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
+            {DATABASE.roster.filter(p => p.position !== 'Porter' && (match.savesManual||{})[p.name] === undefined).map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Gols */}
+      {/* ── SUBSTITUCIONS ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-[#E5C07B]">🔄 Substitucions ({(match.subs||[]).length})</p>
-          <button onClick={addSub} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
-            <Plus className="w-3 h-3"/> Afegir
-          </button>
+          <p className="text-xs font-bold text-[#E5C07B]">🔄 Substitucions ({subs.length})</p>
+          <AddBtn onClick={addSub} label="Canvi"/>
         </div>
-        <p className="text-[10px] text-gray-600">Per calcular minuts de joc. Posa el porter de cada moment i els 4 jugadors de camp.</p>
-        {(match.subs||[]).map((s,i) => (
-          <SubForm key={i} sub={s} idx={i} onChange={s=>updateSub(i,s)} onRemove={()=>removeSub(i)}/>
-        ))}
+        <p className="text-[10px] text-gray-600">Porter de cada moment + 4 jugadors de camp. Descans/Final = sense jugadors.</p>
+        {subs.map((s,i) => <SubForm key={i} sub={s} idx={i} onChange={s=>updateSub(i,s)} onRemove={()=>removeSub(i)}/>)}
+        {/* Botons afegir al final */}
+        <div className="flex gap-2 pt-1">
+          <AddBtn onClick={addSub}   label="+ Canvi"   color="gold"/>
+          <AddBtn onClick={addBreak} label="⏸ Descans" color="blue"/>
+          <AddBtn onClick={addFinal} label="🏁 Final"   color="gray"/>
+        </div>
       </div>
 
-      {/* Gols */}
+      {/* ── TARGETES ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-[#E5C07B]">🟨 Targetes ({cards.length})</p>
+          <AddBtn onClick={addCard} label="Afegir targeta"/>
+        </div>
+        {cards.map((c,i) => <CardForm key={i} card={c} idx={i} onChange={c=>updateCard(i,c)} onRemove={()=>removeCard(i)}/>)}
+        {cards.length > 0 && <AddBtn onClick={addCard} label="+ Targeta" color="gold"/>}
+      </div>
+
+      {/* ── GOLS ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-bold text-[#E5C07B]">⚽ Gols ({match.goals.length})</p>
-          <button onClick={addGoal} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
-            <Plus className="w-3 h-3"/> Afegir gol
-          </button>
+          <AddBtn onClick={addGoal} label="Afegir gol"/>
         </div>
-        {match.goals.map((g,i) => (
-          <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)}/>
-        ))}
+        {match.goals.map((g,i) => <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)}/>)}
+        {/* Botó afegir al final */}
+        <AddBtn onClick={addGoal} label="+ Gol" color="gold"/>
       </div>
 
-      {/* Moments */}
+      {/* ── MOMENTS ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-[#E5C07B]">📝 Moments ({match.moments.length})</p>
-          <button onClick={addMoment} className="flex items-center gap-1 px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/20 transition-all">
-            <Plus className="w-3 h-3"/> Afegir moment
-          </button>
+          <p className="text-xs font-bold text-[#E5C07B]">📝 Moments ({moments.length})</p>
+          <AddBtn onClick={addMoment} label="Afegir moment"/>
         </div>
         <p className="text-[11px] text-gray-600">Ordre cronològic. L'emoji s'assigna automàticament.</p>
-        {match.moments.map((m,i) => (
-          <MomentForm key={i} moment={m} idx={i} onChange={m=>updateMoment(i,m)} onRemove={()=>removeMoment(i)}/>
-        ))}
+        {moments.map((m,i) => <MomentForm key={i} moment={m} idx={i} onChange={v=>updateMoment(i,v)} onRemove={()=>removeMoment(i)}/>)}
+        {moments.length > 0 && <AddBtn onClick={addMoment} label="+ Moment" color="gold"/>}
       </div>
 
       <button onClick={onPreview}
-        className="w-full py-3 bg-[#E5C07B] text-[#121212] font-black rounded-xl hover:bg-[#f0cc85] transition-all text-sm">
+        className="w-full py-3 bg-[#E5C07B] text-[#121212] font-black rounded-xl hover:bg-[#f0cc85] transition-all text-sm sticky bottom-4 shadow-xl shadow-black/50">
         Previsualitzar codi →
       </button>
     </>
@@ -717,36 +722,28 @@ function MatchForm({ match, setMatch, onPreview }) {
 
 // ── Admin Panel principal ─────────────────────────────────────────
 export default function AdminPanel({ onClose }) {
-  const [token, setToken]         = useState(() => localStorage.getItem('gh_token') || '');
+  const [token, setToken]           = useState(() => localStorage.getItem('gh_token') || '');
   const [tokenSaved, setTokenSaved] = useState(!!localStorage.getItem('gh_token'));
-  const [screen, setScreen]       = useState('select'); // select | form | preview | saving | done | error
-  const [errorMsg, setErrorMsg]   = useState('');
+  const [screen, setScreen]         = useState('select');
+  const [errorMsg, setErrorMsg]     = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
-  const [isEdit, setIsEdit]       = useState(false);
+  const [isEdit, setIsEdit]         = useState(false);
 
   const emptyMatch = {
     jornada: `Jornada ${DATABASE.matches.length + 1}`,
     opponent: '', date: '', result: '', youtubeUrl: '',
-    goals: [], subs: [], moments: [], savesManual: {},
+    idealMinutesPerPlayer: 20.0,
+    goals: [], subs: [], cards: [], moments: [], savesManual: {},
   };
   const [match, setMatch] = useState(emptyMatch);
 
   const saveToken = () => { localStorage.setItem('gh_token', token); setTokenSaved(true); };
 
-  const handleSelectMatch = (m) => {
-    setMatch(matchToForm(m));
-    setIsEdit(true);
-    setScreen('form');
-  };
-
-  const handleNewMatch = () => {
-    setMatch(emptyMatch);
-    setIsEdit(false);
-    setScreen('form');
-  };
+  const handleSelectMatch = (m) => { setMatch(matchToForm(m)); setIsEdit(true); setScreen('form'); };
+  const handleNewMatch    = () => { setMatch(emptyMatch); setIsEdit(false); setScreen('form'); };
 
   const handlePreview = () => {
-    const code = isEdit ? generateEditCode(match) : generateMatchCode(match);
+    const code = buildMatchCode(match, isEdit ? match._id : null);
     setGeneratedCode(code);
     setScreen('preview');
   };
@@ -757,12 +754,9 @@ export default function AdminPanel({ onClose }) {
       const tk = token || localStorage.getItem('gh_token');
       if (!tk) throw new Error('Cal el token de GitHub');
       const { sha, content } = await getFileSha(tk);
-      let newContent;
-      if (isEdit) {
-        newContent = replaceMatchInDataJs(content, match._id, generatedCode);
-      } else {
-        newContent = injectMatchIntoDataJs(content, generatedCode);
-      }
+      const newContent = isEdit
+        ? replaceMatchInDataJs(content, match._id, generatedCode)
+        : injectMatchIntoDataJs(content, generatedCode);
       const commitMsg = isEdit
         ? `Edit ${match.jornada} vs ${match.opponent}`
         : `Add ${match.jornada} vs ${match.opponent} (${match.result})`;
@@ -812,17 +806,9 @@ export default function AdminPanel({ onClose }) {
           </div>
         )}
 
-        {/* SELECCIÓ */}
-        {screen === 'select' && (
-          <MatchSelector onSelect={handleSelectMatch} onNew={handleNewMatch}/>
-        )}
+        {screen === 'select'  && <MatchSelector onSelect={handleSelectMatch} onNew={handleNewMatch}/>}
+        {screen === 'form'    && <MatchForm match={match} setMatch={setMatch} onPreview={handlePreview}/>}
 
-        {/* FORMULARI */}
-        {screen === 'form' && (
-          <MatchForm match={match} setMatch={setMatch} onPreview={handlePreview}/>
-        )}
-
-        {/* PREVIEW */}
         {screen === 'preview' && (
           <div className="space-y-4">
             {isEdit && (
@@ -836,7 +822,9 @@ export default function AdminPanel({ onClose }) {
             </div>
             <div className="bg-[#1a1a1a] rounded-xl border border-[#E5C07B]/20 p-4">
               <p className="text-sm text-white font-bold">{match.jornada} vs {match.opponent} — {match.result}</p>
-              <p className="text-xs text-gray-500">{match.goals.filter(g=>g.type==='favor').length}⚽ · {match.goals.filter(g=>g.type==='contra').length}❌ · {match.moments.length} moments</p>
+              <p className="text-xs text-gray-500">
+                {match.goals.filter(g=>g.type==='favor').length}⚽ · {match.goals.filter(g=>g.type==='contra').length}❌ · {(match.cards||[]).length}🟨 · {match.moments.length} moments
+              </p>
             </div>
             <button onClick={handlePush}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-2">
@@ -846,7 +834,6 @@ export default function AdminPanel({ onClose }) {
           </div>
         )}
 
-        {/* SAVING */}
         {screen === 'saving' && (
           <div className="flex flex-col items-center py-20 gap-4">
             <Loader className="w-10 h-10 text-[#E5C07B] animate-spin"/>
@@ -854,7 +841,6 @@ export default function AdminPanel({ onClose }) {
           </div>
         )}
 
-        {/* DONE */}
         {screen === 'done' && (
           <div className="flex flex-col items-center py-20 gap-4">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -862,14 +848,12 @@ export default function AdminPanel({ onClose }) {
             </div>
             <p className="text-white font-bold text-lg">Fet! ✅</p>
             <p className="text-gray-500 text-sm text-center">{isEdit ? 'Canvis guardats.' : 'Partit pujat.'} Web actualitzada en ~2 min.</p>
-            <button onClick={() => setScreen('select')}
-              className="px-6 py-2 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-xl text-sm font-bold">
+            <button onClick={() => setScreen('select')} className="px-6 py-2 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-xl text-sm font-bold">
               ← Tornar als partits
             </button>
           </div>
         )}
 
-        {/* ERROR */}
         {screen === 'error' && (
           <div className="flex flex-col items-center py-12 gap-4">
             <div className="w-16 h-16 rounded-full bg-[#C0392B]/20 flex items-center justify-center">
