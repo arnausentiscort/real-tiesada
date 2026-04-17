@@ -107,13 +107,7 @@ export const calcGlobalStats = (database) => {
   });
 
   database.matches.forEach(match => {
-    const getOnPitch = (goal) => {
-      if (goal.onPitch) return goal.onPitch;
-      const { stints } = calcMatchStats(match);
-      if (!stints.length) return [];
-      const t = parseTime(goal.time);
-      return stints.filter(s => s.start <= t && s.end > t).map(s => s.player);
-    };
+    const getOnPitch = (goal) => goal.onPitch || [];
 
     match.events.goals.forEach(goal => {
       const onPitch = getOnPitch(goal);
