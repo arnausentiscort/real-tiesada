@@ -5,6 +5,7 @@ import { calcGlobalStats, formatTime } from '../utils.js';
 import ExportExcelButton from './ExportExcel.jsx';
 import DuoStats from './DuoStats.jsx';
 import LineupStats from './LineupStats.jsx';
+import ChanceCreationChart from './ChanceCreationChart.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const ACCENT = '#E5C07B';
@@ -677,6 +678,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
             </div>
           </div>
 
+          <ChanceCreationChart />
           <DuoStats />
           <LineupStats />
 
