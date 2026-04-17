@@ -298,10 +298,11 @@ function PlayerModal({ player, stats, onClose }) {
   const perMatch = DATABASE.matches.map(m => {
     const gf = (m.events?.goals||[]).filter(g => g.type==='favor' && g.scorer===player.name).length;
     const gc = (m.events?.goals||[]).filter(g => g.type==='contra' && (g.onPitch||[]).includes(player.name)).length;
+    const gfOnPitch = (m.events?.goals||[]).filter(g => g.type==='favor' && (g.onPitch||[]).includes(player.name)).length;
     const ast = (m.events?.goals||[]).filter(g => g.type==='favor' && g.assist===player.name).length;
     const [f,a] = m.result.split('-').map(s=>parseInt(s.trim()));
-    return { jornada: m.jornada, opponent: m.opponent, gf, gc, ast, result: m.result, f, a };
-  }).filter(m => m.gf>0 || m.gc>0 || m.ast>0);
+    return { jornada: m.jornada, opponent: m.opponent, gf, gc, gfOnPitch, ast, result: m.result, f, a };
+  }).filter(m => m.gf>0 || m.gc>0 || m.ast>0 || m.gfOnPitch>0);
 
   useEffect(() => {
     const onKey = e => { if (e.key==='Escape') onClose(); };
@@ -361,10 +362,11 @@ function PlayerModal({ player, stats, onClose }) {
             <p className="text-xs text-gray-600 uppercase tracking-wider mb-3">Per jornada</p>
             <div className="space-y-2">
               {DATABASE.matches.map(m => {
-                const gf  = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.scorer===player.name).length;
-                const ast = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.assist===player.name).length;
-                const gc  = (m.events?.goals||[]).filter(g=>g.type==='contra'&&(g.onPitch||[]).includes(player.name)).length;
-                if (gf===0&&ast===0&&gc===0) return null;
+                const gf        = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.scorer===player.name).length;
+                const ast       = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.assist===player.name).length;
+                const gc        = (m.events?.goals||[]).filter(g=>g.type==='contra'&&(g.onPitch||[]).includes(player.name)).length;
+                const gfOnPitch = (m.events?.goals||[]).filter(g=>g.type==='favor'&&(g.onPitch||[]).includes(player.name)).length;
+                if (gf===0&&ast===0&&gc===0&&gfOnPitch===0) return null;
                 const [f,a] = m.result.split('-').map(s=>parseInt(s.trim()));
                 const rs = getRS(f,a);
                 return (
@@ -374,6 +376,7 @@ function PlayerModal({ player, stats, onClose }) {
                     <div className="flex gap-2 text-xs">
                       {gf>0 && <span className="text-emerald-400 font-bold">{gf}⚽</span>}
                       {ast>0 && <span className="text-blue-400 font-bold">{ast}👟</span>}
+                      {gfOnPitch>0 && <span className="text-[#E5C07B] font-bold">{gfOnPitch}🌐</span>}
                       {gc>0 && <span className="text-[#C0392B] font-bold">{gc}🥅</span>}
                     </div>
                   </div>
