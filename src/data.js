@@ -451,7 +451,9 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 20.0,
       savesManual: { "Ivan Mico": 0, "Oriol Tomas": 0 },
-      shots: {}, keyPasses: {}, dribbles: {},
+      shots: { "Arnau Sentis": [{ time: "1:47", onTarget: true }, { time: "3:25", onTarget: true }, { time: "31:58", onTarget: true }, { time: "35:18", onTarget: false }, { time: "36:18", onTarget: false }], "Roi Seoane": [{ time: "14:27", onTarget: true }, { time: "23:30", onTarget: false }, { time: "36:48", onTarget: true }], "Roger Miro": [{ time: "14:45", onTarget: false }, { time: "16:05", onTarget: true }, { time: "24:23", onTarget: false }, { time: "30:24", onTarget: false }], "Pau Ibañez": [{ time: "23:11", onTarget: true }, { time: "35:01", onTarget: true }], "Chengzhi Li": [{ time: "21:55", onTarget: true }, { time: "23:35", onTarget: false }, { time: "27:39", onTarget: false }, { time: "37:40", onTarget: false }], "Joan Medina": [{ time: "29:00", onTarget: true }, { time: "32:16", onTarget: true }, { time: "33:15", onTarget: true }], "Ivan Mico": [{ time: "32:30", onTarget: false }, { time: "38:32", onTarget: false }] },
+      keyPasses: { "Joan Medina": [{ time: "1:47" }, { time: "3:25" }, { time: "16:05" }], "Arnau Sentis": [{ time: "14:45" }, { time: "23:11" }, { time: "35:01" }], "Chengzhi Li": [{ time: "23:30" }, { time: "23:30" }, { time: "36:18" }], "Ivan Mico": [{ time: "28:21" }, { time: "30:24" }, { time: "31:58" }, { time: "32:16" }], "Pau Ibañez": [{ time: "35:18" }, { time: "38:32" }], "Oriol Tomas": [{ time: "36:48" }] },
+      dribbles: { "Ivan Mico": [{ time: "4:50" }, { time: "38:33" }], "Pau Ibañez": [{ time: "5:39" }, { time: "5:41" }, { time: "22:35" }], "Chengzhi Li": [{ time: "11:09" }] },
       events: {
         substitutions: [
           { time: "1:00",  goalkeeper: "Joan Medina",  onPitch: ["Arnau Sentis","Pau Ibañez","Oriol Tomas","Ivan Mico"] },
