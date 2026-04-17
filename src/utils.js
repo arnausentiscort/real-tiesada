@@ -99,11 +99,13 @@ export const calcMatchStats = (match) => {
 export const calcGlobalStats = (database) => {
   const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
   const goalsFor = {}, goalsAgainst = {}, yellowCards = {}, saves = {};
+  const shotsTotal = {}, shotsOnTarget = {}, keyPassesMap = {}, dribblesMap = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
     goals[p] = 0; assists[p] = 0; minutesCamp[p] = 0; minutesPorter[p] = 0;
     goalsFor[p] = 0; goalsAgainst[p] = 0; yellowCards[p] = 0; saves[p] = 0;
+    shotsTotal[p] = 0; shotsOnTarget[p] = 0; keyPassesMap[p] = 0; dribblesMap[p] = 0;
   });
 
   database.matches.forEach(match => {
@@ -143,6 +145,20 @@ export const calcGlobalStats = (database) => {
       if (card.color === 'yellow' && yellowCards[card.player] !== undefined) yellowCards[card.player]++;
     });
 
+    // Tirs, key passes, regats
+    const countEvents = (map, dest) => {
+      Object.entries(map || {}).forEach(([name, evs]) => {
+        if (dest[name] !== undefined) dest[name] += (evs || []).length;
+      });
+    };
+    countEvents(match.shots,     shotsTotal);
+    countEvents(match.keyPasses, keyPassesMap);
+    countEvents(match.dribbles,  dribblesMap);
+    Object.entries(match.shots || {}).forEach(([name, evs]) => {
+      if (shotsOnTarget[name] !== undefined)
+        shotsOnTarget[name] += (evs || []).filter(e => e.onTarget).length;
+    });
+
     // Minuts de CAMP (ja nets gràcies al filtre del goalkeeper a calcMatchStats)
     const { totals, stints: matchStints } = calcMatchStats(match);
     Object.entries(totals).forEach(([p, secs]) => {
@@ -174,5 +190,9 @@ export const calcGlobalStats = (database) => {
     goalsAgainst:  sortDesc(goalsAgainst),
     saves:         sortDesc(saves).filter(([,v]) => v > 0),
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
+    shotsTotal:    sortDesc(shotsTotal).filter(([,v]) => v > 0),
+    shotsOnTarget: sortDesc(shotsOnTarget).filter(([,v]) => v > 0),
+    keyPasses:     sortDesc(keyPassesMap).filter(([,v]) => v > 0),
+    dribbles:      sortDesc(dribblesMap).filter(([,v]) => v > 0),
   };
 };
