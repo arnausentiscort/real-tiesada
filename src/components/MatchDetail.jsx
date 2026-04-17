@@ -628,7 +628,7 @@ function TimelineChart({ match, matchStats }) {
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack, onNavigate }) {
   const [videoStart, setVideoStart] = useState(0);
-  const [videoOpen, setVideoOpen] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(true);
 
   const allMatches = DATABASE.matches;
   const currentIdx = allMatches.findIndex(m => m.id === match.id);
