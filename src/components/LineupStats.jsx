@@ -61,7 +61,6 @@ function calcLineupStats() {
   DATABASE.matches.forEach(match => {
     const subs = match.events?.substitutions || [];
 
-    // Temps compartit — només partits amb substitucions
     if (subs.length >= 2) {
       for (let i = 0; i < subs.length - 1; i++) {
         const cur  = subs[i];
@@ -80,7 +79,6 @@ function calcLineupStats() {
       }
     }
 
-    // Gols — usa onPitch de cada gol
     (match.events?.goals || []).forEach(goal => {
       const op = goal.onPitch || [];
       if (!op.length) return;
@@ -101,28 +99,23 @@ function calcLineupStats() {
     });
   });
 
+  // Ordena per gols marcats junts; desempat per menys gols encaixats
   const pairs = Object.values(pairData)
-    .sort((a, b) => b.secs - a.secs)
+    .filter(p => p.goalsFor > 0 || p.goalsAgainst > 0 || p.secs > 0)
+    .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
     .slice(0, 10);
 
   const quartets = Object.values(quartetData)
-    .filter(q => q.secs > 0)
-    .sort((a, b) => b.secs - a.secs)
+    .filter(q => q.goalsFor > 0 || q.secs > 0)
+    .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
     .slice(0, 5);
 
   return { pairs, quartets };
 }
 
-function barGradient(i) {
-  if (i === 0) return 'linear-gradient(90deg,#E5C07B,#F0D090)';
-  if (i === 1) return 'linear-gradient(90deg,#aaa,#ddd)';
-  if (i === 2) return 'linear-gradient(90deg,#cd7f32,#e8a060)';
-  return 'rgba(255,255,255,0.18)';
-}
-
 // ── Secció 1: Top Parelles ────────────────────────────────────────
 function TopPairs({ pairs }) {
-  const maxSecs = pairs[0]?.secs || 1;
+  const maxFor = Math.max(...pairs.map(p => p.goalsFor), 1);
 
   return (
     <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5">
@@ -130,20 +123,19 @@ function TopPairs({ pairs }) {
         <h3 className="text-sm font-black text-[#E5C07B] flex items-center gap-2">
           🤝 Top Parelles
         </h3>
-        <p className="text-[10px] text-gray-600 mt-0.5">Minuts junts · gols marcats · encaixats · ratio/20'</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">Ordenat per gols marcats junts</p>
       </div>
 
       <div className="space-y-3">
         {pairs.map(({ players, secs, goalsFor, goalsAgainst }, i) => {
           const [nameA, nameB] = players;
-          const mins    = Math.round(secs / 60);
-          const pct     = (secs / maxSecs) * 100;
-          const ratio   = secs > 0 ? ((goalsFor / (secs / 60)) * 20).toFixed(1) : '—';
-          const isTop3  = i < 3;
+          const mins   = secs > 0 ? Math.round(secs / 60) : null;
+          const isTop3 = i < 3;
+          const pct    = (goalsFor / maxFor) * 100;
 
           return (
             <div key={i}>
-              <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="flex items-center gap-2.5">
                 {/* Posició */}
                 <span className="text-sm w-5 shrink-0 text-center leading-none">
                   {MEDALS[i] || <span className="text-[10px] text-gray-700 font-mono">{i+1}</span>}
@@ -161,36 +153,35 @@ function TopPairs({ pairs }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 flex-wrap mb-1">
                     <span className="text-xs font-black"
-                      style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)'}}>
+                      style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'}}>
                       {getShirt(nameA)}
                     </span>
                     <span className="text-[9px] text-gray-700">+</span>
                     <span className="text-xs font-black"
-                      style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)'}}>
+                      style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'}}>
                       {getShirt(nameB)}
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
+                  <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{width:`${pct}%`, background: barGradient(i)}}/>
+                      style={{width:`${pct}%`, background:'rgba(39,174,96,0.6)'}}/>
                   </div>
                 </div>
 
-                {/* Stats dreta */}
+                {/* Gols — prominents */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {(goalsFor > 0 || goalsAgainst > 0) && (
-                    <div className="flex items-center gap-1 text-[10px] font-mono">
-                      {goalsFor > 0 && <span className="text-emerald-400">+{goalsFor}</span>}
-                      {goalsAgainst > 0 && <span className="text-[#C0392B]">-{goalsAgainst}</span>}
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-black font-mono ${isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600'}`}>
+                      {goalsFor}
+                    </span>
+                    <span className="text-[10px]">⚽</span>
+                  </div>
+                  {goalsAgainst > 0 && (
+                    <span className="text-xs font-mono text-[#C0392B]">-{goalsAgainst}</span>
                   )}
-                  {secs > 0 && goalsFor > 0 && (
-                    <span className="text-[9px] font-mono text-[#E5C07B]/50 hidden sm:block">{ratio}/20'</span>
+                  {mins !== null && (
+                    <span className="text-[10px] font-mono text-gray-600">{mins}'</span>
                   )}
-                  <span className="text-sm font-black font-mono"
-                    style={{color: isTop3 ? '#E5C07B' : 'rgba(255,255,255,0.35)'}}>
-                    {mins}'
-                  </span>
                 </div>
               </div>
             </div>
@@ -203,7 +194,7 @@ function TopPairs({ pairs }) {
 
 // ── Secció 2: Top Quintets (4 jugadors de camp) ───────────────────
 function TopQuartets({ quartets }) {
-  const maxSecs = quartets[0]?.secs || 1;
+  const maxFor = Math.max(...quartets.map(q => q.goalsFor), 1);
 
   if (!quartets.length) return null;
 
@@ -213,19 +204,18 @@ function TopQuartets({ quartets }) {
         <h3 className="text-sm font-black text-[#E5C07B] flex items-center gap-2">
           ⚡ Top Quintets
         </h3>
-        <p className="text-[10px] text-gray-600 mt-0.5">4 jugadors de camp que més minuts han jugat junts</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">4 jugadors de camp · ordenat per gols marcats junts</p>
       </div>
 
       <div className="space-y-4">
         {quartets.map(({ players, secs, goalsFor, goalsAgainst }, i) => {
-          const mins   = Math.round(secs / 60);
-          const pct    = (secs / maxSecs) * 100;
-          const ratio  = secs > 0 ? ((goalsFor / (secs / 60)) * 20).toFixed(1) : '—';
+          const mins   = secs > 0 ? Math.round(secs / 60) : null;
           const isTop3 = i < 3;
+          const pct    = (goalsFor / maxFor) * 100;
 
           return (
             <div key={i}>
-              <div className="flex items-start gap-2.5 mb-1.5">
+              <div className="flex items-start gap-2.5">
                 {/* Posició */}
                 <span className="text-sm w-5 shrink-0 text-center leading-none pt-1">
                   {MEDALS[i] || <span className="text-[10px] text-gray-700 font-mono">{i+1}</span>}
@@ -245,32 +235,33 @@ function TopQuartets({ quartets }) {
                   <div className="flex flex-wrap gap-x-1 gap-y-0.5 mb-1.5">
                     {players.map((name, j) => (
                       <span key={name} className="text-[10px] font-black"
-                        style={{color: isTop3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)'}}>
-                        {getShirt(name)}{j < players.length - 1 ? <span className="text-gray-700 font-normal"> ·</span> : ''}
+                        style={{color: isTop3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)'}}>
+                        {getShirt(name)}{j < players.length - 1 && <span className="text-gray-700 font-normal"> ·</span>}
                       </span>
                     ))}
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
+                  <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{width:`${pct}%`, background: barGradient(i)}}/>
+                      style={{width:`${pct}%`, background:'rgba(39,174,96,0.6)'}}/>
                   </div>
                 </div>
 
-                {/* Stats + minuts */}
+                {/* Gols — prominents */}
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
-                  <span className="text-sm font-black font-mono"
-                    style={{color: isTop3 ? '#E5C07B' : 'rgba(255,255,255,0.35)'}}>
-                    {mins}'
-                  </span>
-                  {(goalsFor > 0 || goalsAgainst > 0) && (
-                    <div className="flex items-center gap-1 text-[10px] font-mono">
-                      {goalsFor > 0 && <span className="text-emerald-400">⚽{goalsFor}</span>}
-                      {goalsAgainst > 0 && <span className="text-[#C0392B]">❌{goalsAgainst}</span>}
-                    </div>
-                  )}
-                  {secs > 0 && goalsFor > 0 && (
-                    <span className="text-[9px] font-mono text-[#E5C07B]/40">{ratio}/20'</span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-black font-mono ${isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600'}`}>
+                      {goalsFor}
+                    </span>
+                    <span className="text-[10px]">⚽</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {goalsAgainst > 0 && (
+                      <span className="text-[10px] font-mono text-[#C0392B]">-{goalsAgainst}</span>
+                    )}
+                    {mins !== null && (
+                      <span className="text-[10px] font-mono text-gray-600">{mins}'</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -284,7 +275,7 @@ function TopQuartets({ quartets }) {
 // ── Component principal ───────────────────────────────────────────
 export default function LineupStats() {
   const { pairs, quartets } = useMemo(() => calcLineupStats(), []);
-  if (!pairs.length) return null;
+  if (!pairs.length && !quartets.length) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
