@@ -98,12 +98,12 @@ export const calcMatchStats = (match) => {
 
 export const calcGlobalStats = (database) => {
   const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
-  const goalsFor = {}, goalsAgainst = {}, goalsConceded = {}, yellowCards = {}, saves = {};
+  const goalsFor = {}, goalsAgainst = {}, yellowCards = {}, saves = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
     goals[p] = 0; assists[p] = 0; minutesCamp[p] = 0; minutesPorter[p] = 0;
-    goalsFor[p] = 0; goalsAgainst[p] = 0; goalsConceded[p] = 0; yellowCards[p] = 0; saves[p] = 0;
+    goalsFor[p] = 0; goalsAgainst[p] = 0; yellowCards[p] = 0; saves[p] = 0;
   });
 
   database.matches.forEach(match => {
@@ -116,7 +116,6 @@ export const calcGlobalStats = (database) => {
         if (goal.assist && assists[goal.assist] !== undefined) assists[goal.assist]++;
         onPitch.forEach(p => { if (goalsFor[p] !== undefined) goalsFor[p]++; });
       } else {
-        if (goal.goalkeeper && goalsConceded[goal.goalkeeper] !== undefined) goalsConceded[goal.goalkeeper]++;
         onPitch.forEach(p => { if (goalsAgainst[p] !== undefined) goalsAgainst[p]++; });
       }
     });
@@ -173,7 +172,6 @@ export const calcGlobalStats = (database) => {
     minutesPorter: sortDesc(minutesPorter).filter(([,v]) => v > 0),
     goalsFor:      sortDesc(goalsFor),
     goalsAgainst:  sortDesc(goalsAgainst),
-    goalsConceded: sortDesc(goalsConceded).filter(([,v]) => v > 0),
     saves:         sortDesc(saves).filter(([,v]) => v > 0),
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
   };

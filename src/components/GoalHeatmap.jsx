@@ -124,7 +124,7 @@ function useBallAnimation(goal) {
     };
 
     trailRef.current = []; spinRef.current = 0;
-    setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 180);
+    setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 200);
   }, [goal]);
 
   useEffect(() => {
@@ -146,7 +146,65 @@ const SVG_ANIMATIONS = `
   @keyframes netFlash  { 0%{opacity:0.35} 60%{opacity:0.5} 100%{opacity:0.07} }
   @keyframes impactPop { 0%{opacity:0.8;transform:scale(0.5)} 100%{opacity:0;transform:scale(3.5)} }
   @keyframes floatNum  { 0%{opacity:0;transform:translateY(4px)} 100%{opacity:0.7;transform:translateY(0)} }
+  @keyframes bigRipple { 0%{opacity:0.85;transform:scale(1)} 100%{opacity:0;transform:scale(9)} }
+  @keyframes ballSink  { 0%{opacity:1;transform:scale(1)} 80%{opacity:0.4;transform:scale(0.3)} 100%{opacity:0;transform:scale(0.05)} }
+  @keyframes netBurst  { 0%{opacity:0;fill-opacity:0.18} 25%{opacity:1;fill-opacity:0.45} 100%{opacity:0;fill-opacity:0} }
 `;
+
+// ── Hook: pilota al GoalSVG (shotPos→goalPos, paràbola) ──────────
+function useGoalBallAnimation(goal) {
+  const [ballPos,  setBallPos]  = useState(null);
+  const [trail,    setTrail]    = useState([]);
+  const [ripple,   setRipple]   = useState(false);
+  const [sinking,  setSinking]  = useState(false);
+  const rafRef   = useRef(null);
+  const trailRef = useRef([]);
+
+  useEffect(() => {
+    setBallPos(null); setTrail([]); setRipple(false); setSinking(false);
+    trailRef.current = [];
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (!goal?.goalPos || !goal?.shotPos) return;
+
+    const GP = goal.goalPos;
+    // Projecta shotPos del camp (y=0–420) → x en GoalSVG (0–300)
+    const startX = Math.max(15, Math.min(285, (goal.shotPos.y / 420) * 300));
+    const p0 = { x: startX, y: 230 }; // just below ground (y=200)
+    const p1 = { x: GP.x,   y: GP.y };
+    // CP: arc suau per sobre del travesser
+    const cp = {
+      x: p0.x * 0.38 + p1.x * 0.62,
+      y: Math.min(p0.y, p1.y) - 100,
+    };
+
+    const DURATION = 660;
+    let startTime = null;
+
+    const tick = (ts) => {
+      if (!startTime) startTime = ts;
+      const rawT = Math.min((ts - startTime) / DURATION, 1);
+      const ease = rawT < 0.5 ? 4*rawT*rawT*rawT : 1 - Math.pow(-2*rawT+2, 3)/2;
+      const pos  = bezierAt(ease, p0, cp, p1);
+
+      trailRef.current = [...trailRef.current.slice(-8), { x: pos.x, y: pos.y }];
+      setTrail([...trailRef.current]);
+      setBallPos({ x: pos.x, y: pos.y });
+
+      if (rawT >= 1) {
+        setSinking(true);
+        setRipple(true);
+        setTimeout(() => { setBallPos(null); setTrail([]); }, 420);
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 200);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [goal]);
+
+  return { ballPos, trail, ripple, sinking };
+}
 
 // ── Camp SVG ──────────────────────────────────────────────────────
 function PitchSVG({ goals, activeGoal, setActiveGoal }) {
@@ -373,7 +431,8 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
 // ── Porteria SVG ──────────────────────────────────────────────────
 const GROUND_Y = 185;
 function GoalSVG({ goals, activeGoal, setActiveGoal }) {
-  const hasActive = activeGoal !== null && goals[activeGoal]?._gx;
+  const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
+  const { ballPos, trail, ripple, sinking } = useGoalBallAnimation(activeGoalData);
 
   return (
     <svg viewBox="-18 -18 336 230" style={{width:'100%',display:'block'}}>
@@ -382,6 +441,11 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         <radialGradient id="netbg" cx="50%" cy="0%">
           <stop offset="0%"   stopColor="rgba(255,255,255,0.03)"/>
           <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
+        </radialGradient>
+        <radialGradient id="goalBallGrad" cx="35%" cy="30%">
+          <stop offset="0%"   stopColor="#fff"/>
+          <stop offset="55%"  stopColor="#e8e8e8"/>
+          <stop offset="100%" stopColor="#b0b0b0"/>
         </radialGradient>
       </defs>
 
@@ -404,14 +468,14 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
 
       {/* Xarxa */}
       {[30,60,90,120,150,180,210,240,270].map(x=>(
-        <line key={`nv-${x}`} x1={x} y1="0" x2={x} y2="200"
+        <line key={`nv-${x}-${ripple}`} x1={x} y1="0" x2={x} y2="200"
           stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"
-          style={hasActive ? {animation:'netFlash 0.6s ease-out both'} : {}}/>
+          style={ripple ? {animation:'netFlash 0.7s ease-out both'} : {}}/>
       ))}
       {[40,80,120,160].map(y=>(
-        <line key={`nh-${y}`} x1="0" y1={y} x2="300" y2={y}
+        <line key={`nh-${y}-${ripple}`} x1="0" y1={y} x2="300" y2={y}
           stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"
-          style={hasActive ? {animation:`netFlash 0.6s ease-out ${y*0.001}s both`} : {}}/>
+          style={ripple ? {animation:`netFlash 0.7s ease-out ${y*0.002}s both`} : {}}/>
       ))}
       {/* Diagonals perspectiva xarxa */}
       {[30,60,90,120,150,180,210,240,270].map(x=>(
@@ -486,6 +550,56 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
           </g>
         );
       })}
+
+      {/* ── Pilota animada (shotPos→goalPos) ── */}
+      {ballPos && activeGoalData && (() => {
+        const color = PLAYER_COLORS[activeGoalData.scorer] || ACCENT;
+        return (
+          <g key={`gball-${activeGoal}`}>
+            {trail.map((pos, i) => {
+              const prog = (i + 1) / trail.length;
+              return <circle key={i} cx={pos.x} cy={pos.y} r={4.5*prog} fill={color} opacity={0.28*prog}/>;
+            })}
+            <ellipse cx={ballPos.x+2} cy={ballPos.y+3} rx="5" ry="2.5" fill="rgba(0,0,0,0.3)"/>
+            <circle cx={ballPos.x} cy={ballPos.y} r="9"
+              fill="url(#goalBallGrad)"
+              stroke={sinking ? color : 'rgba(0,0,0,0.3)'}
+              strokeWidth={sinking ? 1.5 : 0.7}
+              style={{
+                transformOrigin: `${ballPos.x}px ${ballPos.y}px`,
+                filter: sinking ? `drop-shadow(0 0 12px ${color})` : 'none',
+                ...(sinking ? { animation: 'ballSink 0.42s ease-in forwards' } : {}),
+              }}/>
+            <g style={{transformOrigin:`${ballPos.x}px ${ballPos.y}px`}}>
+              <path d={`M${ballPos.x-4},${ballPos.y-1.5} Q${ballPos.x},${ballPos.y-6.5} ${ballPos.x+4},${ballPos.y-1.5}`}
+                fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="0.9"/>
+            </g>
+          </g>
+        );
+      })()}
+
+      {/* ── Ripple gran en arribar ── */}
+      {ripple && activeGoalData?.goalPos && (() => {
+        const color = PLAYER_COLORS[activeGoalData.scorer] || ACCENT;
+        const GP = activeGoalData.goalPos;
+        return (
+          <g key={`ripple-${activeGoal}`}>
+            {[0,1,2,3].map(i => (
+              <circle key={i} cx={GP.x} cy={GP.y} r="9"
+                fill="none"
+                stroke={i % 2 === 0 ? 'white' : color}
+                strokeWidth={i < 2 ? 2.5 : 1.5}
+                style={{
+                  transformOrigin: `${GP.x}px ${GP.y}px`,
+                  animation: `bigRipple ${0.55+i*0.12}s ease-out ${i*0.11}s forwards`,
+                }}/>
+            ))}
+            <circle cx={GP.x} cy={GP.y} r="18"
+              fill={color} opacity="0"
+              style={{animation:'netBurst 0.5s ease-out both'}}/>
+          </g>
+        );
+      })()}
 
       {/* Pals */}
       <rect x="-9" y="-8" width="11" height="210" rx="3" fill="#e8e8e8"/>

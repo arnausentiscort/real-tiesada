@@ -4,6 +4,7 @@ import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
 import ExportExcelButton from './ExportExcel.jsx';
 import DuoStats from './DuoStats.jsx';
+import LineupStats from './LineupStats.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const ACCENT = '#E5C07B';
@@ -295,7 +296,7 @@ function PlayerCard({ rank, name, value, label, emoji }) {
 function PlayerModal({ player, stats, onClose }) {
   const perMatch = DATABASE.matches.map(m => {
     const gf = (m.events?.goals||[]).filter(g => g.type==='favor' && g.scorer===player.name).length;
-    const gc = (m.events?.goals||[]).filter(g => g.type==='contra' && g.goalkeeper===player.name).length;
+    const gc = (m.events?.goals||[]).filter(g => g.type==='contra' && (g.onPitch||[]).includes(player.name)).length;
     const ast = (m.events?.goals||[]).filter(g => g.type==='favor' && g.assist===player.name).length;
     const [f,a] = m.result.split('-').map(s=>parseInt(s.trim()));
     return { jornada: m.jornada, opponent: m.opponent, gf, gc, ast, result: m.result, f, a };
@@ -361,7 +362,7 @@ function PlayerModal({ player, stats, onClose }) {
               {DATABASE.matches.map(m => {
                 const gf  = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.scorer===player.name).length;
                 const ast = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.assist===player.name).length;
-                const gc  = (m.events?.goals||[]).filter(g=>g.type==='contra'&&g.goalkeeper===player.name).length;
+                const gc  = (m.events?.goals||[]).filter(g=>g.type==='contra'&&(g.onPitch||[]).includes(player.name)).length;
                 if (gf===0&&ast===0&&gc===0) return null;
                 const [f,a] = m.result.split('-').map(s=>parseInt(s.trim()));
                 const rs = getRS(f,a);
@@ -677,6 +678,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
           </div>
 
           <DuoStats />
+          <LineupStats />
 
           {/* Minuts de camp */}
           {stats.minutesCamp.length > 0 && (
@@ -713,8 +715,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
             </div>
           )}
 
-          {/* Porter: minuts + gols encaixats + aturades */}
-          {(stats.minutesPorter.length > 0 || stats.goalsConceded.length > 0) && (
+          {/* Porter: minuts + aturades */}
+          {stats.minutesPorter.length > 0 && (
             <div>
               <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#E5C07B]"/> Estadístiques de Porter
@@ -746,18 +748,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           </div>
                         );
                       })}
-                    </div>
-                  </div>
-                )}
-                {stats.goalsConceded.length > 0 && (
-                  <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-[#C0392B]/10">
-                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🥅 Gols Encaixats</h4>
-                    <div className="space-y-2">
-                      {stats.goalsConceded.map(([name,count],i) => (
-                        <StatRow key={name} name={name} value={count}
-                          max={Math.max(...stats.goalsConceded.map(([,v])=>v),1)}
-                          color="#C0392B" delay={i*60}/>
-                      ))}
                     </div>
                   </div>
                 )}
