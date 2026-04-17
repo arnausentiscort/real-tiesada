@@ -248,50 +248,72 @@ function MomentCard({ item, onJump }) {
 }
 
 // ── Stats per jugador (tirs / key passes / regats) ───────────────
-function MatchPlayerStats({ match }) {
+function MatchPlayerStats({ match, onJumpToVideo }) {
   const shots     = match.shots     || {};
   const keyPasses = match.keyPasses || {};
   const dribbles  = match.dribbles  || {};
+  const hasVideo  = !!(match.youtubeId || match.vimeoId);
 
   const hasData = Object.keys(shots).length > 0 || Object.keys(keyPasses).length > 0 || Object.keys(dribbles).length > 0;
   if (!hasData) return null;
 
   const shotStats = Object.entries(shots)
-    .map(([name, evs]) => ({ name, total: evs.length, onTarget: evs.filter(e => e.onTarget).length }))
+    .map(([name, evs]) => ({ name, evs, total: evs.length, onTarget: evs.filter(e => e.onTarget).length }))
     .sort((a, b) => b.total - a.total);
   const kpStats = Object.entries(keyPasses)
-    .map(([name, evs]) => ({ name, count: evs.length }))
+    .map(([name, evs]) => ({ name, evs, count: evs.length }))
     .sort((a, b) => b.count - a.count);
   const dribStats = Object.entries(dribbles)
-    .map(([name, evs]) => ({ name, count: evs.length }))
+    .map(([name, evs]) => ({ name, evs, count: evs.length }))
     .sort((a, b) => b.count - a.count);
 
   const maxShots = shotStats[0]?.total || 1;
   const maxKp    = kpStats[0]?.count   || 1;
   const maxDrib  = dribStats[0]?.count  || 1;
 
+  const Chip = ({ ev, accent, dot }) => (
+    <button
+      onClick={() => hasVideo && onJumpToVideo && onJumpToVideo(ev.time)}
+      className="text-[9px] font-mono px-1.5 py-0.5 rounded border transition-all"
+      style={{
+        background: '#111',
+        borderColor: 'rgba(255,255,255,0.08)',
+        color: hasVideo && onJumpToVideo ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',
+        cursor: hasVideo && onJumpToVideo ? 'pointer' : 'default',
+      }}
+      onMouseEnter={e => { if (hasVideo && onJumpToVideo) { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent; }}}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = hasVideo && onJumpToVideo ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)'; }}
+    >
+      {ev.time}{dot !== undefined ? (dot ? ' ●' : ' ○') : ''}
+    </button>
+  );
+
   return (
     <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden">
       <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
         <span className="text-base">📊</span>
         <h3 className="text-base font-bold text-[#E5C07B]">Estadístiques del Partit</h3>
+        {hasVideo && onJumpToVideo && <span className="text-[10px] text-gray-600 ml-auto">Clica un temps per saltar al vídeo</span>}
       </div>
       <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-5">
 
         {shotStats.length > 0 && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🎯 Tirs</p>
-            <div className="space-y-2.5">
-              {shotStats.map(({ name, total, onTarget }) => (
+            <div className="space-y-3">
+              {shotStats.map(({ name, evs, total, onTarget }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
                     <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
                     <span className="text-[10px] font-mono text-gray-500">{onTarget}<span className="text-gray-700">/{total}</span></span>
                   </div>
-                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
                     <div className="h-full rounded-full bg-[#333] relative overflow-hidden" style={{width:`${(total/maxShots)*100}%`}}>
                       <div className="absolute left-0 top-0 h-full bg-[#E5C07B]" style={{width:`${(onTarget/total)*100}%`}}/>
                     </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {evs.map((ev, i) => <Chip key={i} ev={ev} accent="#E5C07B" dot={ev.onTarget}/>)}
                   </div>
                 </div>
               ))}
@@ -302,15 +324,18 @@ function MatchPlayerStats({ match }) {
         {kpStats.length > 0 && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🔑 Key Passes</p>
-            <div className="space-y-2.5">
-              {kpStats.map(({ name, count }) => (
+            <div className="space-y-3">
+              {kpStats.map(({ name, evs, count }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
                     <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
                     <span className="text-[10px] font-mono text-blue-400">{count}</span>
                   </div>
-                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
                     <div className="h-full rounded-full bg-blue-500/70" style={{width:`${(count/maxKp)*100}%`}}/>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {evs.map((ev, i) => <Chip key={i} ev={ev} accent="#61AFEF"/>)}
                   </div>
                 </div>
               ))}
@@ -321,15 +346,18 @@ function MatchPlayerStats({ match }) {
         {dribStats.length > 0 && (
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🪄 Regats</p>
-            <div className="space-y-2.5">
-              {dribStats.map(({ name, count }) => (
+            <div className="space-y-3">
+              {dribStats.map(({ name, evs, count }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
                     <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
                     <span className="text-[10px] font-mono text-purple-400">{count}</span>
                   </div>
-                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
                     <div className="h-full rounded-full bg-purple-500/70" style={{width:`${(count/maxDrib)*100}%`}}/>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {evs.map((ev, i) => <Chip key={i} ev={ev} accent="#a855f7"/>)}
                   </div>
                 </div>
               ))}
@@ -600,6 +628,7 @@ function TimelineChart({ match, matchStats }) {
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack, onNavigate }) {
   const [videoStart, setVideoStart] = useState(0);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const allMatches = DATABASE.matches;
   const currentIdx = allMatches.findIndex(m => m.id === match.id);
@@ -621,7 +650,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
     if (!hasVideo) return;
     const secs = Math.max(0, parseTime(timeStr) - 3);
     setVideoStart(secs);
-    document.getElementById('match-video')?.scrollIntoView({ behavior:'smooth', block:'start' });
+    setVideoOpen(true);
+    setTimeout(() => document.getElementById('match-video')?.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
   };
 
   return (
@@ -687,28 +717,41 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
       {/* MVP Voting — just sota el marcador */}
       <MvpVoting match={match} />
 
-      {/* Vídeo */}
+      {/* Vídeo — col·lapsable */}
       {hasVideo && (
-        <div id="match-video" className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-xl">
-          <div className="aspect-video w-full">
-            {match.youtubeId && (
-              <iframe width="100%" height="100%"
-                src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart>0?1:0}`}
-                title={`${DATABASE.teamName} vs ${match.opponent}`}
-                frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
-            )}
-            {match.vimeoId && (
-              <iframe width="100%" height="100%"
-                src={`https://player.vimeo.com/video/${match.vimeoId}?badge=0&autopause=0`}
-                title={`${DATABASE.teamName} vs ${match.opponent}`}
-                frameBorder="0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
-            )}
-          </div>
+        <div id="match-video">
+          {!videoOpen ? (
+            <button onClick={() => setVideoOpen(true)}
+              className="w-full py-3 bg-[#1a1a1a] border border-white/8 rounded-xl text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all flex items-center justify-center gap-2">
+              <span className="text-base">▶</span> Vídeo del Partit
+            </button>
+          ) : (
+            <div className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-xl">
+              <div className="flex items-center justify-between px-3 py-2 bg-[#111] border-b border-white/5">
+                <span className="text-xs text-gray-500">▶ Vídeo del Partit</span>
+                <button onClick={() => setVideoOpen(false)} className="text-gray-600 hover:text-gray-300 text-xs transition-colors">✕ Tancar</button>
+              </div>
+              <div className="aspect-video w-full">
+                {match.youtubeId && (
+                  <iframe width="100%" height="100%"
+                    src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart>0?1:0}`}
+                    title={`${DATABASE.teamName} vs ${match.opponent}`}
+                    frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+                )}
+                {match.vimeoId && (
+                  <iframe width="100%" height="100%"
+                    src={`https://player.vimeo.com/video/${match.vimeoId}?badge=0&autopause=0`}
+                    title={`${DATABASE.teamName} vs ${match.opponent}`}
+                    frameBorder="0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Estadístiques per jugador */}
-      <MatchPlayerStats match={match} />
+      <MatchPlayerStats match={match} onJumpToVideo={hasVideo ? jumpToGoal : null} />
 
       {/* Crònica — scroll natural de la pàgina, gran */}
       {cronica.length > 0 && (
