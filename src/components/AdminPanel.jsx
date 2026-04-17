@@ -412,6 +412,18 @@ function cardsToCode(cards) {
   return cards.map(c => `          { time: "${c.time}", color: "${c.color}", player: "${c.player}" },`).join('\n');
 }
 
+function eventMapToCode(map) {
+  const entries = Object.entries(map || {}).filter(([, v]) => v && v.length > 0);
+  if (entries.length === 0) return '{}';
+  const inner = entries.map(([name, evs]) => {
+    const evStrs = evs.map(ev =>
+      ev.onTarget !== undefined ? `{ time: "${ev.time}", onTarget: ${ev.onTarget} }` : `{ time: "${ev.time}" }`
+    ).join(', ');
+    return `"${name}": [${evStrs}]`;
+  }).join(', ');
+  return `{ ${inner} }`;
+}
+
 function buildMatchCode(match, originalId) {
   const ytId = match.youtubeUrl ? match.youtubeUrl.match(/(?:v=|youtu\.be\/)([^&?/]+)/)?.[1] : null;
   const goalsCode   = match.goals.map(goalToCode).join('\n');
@@ -426,6 +438,9 @@ function buildMatchCode(match, originalId) {
   }).join('\n');
   const savesCode = Object.keys(match.savesManual||{}).length > 0
     ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
+  const shotsCode    = `      shots: ${eventMapToCode(match.shots || {})},\n`;
+  const keyPassCode  = `      keyPasses: ${eventMapToCode(match.keyPasses || {})},\n`;
+  const dribblesCode2 = `      dribbles: ${eventMapToCode(match.dribbles || {})},\n`;
   const ytStr = ytId ? `"${ytId}"` : 'null';
   const ideal = match.idealMinutesPerPlayer || 16.0;
 
@@ -440,7 +455,7 @@ function buildMatchCode(match, originalId) {
       youtubeId: ${ytStr},
       vimeoId: null,
       idealMinutesPerPlayer: ${ideal},
-${savesCode}      events: {
+${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}      events: {
         substitutions: [
 ${subsCode}
         ],
@@ -469,7 +484,7 @@ ${momentsCode}
       youtubeId: ${ytStr},
       vimeoId: null,
       idealMinutesPerPlayer: ${ideal},
-${savesCode}      events: {
+${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}      events: {
         substitutions: [
 ${subsCode}
         ],
@@ -531,6 +546,9 @@ function matchToForm(m) {
   }));
   const moments = (m.events?.retransmissio || []).map(r => ({ time: r.time, text: r.text }));
   const savesManual = m.savesManual ? {...m.savesManual} : {};
+  const shots    = m.shots     ? {...m.shots}     : {};
+  const keyPasses = m.keyPasses ? {...m.keyPasses} : {};
+  const dribbles  = m.dribbles  ? {...m.dribbles}  : {};
   return {
     _id: m.id,
     _isEdit: true,
@@ -540,7 +558,7 @@ function matchToForm(m) {
     result: m.result,
     youtubeUrl: ytUrl,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer || 16.0,
-    goals, subs, cards, moments, savesManual,
+    goals, subs, cards, moments, savesManual, shots, keyPasses, dribbles,
   };
 }
 
@@ -566,6 +584,69 @@ function MatchSelector({ onSelect, onNew }) {
             </div>
             <span className="text-gray-600 group-hover:text-[#E5C07B] text-xs transition-colors shrink-0">Editar →</span>
           </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Secció d'events per jugador (tirs / key passes / regats) ─────
+function PlayerEventSection({ title, hasOnTarget = false, data, onChange }) {
+  const roster = DATABASE.roster;
+  const [inputs, setInputs] = useState({});
+
+  const getInp = (name) => inputs[name] || { time: '', onTarget: true };
+  const setInp = (name, val) => setInputs(p => ({ ...p, [name]: val }));
+
+  const addEvent = (name) => {
+    const inp = getInp(name);
+    if (!inp.time) return;
+    const ev = hasOnTarget ? { time: inp.time, onTarget: inp.onTarget } : { time: inp.time };
+    onChange({ ...data, [name]: [...(data[name] || []), ev] });
+    setInp(name, { time: '', onTarget: true });
+  };
+
+  const removeEvent = (name, i) => {
+    const evs = (data[name] || []).filter((_, j) => j !== i);
+    if (evs.length === 0) { const { [name]: _, ...rest } = data; onChange(rest); }
+    else onChange({ ...data, [name]: evs });
+  };
+
+  return (
+    <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
+      {roster.map(pl => {
+        const inp = getInp(pl.name);
+        const events = data[pl.name] || [];
+        return (
+          <div key={pl.name} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] w-20 shrink-0 text-gray-400 font-bold">{pl.shirtName}</span>
+              <input value={inp.time} onChange={e => setInp(pl.name, { ...inp, time: e.target.value })}
+                placeholder="MM:SS" onKeyDown={e => e.key === 'Enter' && addEvent(pl.name)}
+                className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none font-mono"/>
+              {hasOnTarget && (
+                <button onClick={() => setInp(pl.name, { ...inp, onTarget: !inp.onTarget })}
+                  className={`text-[9px] px-2 py-1 rounded-lg border font-bold transition-all ${inp.onTarget ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]'}`}>
+                  {inp.onTarget ? 'a porta' : 'fora'}
+                </button>
+              )}
+              <button onClick={() => addEvent(pl.name)}
+                className="w-6 h-6 rounded-lg bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] flex items-center justify-center hover:bg-[#E5C07B]/25 transition-all shrink-0">
+                <Plus className="w-3 h-3"/>
+              </button>
+            </div>
+            {events.length > 0 && (
+              <div className="flex flex-wrap gap-1 pl-22" style={{paddingLeft:'5.5rem'}}>
+                {events.map((ev, i) => (
+                  <span key={i} className="flex items-center gap-1 bg-[#1a1a1a] border border-white/8 rounded-md px-1.5 py-0.5 text-[9px]">
+                    <span className="text-gray-300 font-mono">{ev.time}</span>
+                    {hasOnTarget && <span className={ev.onTarget ? 'text-emerald-400' : 'text-[#C0392B]'}>{ev.onTarget ? '✓' : '✗'}</span>}
+                    <button onClick={() => removeEvent(pl.name, i)} className="text-gray-600 hover:text-red-400 ml-0.5">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         );
       })}
     </div>
@@ -664,6 +745,33 @@ function MatchForm({ match, setMatch, onPreview }) {
         </div>
       </div>
 
+      {/* ── TIRS ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">🎯 Tirs</p>
+        <p className="text-[10px] text-gray-600">Registra tirs per jugador. Toggle "a porta / fora" per cada tir.</p>
+        <PlayerEventSection hasOnTarget
+          data={match.shots || {}}
+          onChange={v => setMatch(m => ({...m, shots: v}))}/>
+      </div>
+
+      {/* ── KEY PASSES ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">🔑 Key Passes</p>
+        <p className="text-[10px] text-gray-600">Passes clau que generen ocasió de gol.</p>
+        <PlayerEventSection
+          data={match.keyPasses || {}}
+          onChange={v => setMatch(m => ({...m, keyPasses: v}))}/>
+      </div>
+
+      {/* ── REGATS ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">🪄 Regats</p>
+        <p className="text-[10px] text-gray-600">Regats completats amb èxit.</p>
+        <PlayerEventSection
+          data={match.dribbles || {}}
+          onChange={v => setMatch(m => ({...m, dribbles: v}))}/>
+      </div>
+
       {/* ── SUBSTITUCIONS ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -733,7 +841,7 @@ export default function AdminPanel({ onClose }) {
     jornada: `Jornada ${DATABASE.matches.length + 1}`,
     opponent: '', date: '', result: '', youtubeUrl: '',
     idealMinutesPerPlayer: 20.0,
-    goals: [], subs: [], cards: [], moments: [], savesManual: {},
+    goals: [], subs: [], cards: [], moments: [], savesManual: {}, shots: {}, keyPasses: {}, dribbles: {},
   };
   const [match, setMatch] = useState(emptyMatch);
 
