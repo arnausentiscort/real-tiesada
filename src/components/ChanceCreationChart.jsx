@@ -265,7 +265,6 @@ export default function ChanceCreationChart() {
           const rows = [
             ['Gols',       hovered.goals],
             ['Assists',    hovered.assists],
-            ['Fantasies (KP+Reg)', hovered.x],
             ['Key passes', hovered.kp],
             ['Tirs porta', hovered.shotsOT],
             ['Regats',     hovered.dribs],
