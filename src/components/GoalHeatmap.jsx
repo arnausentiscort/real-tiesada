@@ -151,59 +151,71 @@ const SVG_ANIMATIONS = `
   @keyframes netBurst  { 0%{opacity:0;fill-opacity:0.18} 25%{opacity:1;fill-opacity:0.45} 100%{opacity:0;fill-opacity:0} }
 `;
 
-// ── Hook: pilota al GoalSVG (shotPos→goalPos, paràbola) ──────────
+// ── Hook: pilota al GoalSVG — vol + enfonsament via RAF ───────────
 function useGoalBallAnimation(goal) {
-  const [ballPos,  setBallPos]  = useState(null);
-  const [trail,    setTrail]    = useState([]);
-  const [ripple,   setRipple]   = useState(false);
-  const [sinking,  setSinking]  = useState(false);
+  const [frame,  setFrame]  = useState(null); // { x, y, r, alpha, trail }
+  const [ripple, setRipple] = useState(false);
   const rafRef   = useRef(null);
   const trailRef = useRef([]);
 
   useEffect(() => {
-    setBallPos(null); setTrail([]); setRipple(false); setSinking(false);
+    setFrame(null); setRipple(false);
     trailRef.current = [];
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (!goal?.goalPos || !goal?.shotPos) return;
 
     const GP = goal.goalPos;
-    // Projecta shotPos del camp (y=0–420) → x en GoalSVG (0–300)
-    const startX = Math.max(15, Math.min(285, (goal.shotPos.y / 420) * 300));
-    const p0 = { x: startX, y: 230 }; // just below ground (y=200)
+    const startX = Math.max(20, Math.min(280, (goal.shotPos.y / 420) * 300));
+    const p0 = { x: startX, y: 215 }; // just below visible area
     const p1 = { x: GP.x,   y: GP.y };
-    // CP: arc suau per sobre del travesser
+    // Arc natural: punt de control lleugerament per sobre del punt mig
     const cp = {
-      x: p0.x * 0.38 + p1.x * 0.62,
-      y: Math.min(p0.y, p1.y) - 100,
+      x: (p0.x + p1.x) / 2,
+      y: Math.min(p0.y, p1.y) - 55,
     };
 
-    const DURATION = 660;
+    const FLY_DUR  = 700;
+    const SINK_DUR = 520;
     let startTime = null;
+    let sinking   = false;
+    let sinkStart = null;
 
     const tick = (ts) => {
       if (!startTime) startTime = ts;
-      const rawT = Math.min((ts - startTime) / DURATION, 1);
-      const ease = rawT < 0.5 ? 4*rawT*rawT*rawT : 1 - Math.pow(-2*rawT+2, 3)/2;
-      const pos  = bezierAt(ease, p0, cp, p1);
 
-      trailRef.current = [...trailRef.current.slice(-8), { x: pos.x, y: pos.y }];
-      setTrail([...trailRef.current]);
-      setBallPos({ x: pos.x, y: pos.y });
+      if (!sinking) {
+        const rawT = Math.min((ts - startTime) / FLY_DUR, 1);
+        const ease = rawT < 0.5 ? 4*rawT*rawT*rawT : 1 - Math.pow(-2*rawT+2, 3)/2;
+        const pos  = bezierAt(ease, p0, cp, p1);
+        trailRef.current = [...trailRef.current.slice(-8), { x: pos.x, y: pos.y }];
+        setFrame({ x: pos.x, y: pos.y, r: 9, alpha: 1, trail: [...trailRef.current] });
 
-      if (rawT >= 1) {
-        setSinking(true);
-        setRipple(true);
-        setTimeout(() => { setBallPos(null); setTrail([]); }, 420);
-        return;
+        if (rawT >= 1) {
+          sinking = true; sinkStart = ts;
+          setRipple(true);
+          trailRef.current = [];
+        }
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        // Fase d'enfonsament: r i alpha decreixen via RAF (no CSS)
+        const sinkT = Math.min((ts - sinkStart) / SINK_DUR, 1);
+        const ease  = sinkT * sinkT;
+        const r     = 9 * (1 - ease * 0.93);
+        const alpha = 1 - ease;
+        if (r > 0.4) {
+          setFrame({ x: GP.x, y: GP.y, r, alpha, trail: [] });
+          rafRef.current = requestAnimationFrame(tick);
+        } else {
+          setFrame(null);
+        }
       }
-      rafRef.current = requestAnimationFrame(tick);
     };
 
     setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 200);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [goal]);
 
-  return { ballPos, trail, ripple, sinking };
+  return { frame, ripple };
 }
 
 // ── Camp SVG ──────────────────────────────────────────────────────
@@ -432,7 +444,7 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
 const GROUND_Y = 185;
 function GoalSVG({ goals, activeGoal, setActiveGoal }) {
   const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
-  const { ballPos, trail, ripple, sinking } = useGoalBallAnimation(activeGoalData);
+  const { frame, ripple } = useGoalBallAnimation(activeGoalData);
 
   return (
     <svg viewBox="-18 -18 336 230" style={{width:'100%',display:'block'}}>
@@ -551,29 +563,28 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         );
       })}
 
-      {/* ── Pilota animada (shotPos→goalPos) ── */}
-      {ballPos && activeGoalData && (() => {
+      {/* ── Pilota animada — r i alpha via RAF, sense CSS ── */}
+      {frame && activeGoalData && (() => {
         const color = PLAYER_COLORS[activeGoalData.scorer] || ACCENT;
+        const { x, y, r, alpha, trail } = frame;
+        const isSinking = alpha < 0.98;
         return (
-          <g key={`gball-${activeGoal}`}>
+          <g>
             {trail.map((pos, i) => {
               const prog = (i + 1) / trail.length;
-              return <circle key={i} cx={pos.x} cy={pos.y} r={4.5*prog} fill={color} opacity={0.28*prog}/>;
+              return <circle key={i} cx={pos.x} cy={pos.y} r={3.5*prog} fill={color} opacity={0.22*prog}/>;
             })}
-            <ellipse cx={ballPos.x+2} cy={ballPos.y+3} rx="5" ry="2.5" fill="rgba(0,0,0,0.3)"/>
-            <circle cx={ballPos.x} cy={ballPos.y} r="9"
+            {r > 4 && <ellipse cx={x+1.5} cy={y+2.5} rx={r*0.6} ry={r*0.28} fill="rgba(0,0,0,0.3)" opacity={alpha*0.8}/>}
+            <circle cx={x} cy={y} r={r}
               fill="url(#goalBallGrad)"
-              stroke={sinking ? color : 'rgba(0,0,0,0.3)'}
-              strokeWidth={sinking ? 1.5 : 0.7}
-              style={{
-                transformOrigin: `${ballPos.x}px ${ballPos.y}px`,
-                filter: sinking ? `drop-shadow(0 0 12px ${color})` : 'none',
-                ...(sinking ? { animation: 'ballSink 0.42s ease-in forwards' } : {}),
-              }}/>
-            <g style={{transformOrigin:`${ballPos.x}px ${ballPos.y}px`}}>
-              <path d={`M${ballPos.x-4},${ballPos.y-1.5} Q${ballPos.x},${ballPos.y-6.5} ${ballPos.x+4},${ballPos.y-1.5}`}
-                fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="0.9"/>
-            </g>
+              stroke={isSinking ? color : 'rgba(0,0,0,0.25)'}
+              strokeWidth={isSinking ? 1.5 : 0.6}
+              opacity={alpha}
+              style={{filter: isSinking ? `drop-shadow(0 0 ${10*alpha}px ${color})` : 'none'}}/>
+            {r > 5 && (
+              <path d={`M${x-r*0.44},${y-r*0.17} Q${x},${y-r*0.72} ${x+r*0.44},${y-r*0.17}`}
+                fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.8" opacity={alpha}/>
+            )}
           </g>
         );
       })()}
@@ -583,20 +594,25 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         const color = PLAYER_COLORS[activeGoalData.scorer] || ACCENT;
         const GP = activeGoalData.goalPos;
         return (
-          <g key={`ripple-${activeGoal}`}>
+          <g key={`r-${activeGoal}-${ripple}`}>
             {[0,1,2,3].map(i => (
-              <circle key={i} cx={GP.x} cy={GP.y} r="9"
+              <circle key={i} cx={GP.x} cy={GP.y} r="8"
                 fill="none"
                 stroke={i % 2 === 0 ? 'white' : color}
                 strokeWidth={i < 2 ? 2.5 : 1.5}
                 style={{
-                  transformOrigin: `${GP.x}px ${GP.y}px`,
-                  animation: `bigRipple ${0.55+i*0.12}s ease-out ${i*0.11}s forwards`,
+                  transformBox: 'fill-box',
+                  transformOrigin: 'center',
+                  animation: `bigRipple ${0.5+i*0.1}s ease-out ${i*0.1}s forwards`,
                 }}/>
             ))}
-            <circle cx={GP.x} cy={GP.y} r="18"
-              fill={color} opacity="0"
-              style={{animation:'netBurst 0.5s ease-out both'}}/>
+            <circle cx={GP.x} cy={GP.y} r="16"
+              fill={color}
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'center',
+                animation: 'netBurst 0.45s ease-out both',
+              }}/>
           </g>
         );
       })()}
