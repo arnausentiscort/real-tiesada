@@ -60,6 +60,7 @@ export const DATABASE = {
       idealMinutesPerPlayer: 14.5,
       goalkeeperMinutes: { "Marc Farreras": 15, "Joan Medina": 15, "Pau Ibañez": 10 },
       fieldMinutes: { "Arnau Sentis": 14.5, "Roger Miro": 14.5, "Joan Medina": 14.5, "Pau Ibañez": 14.5, "Roi Seoane": 14.5, "Oriol Tomas": 14.5, "Paco Montero": 14.5, "Andreu Cases": 14.5, "Chengzhi Li": 14.5, "Ivan Mico": 14.5, "Marc Farreras": 14.5 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [],
         cards: [
@@ -100,6 +101,7 @@ export const DATABASE = {
       idealMinutesPerPlayer: 20.0,
       goalkeeperMinutes: { "Pau Ibañez": 15, "Joan Medina": 25 },
       fieldMinutes: { "Arnau Sentis": 16, "Roger Miro": 16, "Joan Medina": 16, "Pau Ibañez": 16, "Roi Seoane": 16, "Oriol Tomas": 16, "Paco Montero": 16, "Andreu Cases": 16, "Ivan Mico": 16, "Marc Farreras": 16 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [],
         goals: [
@@ -124,6 +126,7 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       savesManual: { "Roger Miro": 1, "Joan Medina": 6, "Pau Ibañez": 3 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [
           { time: "00:00", goalkeeper: "Joan Medina",  onPitch: ["Roi Seoane", "Pau Ibañez", "Ivan Mico", "Chengzhi Li"] },
@@ -211,6 +214,7 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 17.5,
       savesManual: { "Ivan Mico": 5, "Pau Ibañez": 0 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [
           { time: "3:00",  goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
@@ -283,6 +287,7 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 16.0,
       savesManual: { "Ivan Mico": 8, "Joan Medina": 5 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
        substitutions: [
           { time: "00:00", goalkeeper: "Ivan Mico", onPitch: ["Pau Ibañez", "Oriol Tomas", "Paco Montero", "Roger Miro"] },
@@ -362,6 +367,7 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 20.0,
       savesManual: { "Ivan Mico": 11, "Joan Medina": 3 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [
           { time: "00:00", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis","Oriol Tomas","Chengzhi Li","Ivan Mico"] },
@@ -445,6 +451,7 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 20.0,
       savesManual: { "Ivan Mico": 0, "Oriol Tomas": 0 },
+      shots: {}, keyPasses: {}, dribbles: {},
       events: {
         substitutions: [
           { time: "1:00",  goalkeeper: "Joan Medina",  onPitch: ["Arnau Sentis","Pau Ibañez","Oriol Tomas","Ivan Mico"] },
