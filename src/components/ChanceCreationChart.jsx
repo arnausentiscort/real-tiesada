@@ -54,7 +54,8 @@ export default function ChanceCreationChart() {
       const shotsOT  = stats.shotsOnTarget?.find(([n]) => n === p.name)?.[1] || 0;
       const shotsAll = stats.shotsTotal?.find(([n]) => n === p.name)?.[1] || 0;
       const dribs    = stats.dribbles?.find(([n]) => n === p.name)?.[1] || 0;
-      return { name: p.name, photo: p.photo, kp, goals, assists, y: goals + assists, x: kp, mins, shotsOT, shotsAll, dribs };
+      const fantasies = kp + dribs;
+      return { name: p.name, photo: p.photo, kp, goals, assists, y: goals + assists, x: fantasies, mins, shotsOT, shotsAll, dribs };
     }).filter(p => p.mins > 0);
   }, [stats]);
 
@@ -89,7 +90,7 @@ export default function ChanceCreationChart() {
       <div className="mb-4">
         <h3 className="text-sm font-black text-[#E5C07B]">⚡ Creació de Perill</h3>
         <p className="text-[10px] text-gray-600 mt-0.5">
-          Key passes (eix X) · Gols + Assists (eix Y) · Mida = minuts jugats
+          Fantasies = Key passes + Regats (eix X) · Gols + Assists (eix Y) · Mida = minuts jugats
         </p>
       </div>
 
@@ -167,7 +168,7 @@ export default function ChanceCreationChart() {
           </g>
         ))}
         <text x={PAD.left+IW/2} y={H-2} textAnchor="middle" fontSize="8.5"
-          fill="rgba(229,192,123,0.55)" fontWeight="bold">Key Passes</text>
+          fill="rgba(229,192,123,0.55)" fontWeight="bold">Fantasies (KP + Regats)</text>
 
         {/* Y ticks + label */}
         {yTicks.map(v => (
@@ -264,6 +265,7 @@ export default function ChanceCreationChart() {
           const rows = [
             ['Gols',       hovered.goals],
             ['Assists',    hovered.assists],
+            ['Fantasies (KP+Reg)', hovered.x],
             ['Key passes', hovered.kp],
             ['Tirs porta', hovered.shotsOT],
             ['Regats',     hovered.dribs],
