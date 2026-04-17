@@ -591,11 +591,11 @@ function MatchSelector({ onSelect, onNew }) {
 }
 
 // ── Secció d'events per jugador (tirs / key passes / regats) ─────
-function PlayerEventSection({ title, hasOnTarget = false, data, onChange }) {
+function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange }) {
   const roster = DATABASE.roster;
   const [inputs, setInputs] = useState({});
 
-  const getInp = (name) => inputs[name] || { time: '', onTarget: true };
+  const getInp = (name) => inputs[name] || { time: '', onTarget: true, keyPassBy: '' };
   const setInp = (name, val) => setInputs(p => ({ ...p, [name]: val }));
 
   const addEvent = (name) => {
@@ -603,7 +603,13 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange }) {
     if (!inp.time) return;
     const ev = hasOnTarget ? { time: inp.time, onTarget: inp.onTarget } : { time: inp.time };
     onChange({ ...data, [name]: [...(data[name] || []), ev] });
-    setInp(name, { time: '', onTarget: true });
+    if (linkedKeyPassData && onLinkedKeyPassChange && inp.keyPassBy) {
+      onLinkedKeyPassChange({
+        ...linkedKeyPassData,
+        [inp.keyPassBy]: [...(linkedKeyPassData[inp.keyPassBy] || []), { time: inp.time }]
+      });
+    }
+    setInp(name, { time: '', onTarget: true, keyPassBy: '' });
   };
 
   const removeEvent = (name, i) => {
@@ -619,7 +625,7 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange }) {
         const events = data[pl.name] || [];
         return (
           <div key={pl.name} className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] w-20 shrink-0 text-gray-400 font-bold">{pl.shirtName}</span>
               <input value={inp.time} onChange={e => setInp(pl.name, { ...inp, time: e.target.value })}
                 placeholder="MM:SS" onKeyDown={e => e.key === 'Enter' && addEvent(pl.name)}
@@ -629,6 +635,15 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange }) {
                   className={`text-[9px] px-2 py-1 rounded-lg border font-bold transition-all ${inp.onTarget ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]'}`}>
                   {inp.onTarget ? 'a porta' : 'fora'}
                 </button>
+              )}
+              {linkedKeyPassData && onLinkedKeyPassChange && (
+                <select value={inp.keyPassBy || ''} onChange={e => setInp(pl.name, { ...inp, keyPassBy: e.target.value })}
+                  className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-[9px] text-gray-400 focus:border-[#E5C07B]/40 outline-none">
+                  <option value="">🔑 Sense pas</option>
+                  {roster.filter(p => p.name !== pl.name).map(p =>
+                    <option key={p.name} value={p.name}>{p.shirtName}</option>
+                  )}
+                </select>
               )}
               <button onClick={() => addEvent(pl.name)}
                 className="w-6 h-6 rounded-lg bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] flex items-center justify-center hover:bg-[#E5C07B]/25 transition-all shrink-0">
@@ -751,7 +766,9 @@ function MatchForm({ match, setMatch, onPreview }) {
         <p className="text-[10px] text-gray-600">Registra tirs per jugador. Toggle "a porta / fora" per cada tir.</p>
         <PlayerEventSection hasOnTarget
           data={match.shots || {}}
-          onChange={v => setMatch(m => ({...m, shots: v}))}/>
+          onChange={v => setMatch(m => ({...m, shots: v}))}
+          linkedKeyPassData={match.keyPasses || {}}
+          onLinkedKeyPassChange={v => setMatch(m => ({...m, keyPasses: v}))}/>
       </div>
 
       {/* ── KEY PASSES ── */}

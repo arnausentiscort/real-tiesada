@@ -376,7 +376,7 @@ function PlayerModal({ player, stats, onClose }) {
                     <div className="flex gap-2 text-xs">
                       {gf>0 && <span className="text-emerald-400 font-bold">{gf}⚽</span>}
                       {ast>0 && <span className="text-blue-400 font-bold">{ast}👟</span>}
-                      {gfOnPitch>0 && <span className="text-[#E5C07B] font-bold">{gfOnPitch}🌐</span>}
+                      {gfOnPitch>0 && <span className="text-[#E5C07B] font-bold">{gfOnPitch}🎯</span>}
                       {gc>0 && <span className="text-[#C0392B] font-bold">{gc}🥅</span>}
                     </div>
                   </div>
