@@ -42,8 +42,8 @@ function parseSeconds(timeStr) {
 }
 
 function calcLineupStats() {
-  const pairData    = {};
-  const quartetData = {};
+  const pairData = {};
+  const trioData = {};
 
   const getPair = (a, b) => {
     const key = [a, b].sort().join('|||');
@@ -51,11 +51,11 @@ function calcLineupStats() {
     return pairData[key];
   };
 
-  const getQuartet = (arr4) => {
-    const sorted = [...arr4].sort();
+  const getTrio = (arr3) => {
+    const sorted = [...arr3].sort();
     const key = sorted.join('|||');
-    if (!quartetData[key]) quartetData[key] = { players: sorted, secs: 0, goalsFor: 0, goalsAgainst: 0 };
-    return quartetData[key];
+    if (!trioData[key]) trioData[key] = { players: sorted, secs: 0, goalsFor: 0, goalsAgainst: 0 };
+    return trioData[key];
   };
 
   DATABASE.matches.forEach(match => {
@@ -74,8 +74,8 @@ function calcLineupStats() {
           for (let b = a + 1; b < players.length; b++)
             getPair(players[a], players[b]).secs += secs;
 
-        if (players.length >= 4)
-          combos(players, 4).forEach(c => { getQuartet(c).secs += secs; });
+        if (players.length >= 3)
+          combos(players, 3).forEach(c => { getTrio(c).secs += secs; });
       }
     }
 
@@ -91,10 +91,10 @@ function calcLineupStats() {
         }
       }
 
-      if (op.length >= 4)
-        combos(op, 4).forEach(c => {
-          const q = getQuartet(c);
-          if (isFor) q.goalsFor++; else q.goalsAgainst++;
+      if (op.length >= 3)
+        combos(op, 3).forEach(c => {
+          const t = getTrio(c);
+          if (isFor) t.goalsFor++; else t.goalsAgainst++;
         });
     });
   });
@@ -105,12 +105,12 @@ function calcLineupStats() {
     .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
     .slice(0, 10);
 
-  const quartets = Object.values(quartetData)
-    .filter(q => q.goalsFor > 0 || q.secs > 0)
+  const trios = Object.values(trioData)
+    .filter(t => t.goalsFor > 0 || t.secs > 0)
     .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
     .slice(0, 5);
 
-  return { pairs, quartets };
+  return { pairs, trios };
 }
 
 // ── Secció 1: Top Parelles ────────────────────────────────────────
@@ -192,23 +192,23 @@ function TopPairs({ pairs }) {
   );
 }
 
-// ── Secció 2: Top Quintets (4 jugadors de camp) ───────────────────
-function TopQuartets({ quartets }) {
-  const maxFor = Math.max(...quartets.map(q => q.goalsFor), 1);
+// ── Secció 2: Top Trios (3 jugadors de camp) ─────────────────────
+function TopTrios({ trios }) {
+  const maxFor = Math.max(...trios.map(t => t.goalsFor), 1);
 
-  if (!quartets.length) return null;
+  if (!trios.length) return null;
 
   return (
     <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5">
       <div className="mb-4">
         <h3 className="text-sm font-black text-[#E5C07B] flex items-center gap-2">
-          ⚡ Top Quintets
+          ⚡ Top Trios
         </h3>
-        <p className="text-[10px] text-gray-600 mt-0.5">4 jugadors de camp · ordenat per gols marcats junts</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">3 jugadors de camp · ordenat per gols marcats junts</p>
       </div>
 
       <div className="space-y-4">
-        {quartets.map(({ players, secs, goalsFor, goalsAgainst }, i) => {
+        {trios.map(({ players, secs, goalsFor, goalsAgainst }, i) => {
           const mins   = secs > 0 ? Math.round(secs / 60) : null;
           const isTop3 = i < 3;
           const pct    = (goalsFor / maxFor) * 100;
@@ -221,7 +221,7 @@ function TopQuartets({ quartets }) {
                   {MEDALS[i] || <span className="text-[10px] text-gray-700 font-mono">{i+1}</span>}
                 </span>
 
-                {/* 4 Avatars solapats */}
+                {/* 3 Avatars solapats */}
                 <div className="flex shrink-0 pt-0.5">
                   {players.map((name, j) => (
                     <div key={name} style={{marginLeft: j > 0 ? -10 : 0}}>
@@ -274,13 +274,13 @@ function TopQuartets({ quartets }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function LineupStats() {
-  const { pairs, quartets } = useMemo(() => calcLineupStats(), []);
-  if (!pairs.length && !quartets.length) return null;
+  const { pairs, trios } = useMemo(() => calcLineupStats(), []);
+  if (!pairs.length && !trios.length) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       <TopPairs pairs={pairs}/>
-      <TopQuartets quartets={quartets}/>
+      <TopTrios trios={trios}/>
     </div>
   );
 }

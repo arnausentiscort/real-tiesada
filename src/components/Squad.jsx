@@ -108,7 +108,7 @@ function calcRating(player, stats) {
   const goals    = stats.topScorers.find(([n])=>n===player.name)?.[1] || 0;
   const assists  = stats.topAssists.find(([n])=>n===player.name)?.[1] || 0;
   const minSecs  = stats.totalMinutes.find(([n])=>n===player.name)?.[1] || 0;
-  const conceded = stats.goalsConceded.find(([n])=>n===player.name)?.[1] || 0;
+  const conceded = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
   const saves    = stats.saves.find(([n])=>n===player.name)?.[1] || 0;
   const gf       = stats.goalsFor.find(([n])=>n===player.name)?.[1] || 0;
   const ga       = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
@@ -180,7 +180,7 @@ function PlayerCard({ player, stats, onClick }) {
   const minSecs  = stats.totalMinutes.find(([n])=>n===player.name)?.[1] || 0;
   const gf       = stats.goalsFor.find(([n])=>n===player.name)?.[1] || 0;
   const ga       = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
-  const conceded = stats.goalsConceded.find(([n])=>n===player.name)?.[1] || 0;
+  const conceded = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
   const saves    = stats.saves.find(([n])=>n===player.name)?.[1] || 0;
   const isGK     = player.position === 'Porter';
 
@@ -362,7 +362,7 @@ function PlayerProfile({ player, stats, onClose }) {
   const goals    = stats.topScorers.find(([n])=>n===player.name)?.[1] || 0;
   const assists  = stats.topAssists.find(([n])=>n===player.name)?.[1] || 0;
   const minSecs  = stats.totalMinutes.find(([n])=>n===player.name)?.[1] || 0;
-  const conceded = stats.goalsConceded.find(([n])=>n===player.name)?.[1] || 0;
+  const conceded = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
   const saves    = stats.saves.find(([n])=>n===player.name)?.[1] || 0;
   const gf       = stats.goalsFor.find(([n])=>n===player.name)?.[1] || 0;
   const ga       = stats.goalsAgainst.find(([n])=>n===player.name)?.[1] || 0;
