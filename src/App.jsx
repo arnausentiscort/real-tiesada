@@ -7,6 +7,7 @@ import Clasificacion    from './components/Clasificacion.jsx';
 import GoalHeatmap      from './components/GoalHeatmap.jsx';
 import Galeria          from './components/Galeria.jsx';
 import MvpPage          from './components/MvpPage.jsx';
+import TacticalBoard    from './components/TacticalBoard.jsx';
 import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
 import AdminPanel       from './components/AdminPanel.jsx';
@@ -74,6 +75,7 @@ export default function App() {
     { id: 'mvp',           icon: '⭐', label: 'MVP'           },
     { id: 'heatmap',       icon: '🎯', label: 'Mapa de Gols'  },
     { id: 'galeria',       icon: '📸', label: 'Galeria'       },
+    { id: 'pissarra',      icon: '🎯', label: 'Pissarra'      },
   ];
 
   const activeNavId = isMatch ? 'dashboard' : (typeof view === 'string' ? view : 'dashboard');
@@ -147,6 +149,7 @@ export default function App() {
             {view === 'mvp'           && <MvpPage />}
             {view === 'heatmap'       && <GoalHeatmap />}
             {view === 'galeria'       && <Galeria />}
+            {view === 'pissarra'      && <TacticalBoard />}
             {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
           </>
         )}
