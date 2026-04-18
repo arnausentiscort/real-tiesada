@@ -214,7 +214,9 @@ export const DATABASE = {
       vimeoId: null,
       idealMinutesPerPlayer: 17.5,
       savesManual: { "Ivan Mico": 5, "Pau Ibañez": 0 },
-      shots: {}, keyPasses: {}, dribbles: {},
+      shots: { "Pau Ibañez": [{ time: "12:38", onTarget: true }], "Roger Miro": [{ time: "15:08", onTarget: true }], "Paco Montero": [{ time: "19:19", onTarget: false }], "Joan Medina": [{ time: "22:23", onTarget: true }, { time: "39:14", onTarget: false }], "Marc Farreras": [{ time: "30:30", onTarget: true }, { time: "37:14", onTarget: true }], "Chengzhi Li": [{ time: "32:57", onTarget: true }], "Roi Seoane": [{ time: "37:15", onTarget: true }] },
+      keyPasses: { "Chengzhi Li": [{ time: "5:49" }, { time: "22:23" }], "Roi Seoane": [{ time: "12:38" }], "Pau Ibañez": [{ time: "15:08" }], "Ivan Mico": [{ time: "19:19" }], "Joan Medina": [{ time: "37:14" }], "Roger Miro": [{ time: "39:17" }, { time: "39:14" }] },
+      dribbles: { "Ivan Mico": [{ time: "21:48" }] },
       events: {
         substitutions: [
           { time: "3:00",  goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Joan Medina"] },
