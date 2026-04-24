@@ -20,7 +20,7 @@ const MODES = {
 const DEF_PCT = {
   fs5: [[50,90],[25,70],[75,70],[25,40],[75,40]],
   f7:  [[50,90],[30,75],[70,75],[20,50],[50,50],[80,50],[50,25]],
-  f11: [[50,90],[15,75],[35,75],[65,75],[85,75],[35,55],[65,55],[20,35],[50,35],[80,35],[50,15]],
+  f11: [[50,90],[15,75],[35,75],[65,75],[85,75],[35,55],[65,55],[15,25],[50,35],[85,25],[50,15]],
 };
 
 const RIVAL_PCT = {
@@ -31,9 +31,9 @@ const RIVAL_PCT = {
 
 // ── Alineacions per defecte ───────────────────────────────────────
 const DEF_LINEUP = {
-  fs5: ['Joan Medina','Ivan Mico','Pau Ibañez','Marc Farreras','Arnau Sentis'],
-  f7:  ['Joan Medina','Ivan Mico','Pau Ibañez','Roger Miro','Arnau Sentis','Paco Montero','Marc Farreras'],
-  f11: ['Joan Medina','Oriol Tomas','Roi Seoane','Ivan Mico','Marc Farreras',
+  fs5: ['Ivan Mico','Marc Farreras','Pau Ibañez','Joan Medina','Arnau Sentis'],
+  f7:  ['Ivan Mico','Pau Ibañez','Roger Miro','Arnau Sentis','Paco Montero','Joan Medina','Marc Farreras'],
+  f11: ['Oriol Tomas','Roi Seoane','Ivan Mico','Marc Farreras','Joan Medina',
         'Pau Ibañez','Paco Montero','Chengzhi Li','Arnau Sentis','Andreu Cases','Roger Miro'],
 };
 
