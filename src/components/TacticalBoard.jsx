@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import { DATABASE } from '../data.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -18,9 +18,9 @@ const MODES = {
 
 // ── Posicions per defecte (% camp) ───────────────────────────────
 const DEF_PCT = {
-  fs5: [[50,90],[25,70],[75,70],[25,45],[75,45]],
+  fs5: [[50,90],[25,70],[75,70],[25,40],[75,40]],
   f7:  [[50,90],[30,75],[70,75],[20,50],[50,50],[80,50],[50,25]],
-  f11: [[50,90],[20,80],[40,80],[60,80],[80,80],[25,55],[50,55],[75,55],[25,30],[50,30],[75,30]],
+  f11: [[50,90],[15,75],[35,75],[65,75],[85,75],[35,55],[65,55],[20,35],[50,35],[80,35],[50,15]],
 };
 
 const RIVAL_PCT = {
@@ -31,10 +31,10 @@ const RIVAL_PCT = {
 
 // ── Alineacions per defecte ───────────────────────────────────────
 const DEF_LINEUP = {
-  fs5: ['Joan Medina','Arnau Sentis','Roger Miro','Pau Ibañez','Roi Seoane'],
-  f7:  ['Joan Medina','Ivan Mico','Pau Ibañez','Arnau Sentis','Roger Miro','Oriol Tomas','Chengzhi Li'],
-  f11: ['Joan Medina','Ivan Mico','Pau Ibañez','Roi Seoane','Andreu Cases',
-        'Arnau Sentis','Oriol Tomas','Roger Miro','Paco Montero','Chengzhi Li','Marc Farreras'],
+  fs5: ['Joan Medina','Ivan Mico','Pau Ibañez','Marc Farreras','Arnau Sentis'],
+  f7:  ['Joan Medina','Ivan Mico','Pau Ibañez','Roger Miro','Arnau Sentis','Paco Montero','Marc Farreras'],
+  f11: ['Joan Medina','Oriol Tomas','Roi Seoane','Ivan Mico','Marc Farreras',
+        'Pau Ibañez','Paco Montero','Chengzhi Li','Arnau Sentis','Andreu Cases','Roger Miro'],
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ const mkRivals = m => RIVAL_PCT[m].map(pct2svg);
 const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // ── Línies del camp: Futbol Sala (portrait) ───────────────────────
-function FutsalLines() {
+const FutsalLines = memo(function FutsalLines() {
   const { x: FX, y: FY, w: FW, h: FH } = F;
   const cx = FX + FW / 2, cy = FY + FH / 2;
   const arcR = 88, gW = 55, gH = 22;
@@ -60,36 +60,31 @@ function FutsalLines() {
       <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={52} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      {/* Àrees penals: semicercle baix (cap amunt) i alt (cap avall) */}
       <path d={`M${cx-arcR} ${FY+FH} A${arcR} ${arcR} 0 0 1 ${cx+arcR} ${FY+FH}`}
         fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
       <path d={`M${cx-arcR} ${FY} A${arcR} ${arcR} 0 0 0 ${cx+arcR} ${FY}`}
         fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      {/* Punts de penal */}
       <circle cx={cx} cy={FY+FH-arcR} r={3} fill={S+'0.7)'}/>
       <circle cx={cx} cy={FY+arcR}    r={3} fill={S+'0.7)'}/>
-      {/* Arcs de cantó */}
       <path d={`M${FX} ${FY+18} A18 18 0 0 1 ${FX+18} ${FY}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
       <path d={`M${FX+FW-18} ${FY} A18 18 0 0 1 ${FX+FW} ${FY+18}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
       <path d={`M${FX} ${FY+FH-18} A18 18 0 0 0 ${FX+18} ${FY+FH}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
       <path d={`M${FX+FW-18} ${FY+FH} A18 18 0 0 0 ${FX+FW} ${FY+FH-18}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
-      {/* Porteries */}
       <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
       <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
     </>
   );
-}
+});
 
 // ── Línies Futbol 7 ───────────────────────────────────────────────
-function F7Lines() {
+const F7Lines = memo(function F7Lines() {
   const { x: FX, y: FY, w: FW, h: FH } = F;
   const cx = FX + FW / 2, cy = FY + FH / 2;
-  // Escala: FH=600px≈60m→10px/m; FW=360px≈40m→9px/m
-  const areaW = 162, areaH = 100; // 18m wide, 10m deep
+  const areaW = 162, areaH = 100;
   const ax = cx - areaW / 2;
   const gW = 50, gH = 22;
   const gx = cx - gW / 2;
-  const spotOff = 78; // 8m penalty spot
+  const spotOff = 78;
   const S = 'rgba(255,255,255,';
   return (
     <>
@@ -101,37 +96,31 @@ function F7Lines() {
       <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={60} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      {/* Àrees */}
       <rect x={ax} y={FY} width={areaW} height={areaH} fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
       <rect x={ax} y={FY+FH-areaH} width={areaW} height={areaH} fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      {/* Punts */}
       <circle cx={cx} cy={FY+spotOff}    r={3} fill={S+'0.7)'}/>
       <circle cx={cx} cy={FY+FH-spotOff} r={3} fill={S+'0.7)'}/>
-      {/* Arcs cantó */}
       <path d={`M${FX} ${FY+16} A16 16 0 0 1 ${FX+16} ${FY}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
       <path d={`M${FX+FW-16} ${FY} A16 16 0 0 1 ${FX+FW} ${FY+16}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
       <path d={`M${FX} ${FY+FH-16} A16 16 0 0 0 ${FX+16} ${FY+FH}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
       <path d={`M${FX+FW-16} ${FY+FH} A16 16 0 0 0 ${FX+FW} ${FY+FH-16}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
-      {/* Porteries */}
       <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
       <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
     </>
   );
-}
+});
 
 // ── Línies Futbol 11 ──────────────────────────────────────────────
-function F11Lines() {
+const F11Lines = memo(function F11Lines() {
   const { x: FX, y: FY, w: FW, h: FH } = F;
   const cx = FX + FW / 2, cy = FY + FH / 2;
-  // Escala: FH=600px≈105m→5.71px/m; FW=360px≈68m→5.29px/m
-  const areaW = 213, areaH = 94;   // 40.32m x 16.5m
-  const goalAreaW = 97, goalAreaH = 31; // 18.32m x 5.5m
+  const areaW = 213, areaH = 94;
+  const goalAreaW = 97, goalAreaH = 31;
   const ax = cx - areaW / 2, gax = cx - goalAreaW / 2;
-  const penOff = 63; // 11m → spot
-  const arcR = 52;  // 9.15m D arc
+  const penOff = 63;
+  const arcR = 52;
   const gW = 40, gH = 22;
   const gx = cx - gW / 2;
-  // D arc intersections with area edge
   const dDx = Math.round(Math.sqrt(arcR*arcR - (areaH - penOff)*(areaH - penOff)));
   const S = 'rgba(255,255,255,';
   return (
@@ -144,99 +133,169 @@ function F11Lines() {
       <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={52} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
       <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      {/* Àrees */}
       <rect x={ax} y={FY}         width={areaW} height={areaH}     fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
       <rect x={ax} y={FY+FH-areaH} width={areaW} height={areaH}   fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      {/* Àrees de gol */}
       <rect x={gax} y={FY}             width={goalAreaW} height={goalAreaH} fill="none" stroke={S+'0.5)'} strokeWidth={1}/>
       <rect x={gax} y={FY+FH-goalAreaH} width={goalAreaW} height={goalAreaH} fill="none" stroke={S+'0.5)'} strokeWidth={1}/>
-      {/* Punts de penal */}
       <circle cx={cx} cy={FY+penOff}    r={3} fill={S+'0.7)'}/>
       <circle cx={cx} cy={FY+FH-penOff} r={3} fill={S+'0.7)'}/>
-      {/* Arcs D (part fora de l'àrea) */}
       <path d={`M${cx-dDx} ${FY+areaH} A${arcR} ${arcR} 0 0 1 ${cx+dDx} ${FY+areaH}`}
         fill="none" stroke={S+'0.6)'} strokeWidth={1.5}/>
       <path d={`M${cx-dDx} ${FY+FH-areaH} A${arcR} ${arcR} 0 0 0 ${cx+dDx} ${FY+FH-areaH}`}
         fill="none" stroke={S+'0.6)'} strokeWidth={1.5}/>
-      {/* Arcs cantó */}
       {[[FX,FY,'0 0 1'],[FX+FW,FY,'0 0 0'],[FX,FY+FH,'0 0 0'],[FX+FW,FY+FH,'0 0 1']].map(([bx,by,sw],k)=>{
         const dx = bx===FX?16:-16, dy = by===FY?16:-16;
         return <path key={k} d={`M${bx} ${by+dy} A16 16 ${sw} ${bx+dx} ${by}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>;
       })}
-      {/* Porteries */}
       <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
       <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
     </>
   );
-}
+});
+
+// ── Components Drag Extrets (per evitar re-renders) ────────────────
+
+const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
+  const clipId = `cp-${idx}-${p.name.replace(/\s+/g, '')}`;
+  return (
+    <g style={{ cursor:'grab', touchAction:'none' }}
+      onPointerDown={e => onDown(idx, e)}
+      onPointerMove={e => onMove(idx, e)}
+      onPointerUp={onUp}
+      onPointerCancel={onUp}>
+      <circle cx={p.x} cy={p.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
+      <circle cx={p.x} cy={p.y} r={R+2} fill="none" stroke="#E5C07B" strokeWidth={2.5} strokeOpacity={0.9}/>
+      <circle cx={p.x} cy={p.y} r={R} fill={info?.photo ? '#0a0a0a' : 'rgba(229,192,123,0.15)'}/>
+      {info?.photo ? (
+        <>
+          <defs>
+            <clipPath id={clipId}>
+              <circle cx={p.x} cy={p.y} r={R}/>
+            </clipPath>
+          </defs>
+          <image href={`${BASE}${info.photo}`} x={p.x-R} y={p.y-R} width={R*2} height={R*2}
+            clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMin slice" draggable={false}/>
+        </>
+      ) : (
+        <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
+          fontSize={16} fontWeight="900" fill="#E5C07B" style={{pointerEvents:'none'}}>
+          {p.name[0]}
+        </text>
+      )}
+      <text x={p.x} y={p.y+R+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
+        fill="rgba(255,255,255,0.92)" stroke="#121212" strokeWidth={3} paintOrder="stroke"
+        style={{pointerEvents:'none'}}>
+        {(info?.shirtName || p.name.split(' ')[0]).slice(0,7)}
+      </text>
+    </g>
+  );
+});
+
+const RivalToken = memo(({ pos, idx, onDown, onMove, onUp }) => (
+  <g style={{ cursor:'grab', touchAction:'none' }}
+    onPointerDown={e => onDown(idx,e)}
+    onPointerMove={e => onMove(idx,e)}
+    onPointerUp={onUp}
+    onPointerCancel={onUp}>
+    <circle cx={pos.x} cy={pos.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
+    <circle cx={pos.x} cy={pos.y} r={R+2} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeOpacity={0.7}/>
+    <circle cx={pos.x} cy={pos.y} r={R} fill="#C0392B" fillOpacity={0.9}/>
+    <text x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="middle"
+      fontSize={12} fontWeight="bold" fill="white" style={{pointerEvents:'none'}}>
+      R{idx+1}
+    </text>
+  </g>
+));
 
 // ── Component principal ───────────────────────────────────────────
 export default function TacticalBoard() {
-  const roster   = DATABASE.roster;
-  const svgRef   = useRef(null);
-  const fieldDrag = useRef(null); // { type, idx, pid, ox, oy }
-  const benchDrag = useRef(null); // { name, pid }
+  const roster = DATABASE.roster;
+  const svgRef = useRef(null);
+  const fieldDrag = useRef(null); 
+  const benchDrag = useRef(null); 
 
-  const [mode,         setMode]         = useState('fs5');
+  const [mode, setMode] = useState('fs5');
+  const [unavailable, setUnavailable] = useState([]);
+  const [showConv, setShowConv] = useState(false);
+  
   const [fieldPlayers, setFieldPlayers] = useState(mkField('fs5'));
-  const [rivalPos,     setRivalPos]     = useState(mkRivals('fs5'));
-  const [ghost,        setGhost]        = useState(null); // { name, photo, x, y }
+  const [rivalPos, setRivalPos] = useState(mkRivals('fs5'));
+  const [ghost, setGhost] = useState(null); 
 
-  const getInfo     = name => roster.find(p => p.name === name);
-  const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name));
+  const getInfo = useCallback(name => roster.find(p => p.name === name), [roster]);
+  const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name) && !unavailable.includes(p.name));
 
-  const toSvg = (cx, cy) => {
+  const toSvg = useCallback((cx, cy) => {
     const rect = svgRef.current.getBoundingClientRect();
     return { x: ((cx-rect.left)/rect.width)*VB_W, y: ((cy-rect.top)/rect.height)*VB_H };
-  };
+  }, []);
 
-  // ── Mode ────────────────────────────────────────────────────────
   const switchMode = m => {
-    setMode(m); setFieldPlayers(mkField(m)); setRivalPos(mkRivals(m));
+    setMode(m); 
+    setFieldPlayers(mkField(m).filter(p => !unavailable.includes(p.name))); 
+    setRivalPos(mkRivals(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
   };
 
-  // ── Reset ────────────────────────────────────────────────────────
   const reset = () => {
-    setFieldPlayers(mkField(mode)); setRivalPos(mkRivals(mode));
+    setFieldPlayers(mkField(mode).filter(p => !unavailable.includes(p.name))); 
+    setRivalPos(mkRivals(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
+  };
+
+  const toggleAvail = name => {
+    setUnavailable(prev => {
+      const next = prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name];
+      if (!prev.includes(name)) {
+        setFieldPlayers(fp => fp.filter(p => p.name !== name));
+      }
+      return next;
+    });
   };
 
   // ── Drag jugadors propis ─────────────────────────────────────────
-  const onOwnDown = (idx, e) => {
+  const onOwnDown = useCallback((idx, e) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const { x, y } = toSvg(e.clientX, e.clientY);
     const p = fieldPlayers[idx];
     fieldDrag.current = { type:'own', idx, pid:e.pointerId, ox:x-p.x, oy:y-p.y };
-  };
-  const onOwnMove = (idx, e) => {
+  }, [fieldPlayers, toSvg]);
+  
+  const onOwnMove = useCallback((idx, e) => {
     const d = fieldDrag.current;
     if (!d || d.type!=='own' || d.idx!==idx || d.pid!==e.pointerId) return;
     const { x, y } = toSvg(e.clientX, e.clientY);
     const nx = clamp(x-d.ox, F.x+R, F.x+F.w-R);
     const ny = clamp(y-d.oy, F.y+R, F.y+F.h-R);
     setFieldPlayers(prev => prev.map((p,i) => i===idx ? {...p,x:nx,y:ny} : p));
-  };
-  const onOwnUp = e => { if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; };
+  }, [toSvg]);
+  
+  const onOwnUp = useCallback(e => { 
+    if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
+  }, []);
 
   // ── Drag rivals ──────────────────────────────────────────────────
-  const onRivDown = (idx, e) => {
+  const onRivDown = useCallback((idx, e) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const { x, y } = toSvg(e.clientX, e.clientY);
     const p = rivalPos[idx];
     fieldDrag.current = { type:'rival', idx, pid:e.pointerId, ox:x-p.x, oy:y-p.y };
-  };
-  const onRivMove = (idx, e) => {
+  }, [rivalPos, toSvg]);
+  
+  const onRivMove = useCallback((idx, e) => {
     const d = fieldDrag.current;
     if (!d || d.type!=='rival' || d.idx!==idx || d.pid!==e.pointerId) return;
     const { x, y } = toSvg(e.clientX, e.clientY);
     const nx = clamp(x-d.ox, F.x+R, F.x+F.w-R);
     const ny = clamp(y-d.oy, F.y+R, F.y+F.h-R);
     setRivalPos(prev => prev.map((p,i) => i===idx ? {x:nx,y:ny} : p));
-  };
-  const onRivUp = e => { if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; };
+  }, [toSvg]);
+  
+  const onRivUp = useCallback(e => { 
+    if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
+  }, []);
 
   // ── Drag del banquillo ───────────────────────────────────────────
   const onBenchDown = (name, e) => {
@@ -266,7 +325,6 @@ export default function TacticalBoard() {
     const { x, y } = toSvg(e.clientX, e.clientY);
     if (x < F.x+R || x > F.x+F.w-R || y < F.y+R || y > F.y+F.h-R) return;
 
-    // Busca el jugador més proper
     let nearIdx = -1, nearDist = 52;
     fieldPlayers.forEach((p, i) => {
       const dist = Math.hypot(p.x-x, p.y-y);
@@ -274,59 +332,14 @@ export default function TacticalBoard() {
     });
 
     if (nearIdx !== -1) {
-      // Swap: el del camp va al banquillo (simplement esborrat de fieldPlayers), el del banquillo entra
       setFieldPlayers(prev => prev.map((p,i) => i===nearIdx ? {...p, name} : p));
     } else if (fieldPlayers.length < MODES[mode].n) {
-      // Posició buida: afegir al camp
       setFieldPlayers(prev => [...prev, { name, x, y }]);
     } else {
-      // Tot ple: swap amb el més proper absolut
       let ni = 0, nd = Infinity;
       fieldPlayers.forEach((p,i) => { const dist=Math.hypot(p.x-x,p.y-y); if(dist<nd){nd=dist;ni=i;} });
       setFieldPlayers(prev => prev.map((p,i) => i===ni ? {...p, name} : p));
     }
-  };
-
-  // ── Render token propi (SVG) ─────────────────────────────────────
-  const OwnToken = ({ p, idx }) => {
-    const info = getInfo(p.name);
-    const clipId = `cp-${idx}`;
-    return (
-      <g style={{ cursor:'grab' }}
-        onPointerDown={e => onOwnDown(idx, e)}
-        onPointerMove={e => onOwnMove(idx, e)}
-        onPointerUp={onOwnUp}>
-        {/* Ombra */}
-        <circle cx={p.x} cy={p.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
-        {/* Anell daurat */}
-        <circle cx={p.x} cy={p.y} r={R+2} fill="none" stroke="#E5C07B" strokeWidth={2.5} strokeOpacity={0.9}/>
-        {/* Fons */}
-        <circle cx={p.x} cy={p.y} r={R} fill={info?.photo ? '#0a0a0a' : 'rgba(229,192,123,0.15)'}/>
-        {/* Foto o inicial */}
-        {info?.photo ? (
-          <>
-            <defs>
-              <clipPath id={clipId}>
-                <circle cx={p.x} cy={p.y} r={R}/>
-              </clipPath>
-            </defs>
-            <image href={`${BASE}${info.photo}`} x={p.x-R} y={p.y-R} width={R*2} height={R*2}
-              clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMin slice"/>
-          </>
-        ) : (
-          <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
-            fontSize={16} fontWeight="900" fill="#E5C07B" style={{pointerEvents:'none'}}>
-            {p.name[0]}
-          </text>
-        )}
-        {/* Nom */}
-        <text x={p.x} y={p.y+R+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
-          fill="rgba(255,255,255,0.92)" stroke="#121212" strokeWidth={3} paintOrder="stroke"
-          style={{pointerEvents:'none'}}>
-          {(info?.shirtName || p.name.split(' ')[0]).slice(0,7)}
-        </text>
-      </g>
-    );
   };
 
   return (
@@ -337,7 +350,10 @@ export default function TacticalBoard() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-black text-[#E5C07B]">🎯 Pissarra Tàctica</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Selector de mode */}
+            <button onClick={() => setShowConv(true)}
+              className="px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-xl text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1.5">
+              <span>👥</span> Convocatòria
+            </button>
             <div className="flex bg-[#121212] border border-white/10 rounded-xl p-0.5 gap-0.5">
               {Object.entries(MODES).map(([key, {label}]) => (
                 <button key={key} onClick={() => switchMode(key)}
@@ -357,45 +373,31 @@ export default function TacticalBoard() {
         {/* Layout: camp + banquillo */}
         <div className="flex flex-col lg:flex-row gap-3 items-start">
 
-          {/* Camp SVG — ocupa tota l'amplada disponible */}
+          {/* Camp SVG */}
           <div className="w-full lg:flex-1 min-w-0">
             <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%"
               className="rounded-xl select-none block" style={{ touchAction:'none' }}>
 
-              {/* Fons */}
               <rect width={VB_W} height={VB_H} fill="#0a0a0a" rx={8}/>
-              {/* Gespa */}
               <rect x={F.x} y={F.y} width={F.w} height={F.h} fill="#1c3d1c"/>
 
-              {/* Línies del camp */}
               {mode==='fs5' && <FutsalLines/>}
               {mode==='f7'  && <F7Lines/>}
               {mode==='f11' && <F11Lines/>}
 
-              {/* Etiquetes */}
               <text x={F.x+F.w/2} y={F.y+F.h-10} textAnchor="middle" fontSize={9}
                 fill="rgba(229,192,123,0.35)" fontWeight="bold" letterSpacing={1}>REAL TIESADA</text>
               <text x={F.x+F.w/2} y={F.y+18} textAnchor="middle" fontSize={9}
                 fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>
 
-              {/* Rivals */}
               {rivalPos.map((pos, i) => (
-                <g key={`r-${i}`} style={{ cursor:'grab' }}
-                  onPointerDown={e => onRivDown(i,e)}
-                  onPointerMove={e => onRivMove(i,e)}
-                  onPointerUp={onRivUp}>
-                  <circle cx={pos.x} cy={pos.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
-                  <circle cx={pos.x} cy={pos.y} r={R+2} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeOpacity={0.7}/>
-                  <circle cx={pos.x} cy={pos.y} r={R} fill="#C0392B" fillOpacity={0.9}/>
-                  <text x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="middle"
-                    fontSize={12} fontWeight="bold" fill="white" style={{pointerEvents:'none'}}>
-                    R{i+1}
-                  </text>
-                </g>
+                <RivalToken key={`r-${i}`} pos={pos} idx={i} onDown={onRivDown} onMove={onRivMove} onUp={onRivUp}/>
               ))}
 
-              {/* Jugadors propis */}
-              {fieldPlayers.map((p, i) => <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i}/>)}
+              {fieldPlayers.map((p, i) => (
+                <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i} info={getInfo(p.name)} 
+                  onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} />
+              ))}
             </svg>
           </div>
 
@@ -404,7 +406,6 @@ export default function TacticalBoard() {
             <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
-            {/* Mobile: scroll horitzontal. Desktop: grid vertical */}
             <div className="flex lg:flex-col flex-row flex-wrap gap-2 lg:gap-1.5 overflow-x-auto pb-1">
               {benchPlayers.map(p => (
                 <div key={p.name}
@@ -412,18 +413,18 @@ export default function TacticalBoard() {
                   style={{ touchAction:'none' }}
                   onPointerDown={e => onBenchDown(p.name, e)}
                   onPointerMove={onBenchMove}
-                  onPointerUp={onBenchUp}>
-                  {/* Token banquillo */}
+                  onPointerUp={onBenchUp}
+                  onPointerCancel={onBenchUp}>
                   <div className="relative"
                     style={{ width: BR*2, height: BR*2, borderRadius:'50%',
                              border:'2px solid rgba(229,192,123,0.6)',
                              overflow:'hidden', background:'rgba(229,192,123,0.1)',
                              display:'flex', alignItems:'center', justifyContent:'center' }}>
                     {p.photo ? (
-                      <img src={`${BASE}${p.photo}`} alt={p.name}
-                        style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top' }}/>
+                      <img src={`${BASE}${p.photo}`} alt={p.name} draggable={false}
+                        style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top', pointerEvents:'none' }}/>
                     ) : (
-                      <span style={{ color:'#E5C07B', fontWeight:900, fontSize:16 }}>{p.name[0]}</span>
+                      <span style={{ color:'#E5C07B', fontWeight:900, fontSize:16, pointerEvents:'none' }}>{p.name[0]}</span>
                     )}
                   </div>
                   <span className="text-[8.5px] text-gray-500 font-bold text-center leading-tight"
@@ -436,6 +437,29 @@ export default function TacticalBoard() {
                 <p className="text-[10px] text-gray-700 italic">Tots al camp</p>
               )}
             </div>
+
+            {unavailable.length > 0 && (
+              <div className="mt-4 border-t border-white/5 pt-3">
+                <p className="text-[10px] text-[#C0392B] font-bold uppercase tracking-wider mb-2">
+                  No Convocats ({unavailable.length})
+                </p>
+                <div className="flex lg:flex-col flex-row flex-wrap gap-2 lg:gap-1.5 overflow-x-auto pb-1">
+                  {unavailable.map(name => {
+                    const info = getInfo(name);
+                    return (
+                      <div key={name} className="flex flex-col items-center gap-0.5 opacity-40 grayscale flex-shrink-0">
+                        <div className="relative" style={{ width: BR*1.5, height: BR*1.5, borderRadius:'50%', border:'1px solid #777', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          {info?.photo ? <img src={`${BASE}${info?.photo}`} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top' }}/> : <span style={{ color:'#777', fontWeight:900, fontSize:12 }}>{name[0]}</span>}
+                        </div>
+                        <span className="text-[8px] text-gray-500 font-bold text-center leading-tight">
+                          {(info?.shirtName || name.split(' ')[0]).slice(0,7)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Llegenda */}
             <div className="mt-4 space-y-1.5 hidden lg:block">
@@ -456,7 +480,7 @@ export default function TacticalBoard() {
         </div>
       </div>
 
-      {/* Ghost quan es fa drag del banquillo */}
+      {/* Ghost banquillo */}
       {ghost && (() => {
         const info = getInfo(ghost.name);
         return (
@@ -478,6 +502,37 @@ export default function TacticalBoard() {
           </div>
         );
       })()}
+
+      {/* Modal Convocatoria */}
+      {showConv && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="bg-[#1E1E1E] rounded-2xl border border-white/10 w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh] shadow-2xl">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#121212]">
+              <h3 className="text-lg font-black text-[#E5C07B]">👥 Convocatòria</h3>
+              <button onClick={() => setShowConv(false)} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 space-y-2">
+              <p className="text-xs text-gray-400 mb-4">Desmarca els jugadors que <strong className="text-white">no venen</strong> al partit per treure'ls de la pissarra.</p>
+              {roster.map(p => {
+                const isAvail = !unavailable.includes(p.name);
+                return (
+                  <label key={p.name} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${isAvail ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/40 border-black/50 opacity-50'}`}>
+                    <input type="checkbox" checked={isAvail} onChange={() => toggleAvail(p.name)} className="w-5 h-5 accent-[#E5C07B]" />
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-black flex-shrink-0 flex items-center justify-center border border-white/10">
+                      {p.photo ? <img src={`${BASE}${p.photo}`} className="w-full h-full object-cover object-top" /> : <span className="text-[#E5C07B] text-xs font-bold">{p.name[0]}</span>}
+                    </div>
+                    <span className={`font-bold text-sm ${isAvail ? 'text-white' : 'text-gray-500 line-through'}`}>{p.name}</span>
+                  </label>
+                )
+              })}
+            </div>
+            <div className="p-4 border-t border-white/5 bg-[#121212]">
+              <button onClick={() => setShowConv(false)} className="w-full py-3 bg-[#E5C07B] text-black font-black rounded-xl hover:bg-[#d4b06a] transition-colors">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
