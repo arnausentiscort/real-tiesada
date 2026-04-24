@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, memo } from 'react';
+import React, { useState, useRef, useCallback, memo, useEffect } from 'react';
 import { DATABASE } from '../data.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -8,6 +8,27 @@ const VB_W = 400, VB_H = 660;
 const F = { x: 20, y: 30, w: 360, h: 600 }; // camp
 const R = 22;   // radi token camp (SVG)
 const BR = 24;  // radi token banquillo (px)
+
+// ── Detecció device ──────────────────────────────────────────────
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+};
+
+const useIsTablet = () => {
+  const [isTablet, setIsTablet] = useState(window.innerWidth < 1024 && window.innerWidth >= 768);
+  useEffect(() => {
+    const handleResize = () => setIsTablet(window.innerWidth < 1024 && window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isTablet;
+};
 
 // ── Modes ────────────────────────────────────────────────────────
 const MODES = {
@@ -155,7 +176,7 @@ const F11Lines = memo(function F11Lines() {
 
 // ── Components Drag Extrets (per evitar re-renders) ────────────────
 
-const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
+const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
   const clipId = `cp-${idx}-${p.name.replace(/\s+/g, '')}`;
   return (
     <g style={{ cursor:'grab', touchAction:'none' }}
@@ -163,17 +184,17 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
       onPointerMove={e => onMove(idx, e)}
       onPointerUp={onUp}
       onPointerCancel={onUp}>
-      <circle cx={p.x} cy={p.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
-      <circle cx={p.x} cy={p.y} r={R+2} fill="none" stroke="#E5C07B" strokeWidth={2.5} strokeOpacity={0.9}/>
-      <circle cx={p.x} cy={p.y} r={R} fill={info?.photo ? '#0a0a0a' : 'rgba(229,192,123,0.15)'}/>
+      <circle cx={p.x} cy={p.y+3} r={adaptiveR+3} fill="rgba(0,0,0,0.35)"/>
+      <circle cx={p.x} cy={p.y} r={adaptiveR+2} fill="none" stroke="#E5C07B" strokeWidth={2.5} strokeOpacity={0.9}/>
+      <circle cx={p.x} cy={p.y} r={adaptiveR} fill={info?.photo ? '#0a0a0a' : 'rgba(229,192,123,0.15)'}/>
       {info?.photo ? (
         <>
           <defs>
             <clipPath id={clipId}>
-              <circle cx={p.x} cy={p.y} r={R}/>
+              <circle cx={p.x} cy={p.y} r={adaptiveR}/>
             </clipPath>
           </defs>
-          <image href={`${BASE}${info.photo}`} x={p.x-R} y={p.y-R} width={R*2} height={R*2}
+          <image href={`${BASE}${info.photo}`} x={p.x-adaptiveR} y={p.y-adaptiveR} width={adaptiveR*2} height={adaptiveR*2}
             clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMin slice" draggable={false}/>
         </>
       ) : (
@@ -182,7 +203,7 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
           {p.name[0]}
         </text>
       )}
-      <text x={p.x} y={p.y+R+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
+      <text x={p.x} y={p.y+adaptiveR+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
         fill="rgba(255,255,255,0.92)" stroke="#121212" strokeWidth={3} paintOrder="stroke"
         style={{pointerEvents:'none'}}>
         {(info?.shirtName || p.name.split(' ')[0]).slice(0,12)}
@@ -191,15 +212,15 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
   );
 });
 
-const RivalToken = memo(({ pos, idx, onDown, onMove, onUp }) => (
+const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
   <g style={{ cursor:'grab', touchAction:'none' }}
     onPointerDown={e => onDown(idx,e)}
     onPointerMove={e => onMove(idx,e)}
     onPointerUp={onUp}
     onPointerCancel={onUp}>
-    <circle cx={pos.x} cy={pos.y+3} r={R+3} fill="rgba(0,0,0,0.35)"/>
-    <circle cx={pos.x} cy={pos.y} r={R+2} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeOpacity={0.7}/>
-    <circle cx={pos.x} cy={pos.y} r={R} fill="#C0392B" fillOpacity={0.9}/>
+    <circle cx={pos.x} cy={pos.y+3} r={adaptiveR+3} fill="rgba(0,0,0,0.35)"/>
+    <circle cx={pos.x} cy={pos.y} r={adaptiveR+2} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeOpacity={0.7}/>
+    <circle cx={pos.x} cy={pos.y} r={adaptiveR} fill="#C0392B" fillOpacity={0.9}/>
     <text x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="middle"
       fontSize={12} fontWeight="bold" fill="white" style={{pointerEvents:'none'}}>
       R{idx+1}
@@ -212,7 +233,9 @@ export default function TacticalBoard() {
   const roster = DATABASE.roster;
   const svgRef = useRef(null);
   const fieldDrag = useRef(null); 
-  const benchDrag = useRef(null); 
+  const benchDrag = useRef(null);
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   const [mode, setMode] = useState('fs5');
   const [unavailable, setUnavailable] = useState([]);
@@ -220,7 +243,11 @@ export default function TacticalBoard() {
   
   const [fieldPlayers, setFieldPlayers] = useState(mkField('fs5'));
   const [rivalPos, setRivalPos] = useState(mkRivals('fs5'));
-  const [ghost, setGhost] = useState(null); 
+  const [ghost, setGhost] = useState(null);
+
+  // Radi adaptatiu per mòbil
+  const adaptiveR = isMobile ? R * 1.3 : R;
+  const adaptiveBR = isMobile ? BR * 1.2 : BR;
 
   const getInfo = useCallback(name => roster.find(p => p.name === name), [roster]);
   const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name) && !unavailable.includes(p.name));
@@ -266,10 +293,10 @@ export default function TacticalBoard() {
     const d = fieldDrag.current;
     if (!d || d.type!=='own' || d.idx!==idx || d.pid!==e.pointerId) return;
     const { x, y } = toSvg(e.clientX, e.clientY);
-    const nx = clamp(x-d.ox, F.x+R, F.x+F.w-R);
-    const ny = clamp(y-d.oy, F.y+R, F.y+F.h-R);
+    const nx = clamp(x-d.ox, F.x+adaptiveR, F.x+F.w-adaptiveR);
+    const ny = clamp(y-d.oy, F.y+adaptiveR, F.y+F.h-adaptiveR);
     setFieldPlayers(prev => prev.map((p,i) => i===idx ? {...p,x:nx,y:ny} : p));
-  }, [toSvg]);
+  }, [toSvg, adaptiveR]);
   
   const onOwnUp = useCallback(e => { 
     if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
@@ -288,10 +315,10 @@ export default function TacticalBoard() {
     const d = fieldDrag.current;
     if (!d || d.type!=='rival' || d.idx!==idx || d.pid!==e.pointerId) return;
     const { x, y } = toSvg(e.clientX, e.clientY);
-    const nx = clamp(x-d.ox, F.x+R, F.x+F.w-R);
-    const ny = clamp(y-d.oy, F.y+R, F.y+F.h-R);
+    const nx = clamp(x-d.ox, F.x+adaptiveR, F.x+F.w-adaptiveR);
+    const ny = clamp(y-d.oy, F.y+adaptiveR, F.y+F.h-adaptiveR);
     setRivalPos(prev => prev.map((p,i) => i===idx ? {x:nx,y:ny} : p));
-  }, [toSvg]);
+  }, [toSvg, adaptiveR]);
   
   const onRivUp = useCallback(e => { 
     if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
@@ -323,9 +350,9 @@ export default function TacticalBoard() {
         e.clientY < rect.top  || e.clientY > rect.bottom) return;
 
     const { x, y } = toSvg(e.clientX, e.clientY);
-    if (x < F.x+R || x > F.x+F.w-R || y < F.y+R || y > F.y+F.h-R) return;
+    if (x < F.x+adaptiveR || x > F.x+F.w-adaptiveR || y < F.y+adaptiveR || y > F.y+F.h-adaptiveR) return;
 
-    let nearIdx = -1, nearDist = 52;
+    let nearIdx = -1, nearDist = adaptiveR * 2.4;
     fieldPlayers.forEach((p, i) => {
       const dist = Math.hypot(p.x-x, p.y-y);
       if (dist < nearDist) { nearDist=dist; nearIdx=i; }
@@ -344,39 +371,39 @@ export default function TacticalBoard() {
 
   return (
     <div className="space-y-3">
-      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-4">
+      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 md:p-4">
 
         {/* Capçalera */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-black text-[#E5C07B]">🎯 Pissarra Tàctica</h2>
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 mb-3 md:mb-4">
+          <h2 className="text-base md:text-lg font-black text-[#E5C07B]">🎯 Pissarra Tàctica</h2>
+          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
             <button onClick={() => setShowConv(true)}
-              className="px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-xl text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1.5">
-              <span>👥</span> Convocatòria
+              className="px-2.5 md:px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-[11px] md:text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1 flex-shrink-0">
+              <span>👥</span> <span className="hidden sm:inline">Convocatòria</span>
             </button>
-            <div className="flex bg-[#121212] border border-white/10 rounded-xl p-0.5 gap-0.5">
+            <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
               {Object.entries(MODES).map(([key, {label}]) => (
                 <button key={key} onClick={() => switchMode(key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
                     mode===key ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'text-gray-500 hover:text-white'}`}>
                   {label}
                 </button>
               ))}
             </div>
             <button onClick={reset}
-              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all">
-              ↺ Reiniciar
+              className="px-2.5 md:px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-[10px] md:text-xs text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+              ↺
             </button>
           </div>
         </div>
 
         {/* Layout: camp + banquillo */}
-        <div className="flex flex-col lg:flex-row gap-3 items-start">
+        <div className={`flex ${isMobile ? 'flex-col' : 'lg:flex-row'} gap-2 md:gap-3 items-start`}>
 
           {/* Camp SVG */}
           <div className="w-full lg:flex-1 min-w-0">
             <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%"
-              className="rounded-xl select-none block" style={{ touchAction:'none' }}>
+              className="rounded-lg md:rounded-xl select-none block" style={{ touchAction:'none', maxWidth: isMobile ? '100vw' : '100%' }}>
 
               <rect width={VB_W} height={VB_H} fill="#0a0a0a" rx={8}/>
               <rect x={F.x} y={F.y} width={F.w} height={F.h} fill="#1c3d1c"/>
@@ -391,32 +418,32 @@ export default function TacticalBoard() {
                 fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>
 
               {rivalPos.map((pos, i) => (
-                <RivalToken key={`r-${i}`} pos={pos} idx={i} onDown={onRivDown} onMove={onRivMove} onUp={onRivUp}/>
+                <RivalToken key={`r-${i}`} pos={pos} idx={i} onDown={onRivDown} onMove={onRivMove} onUp={onRivUp} adaptiveR={adaptiveR}/>
               ))}
 
               {fieldPlayers.map((p, i) => (
                 <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i} info={getInfo(p.name)} 
-                  onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} />
+                  onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} adaptiveR={adaptiveR} />
               ))}
             </svg>
           </div>
 
           {/* Banquillo */}
-          <div className="w-full lg:w-28 lg:flex-shrink-0">
-            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-2">
+          <div className={`${isMobile ? 'w-full' : 'lg:w-28 lg:flex-shrink-0'}`}>
+            <p className="text-[9px] md:text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-1.5 md:mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
-            <div className="flex lg:flex-col flex-row flex-wrap gap-2 lg:gap-1.5 overflow-x-auto pb-1">
+            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'lg:flex-col'} gap-1.5 md:gap-2 overflow-x-auto pb-1 md:max-h-96 md:overflow-y-auto`}>
               {benchPlayers.map(p => (
                 <div key={p.name}
-                  className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0"
-                  style={{ touchAction:'none' }}
+                  className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0 touch-manipulation"
+                  style={{ touchAction:'manipulation' }}
                   onPointerDown={e => onBenchDown(p.name, e)}
                   onPointerMove={onBenchMove}
                   onPointerUp={onBenchUp}
                   onPointerCancel={onBenchUp}>
                   <div className="relative"
-                    style={{ width: BR*2, height: BR*2, borderRadius:'50%',
+                    style={{ width: adaptiveBR*2, height: adaptiveBR*2, borderRadius:'50%',
                              border:'2px solid rgba(229,192,123,0.6)',
                              overflow:'hidden', background:'rgba(229,192,123,0.1)',
                              display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -427,31 +454,31 @@ export default function TacticalBoard() {
                       <span style={{ color:'#E5C07B', fontWeight:900, fontSize:16, pointerEvents:'none' }}>{p.name[0]}</span>
                     )}
                   </div>
-                  <span className="text-[8.5px] text-gray-500 font-bold text-center leading-tight"
-                    style={{ maxWidth: BR*2 }}>
+                  <span className="text-[8px] md:text-[8.5px] text-gray-500 font-bold text-center leading-tight"
+                    style={{ maxWidth: adaptiveBR*2 }}>
                     {(p.shirtName || p.name.split(' ')[0]).slice(0,7)}
                   </span>
                 </div>
               ))}
               {benchPlayers.length === 0 && (
-                <p className="text-[10px] text-gray-700 italic">Tots al camp</p>
+                <p className="text-[9px] md:text-[10px] text-gray-700 italic">Tots al camp</p>
               )}
             </div>
 
             {unavailable.length > 0 && (
-              <div className="mt-4 border-t border-white/5 pt-3">
-                <p className="text-[10px] text-[#C0392B] font-bold uppercase tracking-wider mb-2">
+              <div className="mt-3 md:mt-4 border-t border-white/5 pt-2 md:pt-3">
+                <p className="text-[8px] md:text-[10px] text-[#C0392B] font-bold uppercase tracking-wider mb-1.5 md:mb-2">
                   No Convocats ({unavailable.length})
                 </p>
-                <div className="flex lg:flex-col flex-row flex-wrap gap-2 lg:gap-1.5 overflow-x-auto pb-1">
+                <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'lg:flex-col'} gap-1.5 md:gap-2 overflow-x-auto pb-1 md:max-h-40 md:overflow-y-auto`}>
                   {unavailable.map(name => {
                     const info = getInfo(name);
                     return (
                       <div key={name} className="flex flex-col items-center gap-0.5 opacity-40 grayscale flex-shrink-0">
-                        <div className="relative" style={{ width: BR*1.5, height: BR*1.5, borderRadius:'50%', border:'1px solid #777', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <div className="relative" style={{ width: adaptiveBR*1.5, height: adaptiveBR*1.5, borderRadius:'50%', border:'1px solid #777', overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center' }}>
                           {info?.photo ? <img src={`${BASE}${info?.photo}`} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top' }}/> : <span style={{ color:'#777', fontWeight:900, fontSize:12 }}>{name[0]}</span>}
                         </div>
-                        <span className="text-[8px] text-gray-500 font-bold text-center leading-tight">
+                        <span className="text-[7px] md:text-[8px] text-gray-500 font-bold text-center leading-tight">
                           {(info?.shirtName || name.split(' ')[0]).slice(0,7)}
                         </span>
                       </div>
@@ -462,17 +489,17 @@ export default function TacticalBoard() {
             )}
 
             {/* Llegenda */}
-            <div className="mt-4 space-y-1.5 hidden lg:block">
-              <p className="text-[9px] text-gray-700 font-bold uppercase tracking-wider">Llegenda</p>
+            <div className="mt-3 md:mt-4 space-y-1.5 hidden lg:block text-[8.5px]">
+              <p className="text-gray-700 font-bold uppercase tracking-wider">Llegenda</p>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full border-2 border-[#E5C07B]"/>
-                <span className="text-[9px] text-gray-600">Real Tiesada</span>
+                <div className="w-2.5 h-2.5 rounded-full border-2 border-[#E5C07B]"/>
+                <span className="text-gray-600">Real Tiesada</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#C0392B]"/>
-                <span className="text-[9px] text-gray-600">Rival</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"/>
+                <span className="text-gray-600">Rival</span>
               </div>
-              <p className="text-[8.5px] text-gray-700 mt-2 leading-relaxed">
+              <p className="text-gray-700 mt-2 leading-relaxed">
                 Arrossega fitxes del banquillo al camp per canviar jugadors
               </p>
             </div>
@@ -485,8 +512,8 @@ export default function TacticalBoard() {
         const info = getInfo(ghost.name);
         return (
           <div style={{
-            position:'fixed', left: ghost.x-BR, top: ghost.y-BR,
-            width: BR*2, height: BR*2, borderRadius:'50%',
+            position:'fixed', left: ghost.x-adaptiveBR, top: ghost.y-adaptiveBR,
+            width: adaptiveBR*2, height: adaptiveBR*2, borderRadius:'50%',
             border:'2.5px solid #E5C07B',
             overflow:'hidden', background:'rgba(229,192,123,0.15)',
             display:'flex', alignItems:'center', justifyContent:'center',
@@ -505,29 +532,29 @@ export default function TacticalBoard() {
 
       {/* Modal Convocatoria */}
       {showConv && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="bg-[#1E1E1E] rounded-2xl border border-white/10 w-full max-w-sm overflow-hidden flex flex-col max-h-[80vh] shadow-2xl">
-            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#121212]">
-              <h3 className="text-lg font-black text-[#E5C07B]">👥 Convocatòria</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 md:p-4 backdrop-blur-sm">
+          <div className="bg-[#1E1E1E] rounded-2xl border border-white/10 w-full max-w-sm overflow-hidden flex flex-col max-h-[85vh] md:max-h-[80vh] shadow-2xl">
+            <div className="p-3 md:p-4 border-b border-white/5 flex justify-between items-center bg-[#121212]">
+              <h3 className="text-base md:text-lg font-black text-[#E5C07B]">👥 Convocatòria</h3>
               <button onClick={() => setShowConv(false)} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-4 overflow-y-auto flex-1 space-y-2">
-              <p className="text-xs text-gray-400 mb-4">Desmarca els jugadors que <strong className="text-white">no venen</strong> al partit per treure'ls de la pissarra.</p>
+            <div className="p-3 md:p-4 overflow-y-auto flex-1 space-y-2">
+              <p className="text-[10px] md:text-xs text-gray-400 mb-3 md:mb-4">Desmarca els jugadors que <strong className="text-white">no venen</strong> al partit per treure'ls de la pissarra.</p>
               {roster.map(p => {
                 const isAvail = !unavailable.includes(p.name);
                 return (
-                  <label key={p.name} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${isAvail ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/40 border-black/50 opacity-50'}`}>
-                    <input type="checkbox" checked={isAvail} onChange={() => toggleAvail(p.name)} className="w-5 h-5 accent-[#E5C07B]" />
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-black flex-shrink-0 flex items-center justify-center border border-white/10">
-                      {p.photo ? <img src={`${BASE}${p.photo}`} className="w-full h-full object-cover object-top" /> : <span className="text-[#E5C07B] text-xs font-bold">{p.name[0]}</span>}
+                  <label key={p.name} className={`flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg md:rounded-xl cursor-pointer transition-all border ${isAvail ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-black/40 border-black/50 opacity-50'}`}>
+                    <input type="checkbox" checked={isAvail} onChange={() => toggleAvail(p.name)} className="w-4 h-4 md:w-5 md:h-5 accent-[#E5C07B]" />
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden bg-black flex-shrink-0 flex items-center justify-center border border-white/10">
+                      {p.photo ? <img src={`${BASE}${p.photo}`} className="w-full h-full object-cover object-top" /> : <span className="text-[#E5C07B] text-[9px] md:text-xs font-bold">{p.name[0]}</span>}
                     </div>
-                    <span className={`font-bold text-sm ${isAvail ? 'text-white' : 'text-gray-500 line-through'}`}>{p.name}</span>
+                    <span className={`font-bold text-xs md:text-sm ${isAvail ? 'text-white' : 'text-gray-500 line-through'}`}>{p.name}</span>
                   </label>
                 )
               })}
             </div>
-            <div className="p-4 border-t border-white/5 bg-[#121212]">
-              <button onClick={() => setShowConv(false)} className="w-full py-3 bg-[#E5C07B] text-black font-black rounded-xl hover:bg-[#d4b06a] transition-colors">Confirmar</button>
+            <div className="p-3 md:p-4 border-t border-white/5 bg-[#121212]">
+              <button onClick={() => setShowConv(false)} className="w-full py-2.5 md:py-3 bg-[#E5C07B] text-black font-black rounded-lg md:rounded-xl hover:bg-[#d4b06a] transition-colors text-sm md:text-base">Confirmar</button>
             </div>
           </div>
         </div>
