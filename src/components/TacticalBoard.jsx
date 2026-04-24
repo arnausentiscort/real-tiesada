@@ -185,7 +185,7 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp }) => {
       <text x={p.x} y={p.y+R+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
         fill="rgba(255,255,255,0.92)" stroke="#121212" strokeWidth={3} paintOrder="stroke"
         style={{pointerEvents:'none'}}>
-        {(info?.shirtName || p.name.split(' ')[0]).slice(0,7)}
+        {(info?.shirtName || p.name.split(' ')[0]).slice(0,12)}
       </text>
     </g>
   );
