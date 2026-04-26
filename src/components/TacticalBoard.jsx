@@ -435,16 +435,16 @@ export default function TacticalBoard() {
         </div>
 
         {/* Layout: camp + banquillo */}
-        <div className={`flex flex-col lg:flex-row gap-2 md:gap-3 items-start`}>
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-start">
 
           {/* Camp SVG */}
-          <div className="w-full lg:flex-1 min-w-0" style={{ touchAction:'none' }}>
+          <div className="w-full md:flex-1 min-w-0" style={{ touchAction:'none' }}>
             <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%"
               className="rounded-lg md:rounded-xl select-none block"
               style={{
                 touchAction:'none',
-                maxWidth: isMobile ? '100vw' : '100%',
-                maxHeight: (!isMobile && !isTablet) ? undefined : 'calc(100vh - 180px)',
+                maxWidth: '100%',
+                maxHeight: isMobile ? undefined : 'calc(100vh - 180px)',
               }}>
 
               <defs>
@@ -483,11 +483,12 @@ export default function TacticalBoard() {
           </div>
 
           {/* Banquillo */}
-          <div className={`${isMobile ? 'w-full' : 'lg:w-28 lg:flex-shrink-0'}`}>
+          <div className={`${isMobile ? 'w-full' : 'w-28 shrink-0'}`}>
             <p className="text-[9px] md:text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-1.5 md:mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
-            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'lg:flex-col'} gap-1.5 md:gap-2 overflow-x-auto pb-1 md:max-h-96 md:overflow-y-auto`}>
+            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 md:overflow-y-auto`}
+              style={{ maxHeight: isMobile ? undefined : 'calc(100vh - 220px)' }}>
               {benchPlayers.map(p => (
                 <div key={p.name}
                   className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0"
@@ -524,7 +525,8 @@ export default function TacticalBoard() {
                 <p className="text-[8px] md:text-[10px] text-[#C0392B] font-bold uppercase tracking-wider mb-1.5 md:mb-2">
                   No Convocats ({unavailable.length})
                 </p>
-                <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'lg:flex-col'} gap-1.5 md:gap-2 overflow-x-auto pb-1 md:max-h-40 md:overflow-y-auto`}>
+                <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 md:overflow-y-auto`}
+                  style={{ maxHeight: isMobile ? undefined : 160 }}>
                   {unavailable.map(name => {
                     const info = getInfo(name);
                     return (
@@ -543,7 +545,7 @@ export default function TacticalBoard() {
             )}
 
             {/* Llegenda */}
-            <div className="mt-3 md:mt-4 space-y-1.5 hidden lg:block text-[8.5px]">
+            <div className="mt-3 md:mt-4 space-y-1.5 hidden md:block text-[8.5px]">
               <p className="text-gray-700 font-bold uppercase tracking-wider">Llegenda</p>
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full border-2 border-[#E5C07B]"/>

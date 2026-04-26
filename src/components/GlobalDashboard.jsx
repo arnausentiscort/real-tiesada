@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, Clock, Calendar } from 'lucide-react';
+import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, ChevronDown, Clock, Calendar } from 'lucide-react';
 import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
 import ExportExcelButton from './ExportExcel.jsx';
@@ -499,11 +499,31 @@ function MatchSideCard({ match, onSelect, isActive }) {
   );
 }
 
+// ── Secció plegable ───────────────────────────────────────────────
+function Sec({ id, title, collapsed, onToggle, children }) {
+  return (
+    <div>
+      <button onClick={() => onToggle(id)}
+        className="flex items-center gap-2 w-full text-left mb-3 group py-0.5">
+        <span className="text-sm font-black text-white flex-1">{title}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform duration-200 group-hover:text-gray-400 ${collapsed ? '-rotate-90' : ''}`}/>
+      </button>
+      {!collapsed && children}
+    </div>
+  );
+}
+
 // ── Dashboard principal ───────────────────────────────────────────
 export default function GlobalDashboard({ onSelectMatch }) {
   const stats = useMemo(() => calcGlobalStats(DATABASE), []);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activeMatchId, setActiveMatchId] = useState(null);
+  const [collapsed, setCollapsed] = useState({
+    timeline: false, rankings: false, barres: false,
+    chances: true, duos: true, lineup: true,
+    minutsCamp: true, porter: true, targetes: false, matches: false,
+  });
+  const toggle = k => setCollapsed(p => ({ ...p, [k]: !p[k] }));
 
   const matchHistory = DATABASE.matches.map(m => {
     const [f, a] = m.result.split('-').map(s => parseInt(s.trim()));
@@ -566,8 +586,12 @@ export default function GlobalDashboard({ onSelectMatch }) {
 
       {/* ── TIMELINE TEMPORADA ── */}
       <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 px-4 py-4">
-        <p className="text-xs text-gray-600 uppercase tracking-wider mb-4 px-2">📅 Temporada actual</p>
-        <SeasonTimeline matches={DATABASE.matches} onSelectMatch={handleMatchSelect}/>
+        <button onClick={() => toggle('timeline')}
+          className="flex items-center gap-2 w-full text-left mb-4 px-2 group">
+          <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex-1">📅 Temporada actual</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform duration-200 group-hover:text-gray-400 ${collapsed.timeline ? '-rotate-90' : ''}`}/>
+        </button>
+        {!collapsed.timeline && <SeasonTimeline matches={DATABASE.matches} onSelectMatch={handleMatchSelect}/>}
       </div>
 
       {/* ── LAYOUT DUES COLUMNES: STATS + PARTITS ── */}
@@ -580,11 +604,12 @@ export default function GlobalDashboard({ onSelectMatch }) {
           <div className="flex justify-end">
             <ExportExcelButton/>
           </div>
+          <Sec id="rankings" title="🏅 Golejadors i Assistències" collapsed={collapsed.rankings} onToggle={toggle}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {stats.topScorers.length > 0 && (
               <section>
-                <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[#E5C07B]"/> Golejadors
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 text-[#E5C07B]"/> Golejadors
                   <span className="text-[10px] text-gray-600 font-normal ml-auto">clica per veure detall</span>
                 </h3>
                 <div className="space-y-2">
@@ -599,8 +624,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
             )}
             {stats.topAssists.length > 0 && (
               <section>
-                <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-[#E5C07B]"/> Assistències
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Trophy className="w-3.5 h-3.5 text-[#E5C07B]"/> Assistències
                 </h3>
                 <div className="space-y-2">
                   {stats.topAssists.map(([name, count], idx) => (
@@ -613,8 +638,10 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </section>
             )}
           </div>
+        </Sec>
 
           {/* Barres stats */}
+          <Sec id="barres" title="📊 Estadístiques per jugador" collapsed={collapsed.barres} onToggle={toggle}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-emerald-500/10">
               <h4 className="text-xs font-bold text-[#E5C07B] mb-3 flex items-center gap-1.5">
@@ -680,17 +707,22 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </div>
             </div>
           </div>
+          </Sec>
 
-          <ChanceCreationChart />
-          <DuoStats />
-          <LineupStats />
+          <Sec id="chances" title="🎨 Creació de Perill" collapsed={collapsed.chances} onToggle={toggle}>
+            <ChanceCreationChart />
+          </Sec>
+          <Sec id="duos" title="🤝 Estadístiques de Parelles" collapsed={collapsed.duos} onToggle={toggle}>
+            <DuoStats />
+          </Sec>
+          <Sec id="lineup" title="👥 Stats per Alineació" collapsed={collapsed.lineup} onToggle={toggle}>
+            <LineupStats />
+          </Sec>
 
           {/* Minuts de camp */}
           {stats.minutesCamp.length > 0 && (
+            <Sec id="minutsCamp" title="⏱ Minuts de Camp per Jugador" collapsed={collapsed.minutsCamp} onToggle={toggle}>
             <div>
-              <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#E5C07B]"/> Minuts de Camp per Jugador
-              </h3>
               <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-[#C0392B]/10">
                 <div className="space-y-2.5">
                   {stats.minutesCamp.map(([name, secs]) => {
@@ -718,14 +750,13 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 </div>
               </div>
             </div>
+            </Sec>
           )}
 
           {/* Porter: minuts + aturades */}
           {stats.minutesPorter.length > 0 && (
+            <Sec id="porter" title="🧤 Estadístiques de Porter" collapsed={collapsed.porter} onToggle={toggle}>
             <div>
-              <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#E5C07B]"/> Estadístiques de Porter
-              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {stats.minutesPorter.length > 0 && (
                   <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-emerald-500/10">
@@ -770,55 +801,56 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 )}
               </div>
             </div>
+            </Sec>
           )}
 
           {/* Targetes */}
           {stats.yellowCards.length > 0 && (
-            <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-yellow-500/10">
-              <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🟨 Targetes Grogues</h4>
-              {stats.yellowCards.map(([name,count]) => {
-                const player = DATABASE.roster.find(p=>p.name===name);
-                return (
-                  <div key={name} className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-2.5 mb-2">
-                    {player?.photo && (
-                      <div className="w-8 h-8 rounded-full overflow-hidden border border-yellow-500/20 shrink-0">
-                        <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
-                      </div>
-                    )}
-                    <span className="flex-1 text-sm font-bold text-yellow-200">{sName(name)}</span>
-                    <span className="text-xl font-black text-yellow-400">{count} 🟨</span>
-                  </div>
-                );
-              })}
-            </div>
+            <Sec id="targetes" title="🟨 Targetes Grogues" collapsed={collapsed.targetes} onToggle={toggle}>
+              <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-yellow-500/10">
+                {stats.yellowCards.map(([name,count]) => {
+                  const player = DATABASE.roster.find(p=>p.name===name);
+                  return (
+                    <div key={name} className="flex items-center gap-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl p-2.5 mb-2">
+                      {player?.photo && (
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-yellow-500/20 shrink-0">
+                          <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                        </div>
+                      )}
+                      <span className="flex-1 text-sm font-bold text-yellow-200">{sName(name)}</span>
+                      <span className="text-xl font-black text-yellow-400">{count} 🟨</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Sec>
           )}
 
         </div>
 
         {/* Columna dreta — Partits */}
         <div className="xl:sticky xl:top-20">
-          <h3 className="text-sm font-black text-white mb-3 flex items-center gap-2">
-            🏟 Partits
-          </h3>
-          <div className="space-y-2">
-            {[...DATABASE.matches].reverse().map(match => (
-              <MatchSideCard key={match.id} match={match}
-                onSelect={handleMatchSelect}
-                isActive={activeMatchId === match.id}/>
-            ))}
-          </div>
-          {/* Taula resum */}
-          <div className="mt-4 bg-[#1a1a1a] rounded-xl border border-white/5 p-3">
-            <div className="flex justify-between text-xs text-gray-600 pb-2 border-b border-white/5">
-              <span>{wins}V · {matchHistory.filter(m=>m.for===m.against).length}E · {losses}D</span>
-              <span className="font-mono">
-                <span className="text-emerald-400">{totalGF}</span>
-                <span className="text-gray-600"> - </span>
-                <span className="text-[#C0392B]">{totalGA}</span>
-              </span>
+          <Sec id="matches" title="🏟 Partits" collapsed={collapsed.matches} onToggle={toggle}>
+            <div className="space-y-2">
+              {[...DATABASE.matches].reverse().map(match => (
+                <MatchSideCard key={match.id} match={match}
+                  onSelect={handleMatchSelect}
+                  isActive={activeMatchId === match.id}/>
+              ))}
             </div>
-            <p className="text-[10px] text-gray-700 mt-2 text-center">Temporada 25/26 · Futbol Sala</p>
-          </div>
+            {/* Taula resum */}
+            <div className="mt-4 bg-[#1a1a1a] rounded-xl border border-white/5 p-3">
+              <div className="flex justify-between text-xs text-gray-600 pb-2 border-b border-white/5">
+                <span>{wins}V · {matchHistory.filter(m=>m.for===m.against).length}E · {losses}D</span>
+                <span className="font-mono">
+                  <span className="text-emerald-400">{totalGF}</span>
+                  <span className="text-gray-600"> - </span>
+                  <span className="text-[#C0392B]">{totalGA}</span>
+                </span>
+              </div>
+              <p className="text-[10px] text-gray-700 mt-2 text-center">Temporada 25/26 · Futbol Sala</p>
+            </div>
+          </Sec>
         </div>
       </div>
 
