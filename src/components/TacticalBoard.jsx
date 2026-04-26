@@ -8,6 +8,7 @@ const VB_W = 400, VB_H = 660;
 const F = { x: 20, y: 30, w: 360, h: 600 }; // camp
 const R = 22;   // radi token camp (SVG)
 const BR = 24;  // radi token banquillo (px)
+const BALL_R = 8;  // radi pilota (SVG)
 
 // ── Detecció device ──────────────────────────────────────────────
 const useIsMobile = () => {
@@ -63,6 +64,20 @@ const pct2svg = ([px, py]) => ({ x: F.x + (px/100)*F.w, y: F.y + (py/100)*F.h })
 const mkField  = m => DEF_LINEUP[m].map((name, i) => ({ name, ...pct2svg(DEF_PCT[m][i]) }));
 const mkRivals = m => RIVAL_PCT[m].map(pct2svg);
 const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// ── Component Pilota ──────────────────────────────────────────────
+const Ball = memo(({ ball, onDown, onMove, onUp }) => {
+  if (!ball) return null;
+  return (
+    <circle cx={ball.x} cy={ball.y} r={BALL_R} fill="#fff" fillOpacity={0.9} stroke="#FFD700" strokeWidth={1.2}
+      filter="url(#ballGlow)"
+      style={{ cursor:'grab', touchAction:'none' }}
+      onPointerDown={onDown}
+      onPointerMove={onMove}
+      onPointerUp={onUp}
+      onPointerCancel={onUp}/>
+  );
+});
 
 // ── Línies del camp: Futbol Sala (portrait) ───────────────────────
 const FutsalLines = memo(function FutsalLines() {
@@ -174,8 +189,6 @@ const F11Lines = memo(function F11Lines() {
   );
 });
 
-// ── Components Drag Extrets (per evitar re-renders) ────────────────
-
 const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
   const clipId = `cp-${idx}-${p.name.replace(/\s+/g, '')}`;
   return (
@@ -244,6 +257,7 @@ export default function TacticalBoard() {
   const [fieldPlayers, setFieldPlayers] = useState(mkField('fs5'));
   const [rivalPos, setRivalPos] = useState(mkRivals('fs5'));
   const [ghost, setGhost] = useState(null);
+  const [ball, setBall] = useState({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
 
   // Radi adaptatiu per mòbil
   const adaptiveR = isMobile ? R * 1.3 : R;
@@ -262,12 +276,14 @@ export default function TacticalBoard() {
     setFieldPlayers(mkField(m).filter(p => !unavailable.includes(p.name))); 
     setRivalPos(mkRivals(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
+    setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
   };
 
   const reset = () => {
     setFieldPlayers(mkField(mode).filter(p => !unavailable.includes(p.name))); 
     setRivalPos(mkRivals(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
+    setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
   };
 
   const toggleAvail = name => {
@@ -321,6 +337,27 @@ export default function TacticalBoard() {
   }, [toSvg, adaptiveR]);
   
   const onRivUp = useCallback(e => { 
+    if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
+  }, []);
+
+  // ── Drag pilota ──────────────────────────────────────────────────
+  const onBallDown = useCallback((e) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const { x, y } = toSvg(e.clientX, e.clientY);
+    fieldDrag.current = { type:'ball', pid:e.pointerId, ox:x-ball.x, oy:y-ball.y };
+  }, [ball, toSvg]);
+  
+  const onBallMove = useCallback((e) => {
+    const d = fieldDrag.current;
+    if (!d || d.type!=='ball' || d.pid!==e.pointerId) return;
+    const { x, y } = toSvg(e.clientX, e.clientY);
+    const nx = clamp(x-d.ox, F.x+BALL_R, F.x+F.w-BALL_R);
+    const ny = clamp(y-d.oy, F.y+BALL_R, F.y+F.h-BALL_R);
+    setBall({x:nx, y:ny});
+  }, [toSvg]);
+  
+  const onBallUp = useCallback(e => { 
     if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
   }, []);
 
@@ -398,12 +435,27 @@ export default function TacticalBoard() {
         </div>
 
         {/* Layout: camp + banquillo */}
-        <div className={`flex ${isMobile ? 'flex-col' : 'lg:flex-row'} gap-2 md:gap-3 items-start`}>
+        <div className={`flex flex-col lg:flex-row gap-2 md:gap-3 items-start`}>
 
           {/* Camp SVG */}
-          <div className="w-full lg:flex-1 min-w-0">
+          <div className="w-full lg:flex-1 min-w-0" style={{ touchAction:'none' }}>
             <svg ref={svgRef} viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%"
-              className="rounded-lg md:rounded-xl select-none block" style={{ touchAction:'none', maxWidth: isMobile ? '100vw' : '100%' }}>
+              className="rounded-lg md:rounded-xl select-none block"
+              style={{
+                touchAction:'none',
+                maxWidth: isMobile ? '100vw' : '100%',
+                maxHeight: (!isMobile && !isTablet) ? undefined : 'calc(100vh - 180px)',
+              }}>
+
+              <defs>
+                <filter id="ballGlow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="1.8" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
 
               <rect width={VB_W} height={VB_H} fill="#0a0a0a" rx={8}/>
               <rect x={F.x} y={F.y} width={F.w} height={F.h} fill="#1c3d1c"/>
@@ -422,9 +474,11 @@ export default function TacticalBoard() {
               ))}
 
               {fieldPlayers.map((p, i) => (
-                <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i} info={getInfo(p.name)} 
+                <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i} info={getInfo(p.name)}
                   onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} adaptiveR={adaptiveR} />
               ))}
+
+              <Ball ball={ball} onDown={onBallDown} onMove={onBallMove} onUp={onBallUp}/>
             </svg>
           </div>
 
@@ -436,8 +490,8 @@ export default function TacticalBoard() {
             <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'lg:flex-col'} gap-1.5 md:gap-2 overflow-x-auto pb-1 md:max-h-96 md:overflow-y-auto`}>
               {benchPlayers.map(p => (
                 <div key={p.name}
-                  className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0 touch-manipulation"
-                  style={{ touchAction:'manipulation' }}
+                  className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0"
+                  style={{ touchAction:'none' }}
                   onPointerDown={e => onBenchDown(p.name, e)}
                   onPointerMove={onBenchMove}
                   onPointerUp={onBenchUp}
