@@ -569,6 +569,52 @@ export const DATABASE = {
         ],
       }
     },
+
+    // ── JORNADA 8 — Vietkong ─────────────────────────────────────────
+    {
+      id: "j8-vietkong",
+      jornada: "Jornada 8",
+      opponent: "Vietkong",
+      result: "3 - 4",
+      date: "28 Abr 2026",
+      youtubeId: "A29W3zC29G4",
+      vimeoId: null,
+      idealMinutesPerPlayer: 18.0,
+      savesManual: {},
+      shots: {},
+      keyPasses: {},
+      dribbles: {},
+      events: {
+        substitutions: [
+          { time: "0:00",   goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Roi Seoane", "Paco Montero", "Chengzhi Li"] },
+          { time: "5:39",   goalkeeper: "Joan Medina", onPitch: ["Pau Ibañez", "Roi Seoane", "Paco Montero", "Chengzhi Li"] },
+          { time: "6:20",   goalkeeper: "Joan Medina", onPitch: ["Pau Ibañez", "Oriol Tomas", "Paco Montero", "Chengzhi Li"] },
+          { time: "7:50",   goalkeeper: "Joan Medina", onPitch: ["Pau Ibañez", "Oriol Tomas", "Paco Montero", "Roger Miro"] },
+          { time: "8:30",   goalkeeper: "Joan Medina", onPitch: ["Pau Ibañez", "Oriol Tomas", "Joan Medina", "Roger Miro"] },
+          { time: "11:12",  goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Joan Medina", "Roger Miro", "Pau Ibañez"] },
+          { time: "11:12",  goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Joan Medina", "Roger Miro", "Roi Seoane"] },
+          { time: "14:14",  goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Roi Seoane"] },
+          { time: "15:28",  goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Chengzhi Li", "Paco Montero", "Roi Seoane"] },
+          { time: "16:18",  goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Chengzhi Li", "Paco Montero", "Roi Seoane"] },
+          { time: "18:37",  goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Pau Ibañez", "Chengzhi Li", "Joan Medina"] },
+          { time: "22:06",  goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Pau Ibañez", "Chengzhi Li", "Roger Miro"] },
+          { time: "22:41",  goalkeeper: "Joan Medina", onPitch: ["Paco Montero", "Pau Ibañez", "Arnau Sentis", "Roger Miro"] },
+          { time: "25:38",  goalkeeper: "Joan Medina", onPitch: ["Roi Seoane", "Paco Montero", "Arnau Sentis", "Roger Miro"] },
+          { time: "28:28",  goalkeeper: "Joan Medina", onPitch: ["Roi Seoane", "Paco Montero", "Joan Medina", "Roger Miro"] },
+          { time: "29:12",  goalkeeper: "Joan Medina", onPitch: ["Joan Medina", "Chengzhi Li", "Oriol Tomas", "Roi Seoane"] },
+          { time: "31:22",  goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Chengzhi Li", "Pau Ibañez", "Roger Miro"] },
+          { time: "35:40",  goalkeeper: "Joan Medina", onPitch: ["Oriol Tomas", "Chengzhi Li", "Arnau Sentis", "Roger Miro"] },
+          { time: "37:48",  goalkeeper: "Joan Medina", onPitch: [] },
+        ],
+        cards: [],
+        goals: [
+          { time: "11:12", type: "favor", scorer: "Roger Miro", assist: null, goalkeeper: null,
+            zone: "B6", shotPos: { x: 735, y: 148 }, assistPos: null, goalPos: { x: 70, y: 188 },
+            onPitch: ["Arnau Sentis", "Joan Medina", "Roger Miro", "Pau Ibañez"], notes: "Primer gol de Miró" },
+        ],
+        retransmissio: [],
+      }
+    },
   ]
 };
 
