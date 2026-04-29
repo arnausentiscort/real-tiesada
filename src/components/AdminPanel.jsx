@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Plus, Trash2, ChevronLeft, Github, Check, AlertCircle, Loader } from 'lucide-react';
 import { DATABASE } from '../data.js';
+import SubstitutionTimeline from './SubstitutionTimeline';
 
 const BASE = import.meta.env.BASE_URL;
 const REPO_OWNER = 'arnausentiscort';
@@ -678,24 +679,19 @@ function MatchForm({ match, setMatch, onPreview }) {
     return '';
   };
 
-  const addSub    = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:'',onPitch:[]}]}));
-  const addBreak  = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:lastGK(),onPitch:[],_label:'descans'}]}));
-  const addFinal  = () => setMatch(m => ({...m, subs: [...(m.subs||[]), {time:'',goalkeeper:lastGK(),onPitch:[],_label:'final'}]}));
+  const updateSubs = (newSubs) => setMatch(m => ({...m, subs: newSubs}));
   const addGoal   = () => setMatch(m => ({...m, goals: [...m.goals, {type:'favor',time:'',scorer:'',assist:null,goalkeeper:'',onPitch:[],shotPos:null,assistPos:null,conductPos:null,goalPos:null,zone:'',notes:'',pts:{assist:null,conduct:null,shot:null}}]}));
   const addCard   = () => setMatch(m => ({...m, cards: [...(m.cards||[]), {time:'',color:'yellow',player:''}]}));
   const addMoment = () => setMatch(m => ({...m, moments: [...m.moments, {time:'',text:''}]}));
 
-  const updateSub    = (i, s) => setMatch(m => ({...m, subs:    (m.subs||[]).map((x,j)=>j===i?s:x)}));
   const updateGoal   = (i, g) => setMatch(m => ({...m, goals:   m.goals.map((x,j)=>j===i?g:x)}));
   const updateCard   = (i, c) => setMatch(m => ({...m, cards:   (m.cards||[]).map((x,j)=>j===i?c:x)}));
   const updateMoment = (i, v) => setMatch(m => ({...m, moments: m.moments.map((x,j)=>j===i?v:x)}));
 
-  const removeSub    = (i) => setMatch(m => ({...m, subs:    (m.subs||[]).filter((_,j)=>j!==i)}));
   const removeGoal   = (i) => setMatch(m => ({...m, goals:   m.goals.filter((_,j)=>j!==i)}));
   const removeCard   = (i) => setMatch(m => ({...m, cards:   (m.cards||[]).filter((_,j)=>j!==i)}));
   const removeMoment = (i) => setMatch(m => ({...m, moments: m.moments.filter((_,j)=>j!==i)}));
 
-  const subs    = match.subs || [];
   const cards   = match.cards || [];
   const moments = match.moments || [];
 
@@ -791,18 +787,7 @@ function MatchForm({ match, setMatch, onPreview }) {
 
       {/* ── SUBSTITUCIONS ── */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-bold text-[#E5C07B]">🔄 Substitucions ({subs.length})</p>
-          <AddBtn onClick={addSub} label="Canvi"/>
-        </div>
-        <p className="text-[10px] text-gray-600">Porter de cada moment + 4 jugadors de camp. Descans/Final = sense jugadors.</p>
-        {subs.map((s,i) => <SubForm key={i} sub={s} idx={i} onChange={s=>updateSub(i,s)} onRemove={()=>removeSub(i)}/>)}
-        {/* Botons afegir al final */}
-        <div className="flex gap-2 pt-1">
-          <AddBtn onClick={addSub}   label="+ Canvi"   color="gold"/>
-          <AddBtn onClick={addBreak} label="⏸ Descans" color="blue"/>
-          <AddBtn onClick={addFinal} label="🏁 Final"   color="gray"/>
-        </div>
+        <SubstitutionTimeline subs={match.subs || []} onChange={updateSubs} />
       </div>
 
       {/* ── TARGETES ── */}
