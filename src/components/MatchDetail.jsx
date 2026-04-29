@@ -70,12 +70,12 @@ function buildCronica(match) {
     if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${s}s`;
     return null;
   };
-  (match.events?.goals || []).forEach(g => {
+  (match.goals || match.events?.goals || []).forEach(g => {
     items.push({ time: g.time, kind: g.type === 'favor' ? 'goal_favor' : 'goal_contra',
       scorer: g.scorer, assist: g.assist, notes: g.notes, jumpUrl: makeUrl(g.time),
       localVideoUrl: g.localVideoUrl || null });
   });
-  (match.events?.retransmissio || []).forEach(r => {
+  (match.retransmissio || match.events?.retransmissio || []).forEach(r => {
     items.push({ time: r.time, kind: 'moment', text: r.text, players: r.players,
       emoji: pickEmoji(r.text), photo: r.photo, photoHover: r.photoHover, jumpUrl: makeUrl(r.time) });
   });
@@ -375,7 +375,7 @@ function TimelineChart({ match, matchStats }) {
   if (!matchStats) return null;
   const { stints, playerStats, finalTime } = matchStats;
 
-  const subs = match.events.substitutions || [];
+  const subs = match.substitutions || match.events?.substitutions || [];
 
   // Stints de porter
   const goalkeeperStints = {};
@@ -426,7 +426,7 @@ function TimelineChart({ match, matchStats }) {
   for (let m=5; m<=Math.floor(finalTime/60); m+=5) ticks.push(m);
 
   // Gols
-  const goals = (match.events?.goals||[]).sort((a,b)=>parseTime(a.time)-parseTime(b.time));
+  const goals = (match.goals || match.events?.goals || []).sort((a,b)=>parseTime(a.time)-parseTime(b.time));
 
   return (
     <div className="space-y-5">
@@ -635,7 +635,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   const prevMatch = currentIdx > 0 ? allMatches[currentIdx - 1] : null;
   const nextMatch = currentIdx < allMatches.length - 1 ? allMatches[currentIdx + 1] : null;
 
-  const hasSubstitutions = (match.events.substitutions||[]).length > 1;
+  const hasSubstitutions = (match.substitutions || match.events?.substitutions || []).length > 1;
   const matchStats = useMemo(() => {
     if (!hasSubstitutions) return null;
     return calcMatchStats(match);
