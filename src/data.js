@@ -7,11 +7,11 @@ export const DATABASE = {
 
   // Proper partit (actualitza cada setmana)
   nextMatch: {
-    opponent: "Vietkong",
-    date: "2026-04-27T21:45:00",
-    dateLabel: "27 Abr 2026 · 21:45h",
-    location: "St. Ignasi Sala 2",
-    jornada: "Jornada 8",
+    opponent: "Ensaimada",
+    date: "2026-05-11T21:00:00",
+    dateLabel: "11 Mai 2026 · 21:00h",
+    location: "St. Ignasi Sala 1",
+    jornada: "Jornada 10",
     isHome: false,
   },
 
@@ -636,6 +636,176 @@ export const DATABASE = {
           { time: "34:10", type: "contra", goalkeeper: "Ivan Mico", onPitch: ["Roger Miro","Pau Ibañez","Oriol Tomas","Chengzhi Li"], notes: "Surt fins larea el porter i pase de la mort que el pau se la fot dintre." },
         ],
         retransmissio: [],
+      }
+    },
+
+    // ── JORNADA 9 — Vikings ──────────────────────────────────────────
+    {
+      id: "j9-vikings",
+      jornada: "Jornada 9",
+      opponent: "Vikings",
+      result: "5 - 2",
+      date: "04 Mai 2026",
+      youtubeId: null,
+      vimeoId: null,
+      idealMinutesPerPlayer: 12.0,
+      goalkeeperMinutes: { "Ivan Mico": 20.6, "Joan Medina": 3.4 },
+      savesManual: { "Ivan Mico": 2, "Joan Medina": 3 },
+      shots: {
+        "Arnau Sentis": [{ time: "4:40", onTarget: true }, { time: "5:26", onTarget: false }, { time: "17:56", onTarget: false }],
+        "Joan Medina":  [{ time: "0:39", onTarget: false }, { time: "4:19", onTarget: true }, { time: "6:36", onTarget: true }, { time: "17:14", onTarget: true }],
+        "Roger Miro":   [{ time: "7:45", onTarget: true }, { time: "8:07", onTarget: true }, { time: "11:30", onTarget: true }, { time: "12:55", onTarget: false }, { time: "22:00", onTarget: true }],
+        "Roi Seoane":   [{ time: "14:45", onTarget: true }],
+        "Chengzhi Li":  [{ time: "10:18", onTarget: false }],
+        "Oriol Tomas":  [{ time: "13:10", onTarget: true }],
+        "Pau Ibañez":   [{ time: "17:20", onTarget: false }],
+        "Ivan Mico":    [{ time: "23:47", onTarget: true }],
+      },
+      keyPasses: {
+        "Roger Miro":   [{ time: "0:39" }, { time: "5:26" }],
+        "Arnau Sentis": [{ time: "4:19" }, { time: "17:20" }, { time: "23:47" }],
+        "Chengzhi Li":  [{ time: "7:45" }],
+        "Pau Ibañez":   [{ time: "8:07" }],
+        "Ivan Mico":    [{ time: "17:14" }],
+      },
+      dribbles: {
+        "Chengzhi Li":  [{ time: "10:18" }, { time: "12:40" }, { time: "12:40" }],
+        "Oriol Tomas":  [{ time: "13:10" }],
+        "Arnau Sentis": [{ time: "15:28" }],
+      },
+      events: {
+        substitutions: [
+          { time: "0:00",  goalkeeper: "Ivan Mico",   onPitch: ["Roger Miro", "Arnau Sentis", "Pau Ibañez", "Joan Medina"] },
+          { time: "7:25",  goalkeeper: "Ivan Mico",   onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Pau Ibañez"] },
+          { time: "13:30", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Oriol Tomas"] },
+          { time: "17:30", goalkeeper: "Ivan Mico",   onPitch: ["Pau Ibañez", "Arnau Sentis", "Joan Medina", "Oriol Tomas"] },
+          { time: "17:45", goalkeeper: "Ivan Mico",   onPitch: ["Chengzhi Li", "Oriol Tomas", "Pau Ibañez", "Arnau Sentis"] },
+          { time: "18:52", goalkeeper: "Ivan Mico",   onPitch: ["Roger Miro", "Chengzhi Li", "Pau Ibañez", "Oriol Tomas"] },
+          { time: "20:38", goalkeeper: "Joan Medina", onPitch: ["Roi Seoane", "Pau Ibañez", "Roger Miro", "Ivan Mico"] },
+          { time: "22:48", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Pau Ibañez", "Roger Miro", "Roi Seoane"] },
+        ],
+        cards: [],
+        goals: [
+          {
+            time: "4:40", type: "favor", scorer: "Arnau Sentis", assist: "Joan Medina",
+            goalkeeper: "Ivan Mico", onPitch: ["Roger Miro", "Arnau Sentis", "Pau Ibañez", "Joan Medina"],
+            shotPos: { x: 755, y: 195 }, assistPos: { x: 720, y: 210 }, conductPos: null, goalPos: { x: 148, y: 90 },
+            zone: "B2", notes: "Corner de Pau, cap de Medina que queia a porteria, Sentis la remata.",
+          },
+          {
+            time: "6:36", type: "favor", scorer: "Joan Medina", assist: "Roger Miro",
+            goalkeeper: "Ivan Mico", onPitch: ["Roger Miro", "Arnau Sentis", "Pau Ibañez", "Joan Medina"],
+            shotPos: { x: 748, y: 230 }, assistPos: { x: 610, y: 180 }, conductPos: { x: 480, y: 200 }, goalPos: { x: 150, y: 140 },
+            zone: "B3", notes: "Miro verticalitza i assisteix Medina. Xut fluix que el rival no gosa tocar i entra sol.",
+          },
+          {
+            time: "11:05", type: "contra",
+            goalkeeper: "Ivan Mico", onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Pau Ibañez"],
+            shotPos: { x: 40, y: 210 }, assistPos: null, conductPos: null, goalPos: { x: 150, y: 100 },
+            zone: "A1", notes: "Falta directa des de la vora de l'area.",
+          },
+          {
+            time: "11:30", type: "favor", scorer: "Roger Miro", assist: "Chengzhi Li",
+            goalkeeper: "Ivan Mico", onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Pau Ibañez"],
+            shotPos: { x: 745, y: 175 }, assistPos: { x: 580, y: 200 }, conductPos: { x: 400, y: 280 }, goalPos: { x: 152, y: 85 },
+            zone: "B1", notes: "Chengzhi tira llarg a Miro, Roi fa pantalla i el porter no veu el xut. 3-1.",
+          },
+          {
+            time: "14:45", type: "favor", scorer: "Roi Seoane", assist: "Joan Medina",
+            goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Oriol Tomas"],
+            shotPos: { x: 740, y: 220 }, assistPos: { x: 650, y: 290 }, conductPos: { x: 300, y: 250 }, goalPos: { x: 148, y: 110 },
+            zone: "B2", notes: "Ivan llanca la contra, Medina regata i quan el bloquejen deixa la pilota de punta al Roi. Gol magic.",
+          },
+          {
+            time: "16:16", type: "contra",
+            goalkeeper: "Ivan Mico", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Oriol Tomas"],
+            shotPos: { x: 15, y: 200 }, assistPos: null, conductPos: null, goalPos: { x: 150, y: 100 },
+            zone: "A1", notes: "Oriol no desallotja un fora de banda i dos rivals l'empenten dintre.",
+          },
+          {
+            time: "22:00", type: "favor", scorer: "Roger Miro", assist: "Ivan Mico",
+            goalkeeper: "Joan Medina", onPitch: ["Roi Seoane", "Pau Ibañez", "Roger Miro", "Ivan Mico"],
+            shotPos: { x: 700, y: 195 }, assistPos: { x: 560, y: 210 }, conductPos: { x: 200, y: 200 }, goalPos: { x: 150, y: 100 },
+            zone: "C4", notes: "Medina des de porteria filtra a Ivan que assisteix Miro. Gol de fora de l'area.",
+          },
+        ],
+        retransmissio: [
+          {
+            time: "0:25", type: "bona",
+            text: "Primera accio i ja hi ha futbol: paret Medina-Miro per la banda, centre a l'area... que ningu remata. Bones idees, execucio per millorar.",
+            players: ["Joan Medina", "Roger Miro"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "1:00", type: "bona",
+            text: "LA NOS-TRA DE-FEN-SA FUN-CIO-NA. Avui hi ha dies que la defensa funciona i cal celebrar-ho amb la mateixa energia que un gol.",
+            players: [], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "1:25", type: "tactica",
+            text: "Paret interior Sentis-Miro que prometia molt, pero l'Arnau la tira massa llarga. Spoiler: no sera l'ultima vegada que algú tira 'una mica' massa llarg avui.",
+            players: ["Arnau Sentis", "Roger Miro"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "5:26", type: "dolenta",
+            text: "Miro fa una passada potent a l'area, la pilota arriba als peus de Sentis amb porteria buida... i li passa per les cames. De manera ridicula. Les cames ho sabien, l'Arnau no.",
+            players: ["Arnau Sentis"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "5:50", type: "bona",
+            text: "Medina perd el control i, com el cavaller que es, deixa sortir la pilota per fairplay. El rival ho aprofita. L'honradesa es bonica pero cara.",
+            players: ["Joan Medina"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "7:15", type: "bona",
+            text: "El rival ens fa una paret i deixa un home sol davant porteria. Ivan s'allarga com un gat i para amb PAREDÓN exemplar. Tranquils, tenim porter.",
+            players: ["Ivan Mico"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "7:45", type: "dolenta",
+            text: "Chengzhi fa una passada de banda a banda perfecta a Miro que xuta clar a porteria... i el Roi li treu el gol de sota els pals. El Roi defensava la seva porteria. A la seva manera.",
+            players: ["Chengzhi Li", "Roger Miro", "Roi Seoane"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "12:40", type: "bona",
+            text: "Chengzhi es recupera i ens regala dos regats magics que tant estimem. Algú hauria de gravar-los i posar-los en un museu del futbol sala.",
+            players: ["Chengzhi Li"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "13:48", type: "bona",
+            text: "El rival es queda sol davant porteria. El capita Sentis apareix del no-res, es tira a terra i evita el gol. Accions que no surten al marcador pero que valen com un gol d'or.",
+            players: ["Arnau Sentis"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "14:00", type: "dolenta",
+            text: "Presentem el pitjor corner defensat de la historia del futbol sala: Oriol d'esquenes que acaba planxat a terra, uns segons de joc completament aturat, i el Roi defensant el corner des del mig del camp. Una obra mestra del caos.",
+            players: ["Oriol Tomas", "Roi Seoane"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "16:16", type: "dolenta",
+            text: "Oriol dormit en el moment clau. La pilota li cau als peus, ja se li fa tard, no la desallotja i dos rivals l'empenten dintre. Gol en contra. S'accepten excuses per escrit.",
+            players: ["Oriol Tomas"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "18:17", type: "dolenta",
+            text: "Sentis i Chengzhi combinen de meravella, la passen a Oriol que la controla malament, s'enreda amb la pilota i acaba com un bacalla a la xarxa. Mai millor dit.",
+            players: ["Oriol Tomas", "Arnau Sentis", "Chengzhi Li"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "18:40", type: "bona",
+            text: "El rival regata al Pau, xuta sol i... PAL. La sort tambe es treballa. O almenys aixi ho veurem des d'avui.",
+            players: ["Pau Ibañez"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "22:00", type: "bona",
+            text: "40 segons tocant la pilota, Medina des de porteria avanca el joc, filtra a Ivan, Ivan assisteix Miro a l'altra banda: GOL de fora de l'area. Futbol de debò, nois.",
+            players: ["Joan Medina", "Ivan Mico", "Roger Miro"], videoUrl: null, photo: null, photoHover: null,
+          },
+          {
+            time: "23:59", type: "bona",
+            text: "El rival intenta una contra per l'espai i el Roi intercepta l'accio amb un sacrifici brutal. Les estadistiques no ho recolliran. Nosaltres si.",
+            players: ["Roi Seoane"], videoUrl: null, photo: null, photoHover: null,
+          },
+        ],
       }
     },
   ]
