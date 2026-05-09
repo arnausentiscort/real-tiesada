@@ -53,7 +53,9 @@ export default {
           { time: "36:39", goalkeeper: "Ivan Mico",   onPitch: ["Pau Ibañez", "Chengzhi Li", "Roger Miro", "Arnau Sentis"] },
           { time: "39:40", goalkeeper: "",            onPitch: [] },
         ],
-        cards: [],
+        cards: [
+          { time: "26:42", color: "yellow", player: "Chengzhi Li" },
+        ],
         goals: [
           { time: "4:40", type: "favor", scorer: "Arnau Sentis", assist: "Joan Medina", goalkeeper: "Ivan Mico",
             zone: "C6", shotPos: { x: 773, y: 220 }, assistPos: { x: 738, y: 201 }, conductPos: null, goalPos: { x: 252, y: 169 },
