@@ -3,7 +3,7 @@ export default {
       id: "j9-vikings",
       jornada: "Jornada 9",
       opponent: "Vikings",
-      result: "5 - 2",
+      result: "5 - 3",
       date: "04 Mai 2026",
       youtubeId: "I3EZnlW91sE",
       vimeoId: null,
