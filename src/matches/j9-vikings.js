@@ -51,6 +51,7 @@ export default {
           { time: "30:44", goalkeeper: "Ivan Mico",   onPitch: ["Roi Seoane", "Oriol Tomas", "Joan Medina", "Roger Miro"] },
           { time: "33:05", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Oriol Tomas"] },
           { time: "36:39", goalkeeper: "Ivan Mico",   onPitch: ["Pau Ibañez", "Chengzhi Li", "Roger Miro", "Arnau Sentis"] },
+          { time: "39:40", goalkeeper: "",            onPitch: [] },
         ],
         cards: [],
         goals: [
