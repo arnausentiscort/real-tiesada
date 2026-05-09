@@ -540,7 +540,8 @@ function matchToForm(m) {
     pts: { shot: g.shotPos?{...g.shotPos,zone:g.zone||''}:null, assist:g.assistPos?{...g.assistPos,zone:''}:null, conduct:g.conductPos?{...g.conductPos,zone:''}:null }
   }));
   const subs = (m.events?.substitutions || []).map(s => ({
-    time: s.time, goalkeeper: s.goalkeeper || '', onPitch: s.onPitch || []
+    time: s.time, goalkeeper: s.goalkeeper || '', onPitch: s.onPitch || [],
+    _isBreak: (s.onPitch || []).length === 0,
   }));
   const cards = (m.events?.cards || []).map(c => ({
     time: c.time, color: c.color || 'yellow', player: c.player || ''

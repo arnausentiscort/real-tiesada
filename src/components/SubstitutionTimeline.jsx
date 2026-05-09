@@ -19,7 +19,7 @@ export default function SubstitutionTimeline({ subs = [], onChange }) {
   const campions = roster.filter(p => p.position !== 'Porter');
 
   const addSub = () => {
-    onChange([...subs, { time: '', goalkeeper: '', onPitch: [] }]);
+    onChange([...subs, { time: '', goalkeeper: '', onPitch: [], _isBreak: false }]);
   };
 
   const removeSub = (idx) => {
@@ -92,7 +92,7 @@ export default function SubstitutionTimeline({ subs = [], onChange }) {
         <div className="space-y-2">
           {subs.map((sub, idx) => {
             const isExpanded = expandedIdx === idx;
-            const isBreak = sub._isBreak || (sub.onPitch && sub.onPitch.length === 0);
+            const isBreak = sub._isBreak === true;
             const timeInSecs = parseTime(sub.time);
             const gkName = sub.goalkeeper ? roster.find(p => p.name === sub.goalkeeper)?.shirtName : '?';
             const campSelected = (sub.onPitch || []).length;
