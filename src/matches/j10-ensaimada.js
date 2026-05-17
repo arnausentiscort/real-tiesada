@@ -9,18 +9,6 @@ export default {
   youtubeId: null,
   vimeoId: null,
   idealMinutesPerPlayer: 20.0,
-  goalkeeperMinutes: { "Pau Ibañez": 16.0, "Ivan Mico": 20.0 },
-  fieldMinutes: {
-    "Chengzhi Li":   22,
-    "Oriol Tomas":   23,
-    "Pafila":        26,
-    "Marc Farreras": 18,
-    "Arnau Sentis":  18,
-    "Ivan Mico":     11,
-    "Joan Medina":   28,
-    "Roi Seoane":    23,
-    "Pau Ibañez":    20,
-  },
   shots: {},
   keyPasses: {},
   dribbles: {},
@@ -38,57 +26,60 @@ export default {
       { time: "14:27", goalkeeper: "Ivan Mico",  onPitch: ["Marc Farreras", "Oriol Tomas", "Pafila", "Chengzhi Li"] },
       { time: "15:41", goalkeeper: "Ivan Mico",  onPitch: ["Pau Ibañez", "Oriol Tomas", "Marc Farreras", "Pafila"] },
       // Fi 1a part: 18:32
-      // ── 2A PART (inici no gravat) ────────────────────────────────────────
+      // ── 2A PART inici (no gravat) ────────────────────────────────────────
       { time: "18:32", goalkeeper: "Ivan Mico",  onPitch: ["Pau Ibañez", "Arnau Sentis", "Joan Medina", "Roi Seoane"] },
-      // ── 2A PART (gravada — temps real = temps vídeo + 5:40) ─────────────
+      // ── 2A PART gravada (temps real = temps vídeo + 5:40) ───────────────
       { time: "24:20", goalkeeper: "Ivan Mico",  onPitch: ["Joan Medina", "Marc Farreras", "Pafila", "Oriol Tomas"] }, // vídeo 18:40
       { time: "25:53", goalkeeper: "Ivan Mico",  onPitch: ["Pau Ibañez", "Pafila", "Marc Farreras", "Oriol Tomas"] }, // vídeo 20:13
       { time: "27:50", goalkeeper: "Ivan Mico",  onPitch: ["Arnau Sentis", "Pau Ibañez", "Pafila", "Oriol Tomas"] }, // vídeo 22:10
       { time: "28:38", goalkeeper: "Ivan Mico",  onPitch: ["Chengzhi Li", "Arnau Sentis", "Pau Ibañez", "Oriol Tomas"] }, // vídeo 22:58
       { time: "29:06", goalkeeper: "Ivan Mico",  onPitch: ["Roi Seoane", "Chengzhi Li", "Pau Ibañez", "Arnau Sentis"] }, // vídeo 23:26
-      // TODO: substitució on Roi passa a porter (~min 32-33, a confirmar)
+      // TODO: falta 1 substitució on Pau torna a porteria (~min 33, a confirmar)
+      { time: "33:00", goalkeeper: "Pau Ibañez", onPitch: ["Roi Seoane", "Chengzhi Li", "Joan Medina", "Pafila"] },
+      // Fi del partit
+      { time: "36:00", goalkeeper: "Pau Ibañez", onPitch: [] },
     ],
     cards: [],
     goals: [
       // ── GOL A FAVOR ──────────────────────────────────────────────────────
-      // Medina, min 8:44 | lineup de 6:33 | vídeo 8:44
+      // Medina, 8:44 | lineup 6:33 | vídeo 8:44
       { time: "8:44",  type: "favor", scorer: "Joan Medina", assist: "Roi Seoane", goalkeeper: "Pau Ibañez",
         zone: "C6", shotPos: { x: 740, y: 210 }, assistPos: { x: 720, y: 240 }, conductPos: null, goalPos: { x: 150, y: 100 },
         onPitch: ["Ivan Mico", "Arnau Sentis", "Joan Medina", "Roi Seoane"],
         notes: "" },
 
       // ── GOLS EN CONTRA ────────────────────────────────────────────────────
-      // 1r — Carles B. min ~9:05 | lineup de 6:33 (Ivan Mico al camp) | vídeo ~9:05
+      // 1r — Carles B. ~9:05 | lineup 6:33 | vídeo ~9:05
       { time: "9:05",  type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Ivan Mico", "Arnau Sentis", "Joan Medina", "Roi Seoane"],
         notes: "" },
 
-      // 2n — Luis D. min ~11:10 | lineup de 10:21 | vídeo ~11:10
+      // 2n — Luis D. ~11:10 | lineup 10:21 | vídeo ~11:10
       { time: "11:10", type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Pafila", "Chengzhi Li", "Roi Seoane", "Joan Medina"],
         notes: "" },
 
-      // 3r — Albert C. min ~15:50 | lineup de 15:41 | vídeo ~15:50
+      // 3r — Albert C. ~15:50 | lineup 15:41 | vídeo ~15:50
       { time: "15:50", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Pau Ibañez", "Oriol Tomas", "Marc Farreras", "Pafila"],
         notes: "" },
 
-      // 4t — Fernando P. min ~20:00 | 2a part no gravada | vídeo: NO EXISTEIX
+      // 4t — Fernando P. ~20:00 | 2a part NO gravada
       { time: "20:00", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Pau Ibañez", "Arnau Sentis", "Joan Medina", "Roi Seoane"],
         notes: "No gravat (inici 2a part sense càmera)" },
 
-      // 5è — Carles B. min ~26:00 | lineup de 24:20 | vídeo ~20:20
+      // 5è — Carles B. ~26:00 | lineup 24:20 | vídeo ~20:20
       { time: "26:00", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Joan Medina", "Marc Farreras", "Pafila", "Oriol Tomas"],
         notes: "" },
 
-      // 6è — Carles B. min ~30:00 | lineup de 29:06 | vídeo ~24:20
+      // 6è — Carles B. ~30:00 | lineup 29:06 | vídeo ~24:20
       { time: "30:00", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Roi Seoane", "Chengzhi Li", "Pau Ibañez", "Arnau Sentis"],
         notes: "" },
 
-      // 7è — Albert C. min ~34:00 | vídeo ~28:20
+      // 7è — Albert C. ~34:00 | lineup 33:00 | vídeo ~28:20
       { time: "34:00", type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Roi Seoane", "Chengzhi Li", "Joan Medina", "Pafila"],
         notes: "" },
