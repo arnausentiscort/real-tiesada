@@ -37,7 +37,7 @@ export default {
     cards: [],
     goals: [
       // GOL A FAVOR — Ivan Mico min 2 | lineup 0:00 | vídeo 2:00
-      { time: "2:00", type: "favor", scorer: "Ivan Mico", assist: null, goalkeeper: "Joan Medina",
+      { time: "2:00", type: "favor", scorer: "Ivan Mico", assist: "Roger Miro", goalkeeper: "Joan Medina",
         zone: "C6", shotPos: { x: 740, y: 210 }, assistPos: null, conductPos: null, goalPos: { x: 150, y: 100 },
         onPitch: ["Arnau Sentis", "Roger Miro", "Ivan Mico", "Pau Ibañez"],
         notes: "" },
