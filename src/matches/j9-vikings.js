@@ -8,7 +8,6 @@ export default {
       youtubeId: "I3EZnlW91sE",
       vimeoId: null,
       idealMinutesPerPlayer: 12.0,
-      goalkeeperMinutes: { "Ivan Mico": 20.6, "Joan Medina": 3.4 },
       savesManual: { "Ivan Mico": 4, "Joan Medina": 4 },
       shots: {
         "Arnau Sentis": [{ time: "4:40", onTarget: true }, { time: "5:26", onTarget: false }, { time: "17:56", onTarget: false }],
@@ -39,6 +38,7 @@ export default {
         substitutions: [
           { time: "0:00",  goalkeeper: "Ivan Mico",   onPitch: ["Roger Miro", "Arnau Sentis", "Pau Ibañez", "Joan Medina"] },
           { time: "7:25",  goalkeeper: "Ivan Mico",   onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Pau Ibañez"] },
+          { time: "10:11", goalkeeper: "Ivan Mico",   onPitch: ["Roi Seoane", "Chengzhi Li", "Roger Miro", "Oriol Tomas"] },
           { time: "13:30", goalkeeper: "Ivan Mico",   onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Oriol Tomas"] },
           { time: "17:30", goalkeeper: "Ivan Mico",   onPitch: ["Pau Ibañez", "Arnau Sentis", "Joan Medina", "Oriol Tomas"] },
           { time: "17:45", goalkeeper: "Ivan Mico",   onPitch: ["Chengzhi Li", "Oriol Tomas", "Pau Ibañez", "Arnau Sentis"] },
@@ -63,10 +63,10 @@ export default {
           { time: "6:36", type: "favor", scorer: "Joan Medina", assist: "Roger Miro", goalkeeper: "Ivan Mico",
             zone: "B6", shotPos: { x: 721, y: 209 }, assistPos: { x: 713, y: 284 }, conductPos: null, goalPos: { x: 15, y: 191 },
             onPitch: ["Roger Miro","Arnau Sentis","Pau Ibañez","Joan Medina"], notes: "Miro verticalitza i assisteix Medina. Xut fluix que el rival no gosa tocar i entra sol." },
-          { time: "11:05", type: "contra", goalkeeper: "Ivan Mico", onPitch: ["Roi Seoane","Chengzhi Li","Roger Miro","Pau Ibañez"], notes: "Falta directa des de la vora de l'area." },
+          { time: "11:05", type: "contra", goalkeeper: "Ivan Mico", onPitch: ["Roi Seoane","Chengzhi Li","Roger Miro","Oriol Tomas"], notes: "Falta directa des de la vora de l'area." },
           { time: "11:30", type: "favor", scorer: "Roger Miro", assist: null, goalkeeper: "Ivan Mico",
             zone: "C6", shotPos: { x: 698, y: 211 }, assistPos: { x: 328, y: 213 }, conductPos: { x: 582, y: 261 }, goalPos: { x: 150, y: 194 },
-            onPitch: ["Roi Seoane","Chengzhi Li","Roger Miro","Pau Ibañez"], notes: "Chengzhi tira llarg a Miro, Roi fa pantalla i el porter no veu el xut li pasa entre les cames pero que dolent." },
+            onPitch: ["Roi Seoane","Chengzhi Li","Roger Miro","Oriol Tomas"], notes: "Chengzhi tira llarg a Miro, Roi fa pantalla i el porter no veu el xut li pasa entre les cames pero que dolent." },
           { time: "14:45", type: "favor", scorer: "Roi Seoane", assist: null, goalkeeper: "Ivan Mico",
             zone: "B6", shotPos: { x: 719, y: 199 }, assistPos: { x: 700, y: 222 }, conductPos: null, goalPos: { x: 46, y: 72 },
             onPitch: ["Arnau Sentis","Joan Medina","Roi Seoane","Oriol Tomas"], notes: "Ivan llanca la contra, Medina regata i quan el bloquejen deixa la pilota de punta al Roi. Gol magic." },
