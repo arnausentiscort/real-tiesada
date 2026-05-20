@@ -373,7 +373,7 @@ function MatchPlayerStats({ match, onJumpToVideo }) {
 // ── Gràfic de temps ───────────────────────────────────────────────
 function TimelineChart({ match, matchStats }) {
   if (!matchStats) return null;
-  const { stints, playerStats, finalTime } = matchStats;
+  const { stints, playerStats, finalTime, idealSec } = matchStats;
 
   const subs = match.substitutions || match.events?.substitutions || [];
 
@@ -417,7 +417,7 @@ function TimelineChart({ match, matchStats }) {
   // Ordenar per minuts de CAMP (porters purs al final)
   allPlayers.sort((a,b) => campSecs(b) - campSecs(a));
 
-  const idealSecs = match.idealMinutesPerPlayer * 60;
+  const idealSecs = idealSec ?? (match.idealMinutesPerPlayer * 60);
   const pct = (s) => `${(s/finalTime*100).toFixed(2)}%`;
   const w   = (s,e) => `${((e-s)/finalTime*100).toFixed(2)}%`;
 

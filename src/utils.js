@@ -55,11 +55,14 @@ export const calcMatchStats = (match) => {
       totals[p] = mins * 60;
     });
     const finalTime = 40 * 60;
+    const allGKs = Object.keys(match.goalkeeperMinutes || {});
+    const numPlayers = new Set([...Object.keys(totals), ...allGKs]).size || 1;
+    const idealSec = (finalTime * 5) / numPlayers;
     const stints = Object.entries(totals).map(([player, secs]) => ({ player, start: 0, end: secs }));
     const playerStats = Object.entries(totals)
-      .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - (match.idealMinutesPerPlayer * 60) }))
+      .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - idealSec }))
       .sort((a, b) => b.totalSec - a.totalSec);
-    return { stints, playerStats, finalTime, totals };
+    return { stints, playerStats, finalTime, totals, idealSec };
   }
 
   if (!subs || subs.length < 2) return { stints: [], playerStats: [], finalTime: 0, totals: {} };
@@ -89,11 +92,15 @@ export const calcMatchStats = (match) => {
     stints.push({ player: p, start: active[p], end: finalTime });
   });
 
+  const allGKs = [...new Set(subs.map(s => s.goalkeeper).filter(Boolean))];
+  const numPlayers = new Set([...Object.keys(totals), ...allGKs]).size || 1;
+  const idealSec = (finalTime * 5) / numPlayers;
+
   const playerStats = Object.entries(totals)
-    .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - (match.idealMinutesPerPlayer * 60) }))
+    .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - idealSec }))
     .sort((a, b) => b.totalSec - a.totalSec);
 
-  return { stints, playerStats, finalTime, totals };
+  return { stints, playerStats, finalTime, totals, idealSec };
 };
 
 export const calcGlobalStats = (database) => {
