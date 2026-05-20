@@ -498,7 +498,7 @@ function TimelineChart({ match, matchStats }) {
               if (cur < gs.end) gkSplitted.push({start:cur, end:gs.end});
             });
             const pl = DATABASE.roster.find(p=>p.name===name);
-            const dev = (cSecs + gkSecs(name)) - idealSecs;
+            const dev = cSecs - idealSecs;
 
             return (
               <div key={name} className="flex items-center mb-1.5 group">
