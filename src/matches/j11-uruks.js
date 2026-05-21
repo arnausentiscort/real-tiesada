@@ -8,8 +8,13 @@ export default {
   youtubeId: "-z0c3GzA3_I",
   vimeoId: null,
   idealMinutesPerPlayer: 20.0,
-  shots: {},
-  keyPasses: {},
+  savesManual: { "Joan Medina": 4, "Pau Ibañez": 4, "Ivan Mico": 1 },
+  shots: {
+    "Roger Miro":   [{ time: "1:00",  onTarget: false }],
+    "Chengzhi Li":  [{ time: "18:05", onTarget: false }, { time: "18:40", onTarget: true }],
+    "Pau Ibañez":   [{ time: "38:40", onTarget: true }],
+  },
+  keyPasses: { "Arnau Sentis": [{ time: "38:40" }] },
   dribbles: {},
   events: {
     substitutions: [
@@ -34,7 +39,9 @@ export default {
       { time: "38:09", goalkeeper: "Ivan Mico",    onPitch: ["Arnau Sentis", "Marc Farreras", "Chengzhi Li", "Pau Ibañez"] },
       { time: "39:31", goalkeeper: "Ivan Mico",    onPitch: [] },
     ],
-    cards: [],
+    cards: [
+      { time: "19:20", color: "yellow", player: "Pau Ibañez" },
+    ],
     goals: [
       // GOL A FAVOR — Ivan Mico min 2 | lineup 0:00 | vídeo 2:00
       { time: "2:00", type: "favor", scorer: "Ivan Mico", assist: "Roger Miro", goalkeeper: "Joan Medina",
@@ -73,6 +80,22 @@ export default {
         onPitch: ["Chengzhi Li", "Roger Miro", "Pau Ibañez", "Oriol Tomas"],
         notes: "" },
     ],
-    retransmissio: [],
+    retransmissio: [
+      { time: "1:00",  type: "bona",    text: "Xut de Miró",                              players: ["Roger Miro"] },
+      { time: "3:17",  type: "dolenta", text: "Pal en contra",                             players: [] },
+      { time: "5:10",  type: "bona",    text: "Parada de Medina",                          players: ["Joan Medina"] },
+      { time: "6:00",  type: "bona",    text: "Parada de Medina",                          players: ["Joan Medina"] },
+      { time: "8:30",  type: "bona",    text: "Parada de Medina",                          players: ["Joan Medina"] },
+      { time: "10:30", type: "bona",    text: "Parada de Medina",                          players: ["Joan Medina"] },
+      { time: "14:30", type: "bona",    text: "Parada de Pau",                             players: ["Pau Ibañez"] },
+      { time: "18:05", type: "bona",    text: "Xut de Chengzhi",                           players: ["Chengzhi Li"] },
+      { time: "18:40", type: "bona",    text: "Xut a porta de Chengzhi",                   players: ["Chengzhi Li"] },
+      { time: "19:20", type: "dolenta", text: "Penal en contra. Targeta groga a Pau",      players: ["Pau Ibañez"] },
+      { time: "25:34", type: "bona",    text: "Parada de Pau",                             players: ["Pau Ibañez"] },
+      { time: "29:00", type: "bona",    text: "Parada de Pau",                             players: ["Pau Ibañez"] },
+      { time: "29:19", type: "bona",    text: "Paradón de Pau",                            players: ["Pau Ibañez"] },
+      { time: "38:40", type: "bona",    text: "Key pass d'Arnau, xut de Pau",              players: ["Arnau Sentis", "Pau Ibañez"] },
+      { time: "39:40", type: "bona",    text: "Parada de Ivan",                            players: ["Ivan Mico"] },
+    ],
   },
 };
