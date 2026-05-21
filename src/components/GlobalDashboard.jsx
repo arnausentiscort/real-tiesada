@@ -711,21 +711,41 @@ export default function GlobalDashboard({ onSelectMatch }) {
 
           <Sec id="impact" title="⚡ Impacte Gols / 40 min" collapsed={collapsed.impact} onToggle={toggle}>
             {(() => {
-              const MIN_SECS = 1800;
+              const [impactMode, setImpactMode] = React.useState('camp');
+              const isGK = impactMode === 'porter';
+              const MIN_SECS = isGK ? 600 : 1800;
               const data = DATABASE.roster.map(p => {
-                const secs = stats.minutesCamp.find(([n]) => n === p.name)?.[1] ?? 0;
+                const secs = isGK
+                  ? (stats.minutesPorter.find(([n]) => n === p.name)?.[1] ?? 0)
+                  : (stats.minutesCamp.find(([n]) => n === p.name)?.[1] ?? 0);
                 if (secs < MIN_SECS) return null;
-                const gf  = stats.goalsFor.find(([n])      => n === p.name)?.[1] ?? 0;
-                const ga  = stats.goalsAgainst.find(([n])  => n === p.name)?.[1] ?? 0;
-                const ga90 = (gf / secs) * 2400;
-                const gc90 = (ga / secs) * 2400;
-                return { p, secs, ga90, gc90, net90: ga90 - gc90 };
-              }).filter(Boolean).sort((a, b) => b.net90 - a.net90);
+                const gf = isGK
+                  ? (stats.goalsForGK.find(([n]) => n === p.name)?.[1] ?? 0)
+                  : (stats.goalsFor.find(([n]) => n === p.name)?.[1] ?? 0);
+                const ga = isGK
+                  ? (stats.goalsAgainstGK.find(([n]) => n === p.name)?.[1] ?? 0)
+                  : (stats.goalsAgainst.find(([n]) => n === p.name)?.[1] ?? 0);
+                const gf40 = (gf / secs) * 2400;
+                const gc40 = (ga / secs) * 2400;
+                return { p, secs, gf40, gc40, net40: gf40 - gc40 };
+              }).filter(Boolean).sort((a, b) => b.net40 - a.net40);
 
-              const maxVal = Math.max(...data.flatMap(d => [d.ga90, d.gc90]), 0.01);
+              const maxVal = Math.max(...data.flatMap(d => [d.gf40, d.gc40]), 0.01);
 
               return (
                 <div className="space-y-2">
+                  <div className="flex gap-1 mb-3">
+                    <button onClick={() => setImpactMode('camp')}
+                      className="px-3 py-1 rounded text-xs font-semibold transition-colors"
+                      style={{background: !isGK ? '#E5C07B22' : 'transparent', color: !isGK ? '#E5C07B' : '#6b7280', border: `1px solid ${!isGK ? '#E5C07B44' : '#ffffff11'}`}}>
+                      Camp
+                    </button>
+                    <button onClick={() => setImpactMode('porter')}
+                      className="px-3 py-1 rounded text-xs font-semibold transition-colors"
+                      style={{background: isGK ? '#E5C07B22' : 'transparent', color: isGK ? '#E5C07B' : '#6b7280', border: `1px solid ${isGK ? '#E5C07B44' : '#ffffff11'}`}}>
+                      Porter
+                    </button>
+                  </div>
                   {data.map(d => (
                     <div key={d.p.name} className="flex items-center gap-2 group">
                       {d.p.photo ? (
@@ -740,26 +760,26 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(d.p.name)}</span>
                       <div className="flex-1 flex flex-col gap-0.5">
                         <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{width:`${(d.ga90/maxVal)*100}%`}}/>
+                          <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{width:`${(d.gf40/maxVal)*100}%`}}/>
                         </div>
                         <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#C0392B]/60 rounded-full transition-all duration-700" style={{width:`${(d.gc90/maxVal)*100}%`}}/>
+                          <div className="h-full bg-[#C0392B]/60 rounded-full transition-all duration-700" style={{width:`${(d.gc40/maxVal)*100}%`}}/>
                         </div>
                       </div>
                       <span className="text-[10px] font-mono text-right shrink-0" style={{minWidth:72}}>
-                        <span className="text-emerald-400">{d.ga90.toFixed(1)}</span>
+                        <span className="text-emerald-400">{d.gf40.toFixed(1)}</span>
                         <span className="text-gray-600"> / </span>
-                        <span className="text-[#C0392B]">{d.gc90.toFixed(1)}</span>
-                        <span className="ml-1 font-bold" style={{color: d.net90 > 0.05 ? '#4ade80' : d.net90 < -0.05 ? '#f87171' : '#E5C07B'}}>
-                          ({d.net90 >= 0 ? '+' : ''}{d.net90.toFixed(1)})
+                        <span className="text-[#C0392B]">{d.gc40.toFixed(1)}</span>
+                        <span className="ml-1 font-bold" style={{color: d.net40 > 0.05 ? '#4ade80' : d.net40 < -0.05 ? '#f87171' : '#E5C07B'}}>
+                          ({d.net40 >= 0 ? '+' : ''}{d.net40.toFixed(1)})
                         </span>
                       </span>
                     </div>
                   ))}
                   <div className="flex gap-4 pt-2 border-t border-white/5 text-[9px] text-gray-600">
-                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-emerald-500/60"/>GF/90</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-[#C0392B]/60"/>GC/90</span>
-                    <span className="text-gray-700 ml-auto">Mín. 30 min de camp · ordenat per net</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-emerald-500/60"/>GF/40</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-[#C0392B]/60"/>GC/40</span>
+                    <span className="text-gray-700 ml-auto">{isGK ? 'Mín. 10 min de porter' : 'Mín. 30 min de camp'} · ordenat per net</span>
                   </div>
                 </div>
               );

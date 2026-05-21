@@ -106,12 +106,14 @@ export const calcMatchStats = (match) => {
 export const calcGlobalStats = (database) => {
   const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
   const goalsFor = {}, goalsAgainst = {}, yellowCards = {}, saves = {};
+  const goalsForGK = {}, goalsAgainstGK = {};
   const shotsTotal = {}, shotsOnTarget = {}, keyPassesMap = {}, dribblesMap = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
     goals[p] = 0; assists[p] = 0; minutesCamp[p] = 0; minutesPorter[p] = 0;
     goalsFor[p] = 0; goalsAgainst[p] = 0; yellowCards[p] = 0; saves[p] = 0;
+    goalsForGK[p] = 0; goalsAgainstGK[p] = 0;
     shotsTotal[p] = 0; shotsOnTarget[p] = 0; keyPassesMap[p] = 0; dribblesMap[p] = 0;
   });
 
@@ -124,8 +126,10 @@ export const calcGlobalStats = (database) => {
         if (goal.scorer && goals[goal.scorer] !== undefined) goals[goal.scorer]++;
         if (goal.assist && assists[goal.assist] !== undefined) assists[goal.assist]++;
         onPitch.forEach(p => { if (goalsFor[p] !== undefined) goalsFor[p]++; });
+        if (goal.goalkeeper && goalsForGK[goal.goalkeeper] !== undefined) goalsForGK[goal.goalkeeper]++;
       } else {
         onPitch.forEach(p => { if (goalsAgainst[p] !== undefined) goalsAgainst[p]++; });
+        if (goal.goalkeeper && goalsAgainstGK[goal.goalkeeper] !== undefined) goalsAgainstGK[goal.goalkeeper]++;
       }
     });
 
@@ -195,6 +199,8 @@ export const calcGlobalStats = (database) => {
     minutesPorter: sortDesc(minutesPorter).filter(([,v]) => v > 0),
     goalsFor:      sortDesc(goalsFor),
     goalsAgainst:  sortDesc(goalsAgainst),
+    goalsForGK:    sortDesc(goalsForGK),
+    goalsAgainstGK: sortDesc(goalsAgainstGK),
     saves:         sortDesc(saves).filter(([,v]) => v > 0),
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
     shotsTotal:    sortDesc(shotsTotal).filter(([,v]) => v > 0),
