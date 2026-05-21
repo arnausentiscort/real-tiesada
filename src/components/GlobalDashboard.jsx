@@ -713,18 +713,19 @@ export default function GlobalDashboard({ onSelectMatch }) {
             {(() => {
               const [impactMode, setImpactMode] = React.useState('camp');
               const isGK = impactMode === 'porter';
+              const isAll = impactMode === 'tot';
               const MIN_SECS = isGK ? 600 : 1800;
               const data = DATABASE.roster.map(p => {
-                const secs = isGK
-                  ? (stats.minutesPorter.find(([n]) => n === p.name)?.[1] ?? 0)
-                  : (stats.minutesCamp.find(([n]) => n === p.name)?.[1] ?? 0);
+                const secsCamp   = stats.minutesCamp.find(([n]) => n === p.name)?.[1] ?? 0;
+                const secsPorter = stats.minutesPorter.find(([n]) => n === p.name)?.[1] ?? 0;
+                const secs = isGK ? secsPorter : isAll ? (secsCamp + secsPorter) : secsCamp;
                 if (secs < MIN_SECS) return null;
-                const gf = isGK
-                  ? (stats.goalsForGK.find(([n]) => n === p.name)?.[1] ?? 0)
-                  : (stats.goalsFor.find(([n]) => n === p.name)?.[1] ?? 0);
-                const ga = isGK
-                  ? (stats.goalsAgainstGK.find(([n]) => n === p.name)?.[1] ?? 0)
-                  : (stats.goalsAgainst.find(([n]) => n === p.name)?.[1] ?? 0);
+                const gfCamp = stats.goalsFor.find(([n]) => n === p.name)?.[1] ?? 0;
+                const gfGK   = stats.goalsForGK.find(([n]) => n === p.name)?.[1] ?? 0;
+                const gaCamp = stats.goalsAgainst.find(([n]) => n === p.name)?.[1] ?? 0;
+                const gaGK   = stats.goalsAgainstGK.find(([n]) => n === p.name)?.[1] ?? 0;
+                const gf = isGK ? gfGK : isAll ? (gfCamp + gfGK) : gfCamp;
+                const ga = isGK ? gaGK : isAll ? (gaCamp + gaGK) : gaCamp;
                 const gf40 = (gf / secs) * 2400;
                 const gc40 = (ga / secs) * 2400;
                 return { p, secs, gf40, gc40, net40: gf40 - gc40 };
@@ -735,16 +736,17 @@ export default function GlobalDashboard({ onSelectMatch }) {
               return (
                 <div className="space-y-2">
                   <div className="flex gap-1 mb-3">
-                    <button onClick={() => setImpactMode('camp')}
-                      className="px-3 py-1 rounded text-xs font-semibold transition-colors"
-                      style={{background: !isGK ? '#E5C07B22' : 'transparent', color: !isGK ? '#E5C07B' : '#6b7280', border: `1px solid ${!isGK ? '#E5C07B44' : '#ffffff11'}`}}>
-                      Camp
-                    </button>
-                    <button onClick={() => setImpactMode('porter')}
-                      className="px-3 py-1 rounded text-xs font-semibold transition-colors"
-                      style={{background: isGK ? '#E5C07B22' : 'transparent', color: isGK ? '#E5C07B' : '#6b7280', border: `1px solid ${isGK ? '#E5C07B44' : '#ffffff11'}`}}>
-                      Porter
-                    </button>
+                    {['camp','porter','tot'].map(mode => {
+                      const active = impactMode === mode;
+                      const label = mode === 'camp' ? 'Camp' : mode === 'porter' ? 'Porter' : 'Tot';
+                      return (
+                        <button key={mode} onClick={() => setImpactMode(mode)}
+                          className="px-3 py-1 rounded text-xs font-semibold transition-colors"
+                          style={{background: active ? '#E5C07B22' : 'transparent', color: active ? '#E5C07B' : '#6b7280', border: `1px solid ${active ? '#E5C07B44' : '#ffffff11'}`}}>
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
                   {data.map(d => (
                     <div key={d.p.name} className="flex items-center gap-2 group">
@@ -779,7 +781,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   <div className="flex gap-4 pt-2 border-t border-white/5 text-[9px] text-gray-600">
                     <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-emerald-500/60"/>GF/40</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-[#C0392B]/60"/>GC/40</span>
-                    <span className="text-gray-700 ml-auto">{isGK ? 'Mín. 10 min de porter' : 'Mín. 30 min de camp'} · ordenat per net</span>
+                    <span className="text-gray-700 ml-auto">{isGK ? 'Mín. 10 min de porter' : 'Mín. 30 min totals'} · ordenat per net</span>
                   </div>
                 </div>
               );
