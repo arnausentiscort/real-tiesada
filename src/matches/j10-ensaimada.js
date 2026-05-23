@@ -27,7 +27,7 @@ export default {
       { time: "9:18",  goalkeeper: "Pau Ibañez", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Padilla"] },
       { time: "10:21", goalkeeper: "Pau Ibañez", onPitch: ["Padilla", "Chengzhi Li", "Roi Seoane", "Joan Medina"] },
       { time: "11:39", goalkeeper: "Pau Ibañez", onPitch: ["Oriol Tomas", "Padilla", "Chengzhi Li", "Roi Seoane"] },
-      { time: "12:49", goalkeeper: "Ivan Mico",  onPitch: ["Oriol Tomas", "Padilla", "Chengzhi Li", "Pau Ibañez"] },
+      { time: "12:49", goalkeeper: "Ivan Mico",  onPitch: ["Marc Farreras", "Oriol Tomas", "Padilla", "Roi Seoane"] },
       { time: "14:27", goalkeeper: "Ivan Mico",  onPitch: ["Marc Farreras", "Oriol Tomas", "Padilla", "Chengzhi Li"] },
       { time: "15:41", goalkeeper: "Ivan Mico",  onPitch: ["Pau Ibañez", "Oriol Tomas", "Marc Farreras", "Padilla"] },
       // Fi 1a part: 18:32
