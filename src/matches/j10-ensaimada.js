@@ -59,13 +59,13 @@ export default {
         onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Padilla"],
         notes: "" },
 
-      // 2n — Luis D. ~11:10 | lineup 10:21 | vídeo ~11:10
-      { time: "11:10", type: "contra", goalkeeper: "Pau Ibañez",
+      // 2n — Luis D. 11:28 | lineup 10:21 | vídeo 11:28
+      { time: "11:28", type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Padilla", "Chengzhi Li", "Roi Seoane", "Joan Medina"],
         notes: "" },
 
-      // 3r — Albert C. ~15:50 | lineup 15:41 | vídeo ~15:50
-      { time: "15:50", type: "contra", goalkeeper: "Ivan Mico",
+      // 3r — Albert C. 16:15 | lineup 15:41 | vídeo 16:15
+      { time: "16:15", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Pau Ibañez", "Oriol Tomas", "Marc Farreras", "Padilla"],
         notes: "" },
 
@@ -74,18 +74,18 @@ export default {
         onPitch: ["Pau Ibañez", "Arnau Sentis", "Joan Medina", "Roi Seoane"],
         notes: "No gravat (inici 2a part sense càmera)" },
 
-      // 5è — Carles B. ~26:00 | lineup 24:20 | vídeo ~20:20
-      { time: "26:00", type: "contra", goalkeeper: "Ivan Mico",
+      // 5è — Carles B. ~25:44 | lineup 24:20 | vídeo 20:04
+      { time: "20:04", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Joan Medina", "Marc Farreras", "Padilla", "Oriol Tomas"],
         notes: "" },
 
-      // 6è — ~30:06 | falta de Pau | lineup 29:06 | vídeo ~24:26
-      { time: "30:06", type: "contra", goalkeeper: "Ivan Mico",
+      // 6è — ~29:49 | falta de Pau | lineup 29:06 | vídeo 24:09
+      { time: "24:09", type: "contra", goalkeeper: "Ivan Mico",
         onPitch: ["Roi Seoane", "Chengzhi Li", "Pau Ibañez", "Arnau Sentis"],
         notes: "Falta de Pau que en resulta gol" },
 
-      // 7è — Albert C. ~34:00 | lineup 33:00 | vídeo ~28:20
-      { time: "34:00", type: "contra", goalkeeper: "Pau Ibañez",
+      // 7è — Albert C. ~33:58 | lineup 33:00 | vídeo 28:18
+      { time: "28:18", type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Roi Seoane", "Chengzhi Li", "Joan Medina", "Padilla"],
         notes: "" },
     ],
