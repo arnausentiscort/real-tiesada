@@ -27,7 +27,7 @@ export default {
       { time: "9:18",  goalkeeper: "Pau Ibañez", onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Padilla"] },
       { time: "10:21", goalkeeper: "Pau Ibañez", onPitch: ["Padilla", "Chengzhi Li", "Roi Seoane", "Joan Medina"] },
       { time: "11:39", goalkeeper: "Pau Ibañez", onPitch: ["Oriol Tomas", "Padilla", "Chengzhi Li", "Roi Seoane"] },
-      { time: "12:49", goalkeeper: "Ivan Mico",  onPitch: ["Marc Farreras", "Oriol Tomas", "Padilla", "Roi Seoane"] },
+      { time: "12:49", goalkeeper: "Ivan Mico",  onPitch: ["Chengzhi Li", "Oriol Tomas", "Padilla", "Roi Seoane"] },
       { time: "14:27", goalkeeper: "Ivan Mico",  onPitch: ["Marc Farreras", "Oriol Tomas", "Padilla", "Chengzhi Li"] },
       { time: "15:41", goalkeeper: "Ivan Mico",  onPitch: ["Pau Ibañez", "Oriol Tomas", "Marc Farreras", "Padilla"] },
       // Fi 1a part: 18:32
@@ -54,9 +54,9 @@ export default {
         notes: "" },
 
       // ── GOLS EN CONTRA ────────────────────────────────────────────────────
-      // 1r — Carles B. ~9:05 | lineup 6:33 | vídeo ~9:05
-      { time: "9:05",  type: "contra", goalkeeper: "Pau Ibañez",
-        onPitch: ["Ivan Mico", "Arnau Sentis", "Joan Medina", "Roi Seoane"],
+      // 1r — Carles B. 10:07 | lineup 9:18 | vídeo 10:07
+      { time: "10:07", type: "contra", goalkeeper: "Pau Ibañez",
+        onPitch: ["Arnau Sentis", "Joan Medina", "Roi Seoane", "Padilla"],
         notes: "" },
 
       // 2n — Luis D. ~11:10 | lineup 10:21 | vídeo ~11:10
