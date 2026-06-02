@@ -51,8 +51,9 @@ export default {
       // ── 2A PART inici (Vídeo 2: 19:15–22:01) ────────────────────────────
       { time: "19:15", goalkeeper: "Oriol Tomas",  onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Marc Farreras"] },
       { time: "21:34", goalkeeper: "Oriol Tomas",  onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"] },
-      // ── GAP no gravat (~2 min) ────────────────────────────────────────────
-      { time: "22:01", goalkeeper: "Oriol Tomas",  onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"] },
+      // ── GAP no gravat (~2 min, 22:01–24:01) ─────────────────────────────────
+      { time: "22:01", goalkeeper: "Oriol Tomas",  onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"] },
+      { time: "23:31", goalkeeper: "Oriol Tomas",  onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"] },
       // ── 2A PART (Vídeo 3, temps real = temps vídeo + 2:00) ──────────────
       { time: "25:15", goalkeeper: "Oriol Tomas",  onPitch: ["Pau Ibañez", "Paco Montero", "Ivan Mico", "Andreu Cases"] },    // vídeo 23:15
       { time: "26:18", goalkeeper: "Oriol Tomas",  onPitch: ["Roi Seoane", "Paco Montero", "Pau Ibañez", "Andreu Cases"] },   // vídeo 24:18
@@ -93,7 +94,7 @@ export default {
 
       // 5è — falta de Miro durant el tall no gravat entre vídeo 2 i 3
       { time: "22:01", type: "contra", goalkeeper: "Oriol Tomas",
-        onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"],
+        onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"],
         notes: "⚠️ NO SURT AL VÍDEO — Falta provocada per Miro, marquen de falta directa 5-0. Passa durant el tall entre vídeo 2 i 3" },
 
       // 6è — combinació espectacular, paradón d'Oriol però marquen al rebuig
