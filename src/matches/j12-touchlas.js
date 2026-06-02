@@ -7,7 +7,7 @@ export default {
   opponent: "Touchlas FC",
   result: "2 - 8",
   date: "01 Jun 2026",
-  youtubeId: null,
+  youtubeId: "zjHJ8T2lFcs",
   vimeoId: null,
   idealMinutesPerPlayer: 20.0,
   savesManual: { "Joan Medina": 3, "Pau Ibañez": 2, "Oriol Tomas": 2, "Paco Montero": 3 },
@@ -52,7 +52,7 @@ export default {
       { time: "19:15", goalkeeper: "Oriol Tomas",  onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Marc Farreras"] },
       { time: "21:34", goalkeeper: "Oriol Tomas",  onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"] },
       // ── GAP no gravat (~2 min, 22:01–24:01) ─────────────────────────────────
-      { time: "22:01", goalkeeper: "Oriol Tomas",  onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"] },
+      { time: "22:01", goalkeeper: "Oriol Tomas",  onPitch: ["Ivan Mico", "Andreu Cases", "Chengzhi Li", "Roger Miro"] },
       { time: "23:31", goalkeeper: "Oriol Tomas",  onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"] },
       // ── 2A PART (Vídeo 3, temps real = temps vídeo + 2:00) ──────────────
       { time: "25:15", goalkeeper: "Oriol Tomas",  onPitch: ["Pau Ibañez", "Paco Montero", "Ivan Mico", "Andreu Cases"] },    // vídeo 23:15
@@ -94,7 +94,7 @@ export default {
 
       // 5è — falta de Miro durant el tall no gravat entre vídeo 2 i 3
       { time: "22:01", type: "contra", goalkeeper: "Oriol Tomas",
-        onPitch: ["Ivan Mico", "Arnau Sentis", "Chengzhi Li", "Roger Miro"],
+        onPitch: ["Ivan Mico", "Andreu Cases", "Chengzhi Li", "Roger Miro"],
         notes: "⚠️ NO SURT AL VÍDEO — Falta provocada per Miro, marquen de falta directa 5-0. Passa durant el tall entre vídeo 2 i 3" },
 
       // 6è — combinació espectacular, paradón d'Oriol però marquen al rebuig

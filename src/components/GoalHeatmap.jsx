@@ -323,7 +323,6 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
         const num    = idx + 1;
         return (
           <g key={idx} onClick={() => setActiveGoal(idx === activeGoal ? null : idx)}
-            style={{cursor:'pointer'}}
             style={{cursor:'pointer', opacity: activeGoal !== null ? 0.55 : 1, transition:'opacity 0.3s'}}>
             {/* Traces molt discretes */}
             {g.assistPos && <line x1={g.assistPos.x} y1={g.assistPos.y} x2={g._sx} y2={g._sy} stroke={color} strokeWidth="0.7" strokeDasharray="3,4" opacity="0.15"/>}
