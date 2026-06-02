@@ -98,29 +98,29 @@ export default {
         notes: "⚠️ NO SURT AL VÍDEO — Falta provocada per Miro, marquen de falta directa 5-0. Passa durant el tall entre vídeo 2 i 3" },
 
       // 6è — combinació espectacular, paradón d'Oriol però marquen al rebuig
-      { time: "23:00", type: "contra", goalkeeper: "Oriol Tomas",
+      { time: "25:00", type: "contra", goalkeeper: "Oriol Tomas",
         onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"],
         notes: "Combinació espectacular del rival, paradón d'Oriol però al rebuig marquen 6-0" },
 
-      // 7è — vídeo 28:33
-      { time: "28:33", type: "contra", goalkeeper: "Paco Montero",
+      // 7è — vídeo 28:33 (temps real 30:33)
+      { time: "30:33", type: "contra", goalkeeper: "Paco Montero",
         onPitch: ["Joan Medina", "Pau Ibañez", "Roi Seoane", "Oriol Tomas"],
         notes: "Equip destrossat, gol increïble del rival 7-0" },
 
-      // 8è — gol del córner, vídeo 30:40
-      { time: "30:40", type: "contra", goalkeeper: "Paco Montero",
+      // 8è — gol del córner, vídeo 30:40 (temps real 32:40)
+      { time: "32:40", type: "contra", goalkeeper: "Paco Montero",
         onPitch: ["Roger Miro", "Ivan Mico", "Marc Farreras", "Joan Medina"],
         notes: "Gol del córner anterior: Roi canvia lent, Miro no entra ràpid, Medina no baixa a defensar 8-0" },
 
       // ── GOLS A FAVOR ──────────────────────────────────────────────────────
-      // 1r — Telico, assist Paco
-      { time: "33:28", type: "favor", scorer: "Andreu Cases", assist: "Paco Montero", goalkeeper: "Paco Montero",
+      // 1r — Telico, assist Paco (temps real 35:28)
+      { time: "35:28", type: "favor", scorer: "Andreu Cases", assist: "Paco Montero", goalkeeper: "Paco Montero",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Andreu Cases"],
         notes: "Paco veu el desmarque de Telico i l'assisteix, xuta sol contra porter i marca 1-8" },
 
-      // 2n — Oriol, assist Sentis
-      { time: "36:22", type: "favor", scorer: "Oriol Tomas", assist: "Arnau Sentis", goalkeeper: "Paco Montero",
+      // 2n — Oriol, assist Sentis (temps real 38:22)
+      { time: "38:22", type: "favor", scorer: "Oriol Tomas", assist: "Arnau Sentis", goalkeeper: "Paco Montero",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Oriol Tomas", "Pau Ibañez", "Andreu Cases", "Arnau Sentis"],
         notes: "Oriol agafa la pilota, sprint sol, Sentis li fa d'autopase, sol davant porter i marca 2-8" },
