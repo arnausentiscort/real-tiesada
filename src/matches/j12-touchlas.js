@@ -89,36 +89,36 @@ export default {
       // 4t — 15:20 | sub 14:27 | vídeo 15:20
       { time: "15:20", type: "contra", goalkeeper: "Pau Ibañez",
         onPitch: ["Roi Seoane", "Andreu Cases", "Oriol Tomas", "Paco Montero"],
-        notes: "Contra fallada: Paco intenta xutar, rebot als peus de Roi sense temps ni espai, roben i marquen 4-0" },
+        notes: "Contra nostra fallada: Paco intenta xutar, rebot als peus de Roi sense temps ni espai, roben i marquen 4-0" },
 
-      // 5è — combinació espectacular, vídeo 23:00 (real ~25:00)
+      // 5è — falta de Miro durant el tall no gravat entre vídeo 2 i 3
+      { time: "22:01", type: "contra", goalkeeper: "Oriol Tomas",
+        onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"],
+        notes: "⚠️ NO SURT AL VÍDEO — Falta provocada per Miro, marquen de falta directa 5-0. Passa durant el tall entre vídeo 2 i 3" },
+
+      // 6è — combinació espectacular, paradón d'Oriol però marquen al rebuig
       { time: "23:00", type: "contra", goalkeeper: "Oriol Tomas",
         onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"],
-        notes: "Combinació espectacular del rival, paradón d'Oriol però al rebuig marquen 5-0" },
+        notes: "Combinació espectacular del rival, paradón d'Oriol però al rebuig marquen 6-0" },
 
-      // 6è — falta de Miro, vídeo 23:31 (real ~25:31)
-      { time: "23:31", type: "contra", goalkeeper: "Oriol Tomas",
-        onPitch: ["Chengzhi Li", "Andreu Cases", "Ivan Mico", "Roger Miro"],
-        notes: "Falta provocada per Miro, marquen de falta directa 6-0" },
-
-      // 7è — vídeo 28:33 (real ~30:33)
+      // 7è — vídeo 28:33
       { time: "28:33", type: "contra", goalkeeper: "Paco Montero",
         onPitch: ["Joan Medina", "Pau Ibañez", "Roi Seoane", "Oriol Tomas"],
         notes: "Equip destrossat, gol increïble del rival 7-0" },
 
-      // 8è — gol del córner, vídeo 30:40 (real ~32:40)
+      // 8è — gol del córner, vídeo 30:40
       { time: "30:40", type: "contra", goalkeeper: "Paco Montero",
         onPitch: ["Roger Miro", "Ivan Mico", "Marc Farreras", "Joan Medina"],
         notes: "Gol del córner anterior: Roi canvia lent, Miro no entra ràpid, Medina no baixa a defensar 8-0" },
 
       // ── GOLS A FAVOR ──────────────────────────────────────────────────────
-      // 1r — Telico, assist Paco, vídeo 33:28 (real ~35:28)
+      // 1r — Telico, assist Paco
       { time: "33:28", type: "favor", scorer: "Andreu Cases", assist: "Paco Montero", goalkeeper: "Paco Montero",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Andreu Cases"],
         notes: "Paco veu el desmarque de Telico i l'assisteix, xuta sol contra porter i marca 1-8" },
 
-      // 2n — Oriol, assist Sentis, vídeo 36:22 (real ~38:22)
+      // 2n — Oriol, assist Sentis
       { time: "36:22", type: "favor", scorer: "Oriol Tomas", assist: "Arnau Sentis", goalkeeper: "Paco Montero",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Oriol Tomas", "Pau Ibañez", "Andreu Cases", "Arnau Sentis"],
@@ -139,15 +139,16 @@ export default {
       { time: "13:37", type: "bona",    text: "Primera parada de Pau, després intenta sortir amb la bola",                                                    players: ["Pau Ibañez"] },
       { time: "15:20", type: "dolenta", text: "Paco intenta xutar, rebot als peus de Roi sense temps ni espai, roben i marquen 4-0",                          players: ["Paco Montero", "Roi Seoane"] },
       { time: "17:14", type: "bona",    text: "Xut de Marc a fora amb passkey de Pau",                                                                        players: ["Marc Farreras", "Pau Ibañez"] },
-      { time: "18:25", type: "bona",    text: "Paradón de Pau, un gat salta al camp i para l'acció al rival",                                                 players: ["Pau Ibañez"] },
+      { time: "18:25", type: "bona",    text: "Paradón de Pau, un gat al camp que para l'acció al rival",                                                      players: ["Pau Ibañez"] },
       // ── 2A PART (Vídeo 2) ────────────────────────────────────────────────
       { time: "20:03", type: "bona",    text: "Recuperació de Sentis a l'àrea rival, xut fluix que para el porter",                                           players: ["Arnau Sentis"] },
       { time: "20:30", type: "bona",    text: "Passkey de Chengzhi a Miro que xuta a porta",                                                                  players: ["Chengzhi Li", "Roger Miro"] },
       { time: "21:05", type: "bona",    text: "Parada d'Oriol Tomas",                                                                                         players: ["Oriol Tomas"] },
+      // ── TALL entre Vídeo 2 i Vídeo 3 (no gravat) ───────────────────────
+      { time: "22:01", type: "dolenta", text: "⚠️ NO GRAVAT — Falta provocada per Miro, el rival marca de falta directa 5-0",                                 players: ["Roger Miro"] },
       // ── 2A PART (Vídeo 3, temps real = temps vídeo + 2:00) ──────────────
       { time: "24:28", type: "bona",    text: "Pressió alta i bona recuperació de Chengzhi, passkey a Telico que intenta passar en lloc de xutar",            players: ["Chengzhi Li", "Andreu Cases"] },
-      { time: "25:00", type: "bona",    text: "Paradón d'Oriol, però el rival marca al rebuig 5-0",                                                           players: ["Oriol Tomas"] },
-      { time: "25:31", type: "dolenta", text: "Falta provocada per Miro, el rival marca de falta directa 6-0",                                                players: ["Roger Miro"] },
+      { time: "25:00", type: "bona",    text: "Paradón d'Oriol, però el rival marca al rebuig 6-0",                                                           players: ["Oriol Tomas"] },
       { time: "27:22", type: "bona",    text: "Robo de Telico, es planta 1 contra 1",                                                                         players: ["Andreu Cases"] },
       { time: "28:12", type: "tactica", text: "Pau s'enfada perquè Roi no va a la marca; recuperem i Roi fa bon pase que Telico quasi aprofita però no s'entenen amb Pau i la pilota es perd", players: ["Roi Seoane", "Pau Ibañez", "Andreu Cases"] },
       { time: "28:57", type: "bona",    text: "Bon tall de pilota de Roi, tot i que després la perdem i ens xuten rosant el pal",                             players: ["Roi Seoane"] },
@@ -156,7 +157,7 @@ export default {
       { time: "30:33", type: "dolenta", text: "Equip destrossat, ens pixen i ens marquen un gol increïble 7-0",                                               players: [] },
       { time: "32:26", type: "dolenta", text: "Farreras sent últim home intenta fer un caño, li recuperen la pilota",                                         players: ["Marc Farreras"] },
       { time: "32:26", type: "bona",    text: "Paradón històric de Paco per salvar el gol",                                                                   players: ["Paco Montero"] },
-      { time: "32:40", type: "dolenta", text: "Gol del córner anterior: Roi canvia lent, Miro no entra ràpid, Medina no baixa a defensar — CARADURES 8-0",   players: ["Roi Seoane", "Roger Miro", "Joan Medina"] },
+      { time: "32:40", type: "dolenta", text: "Gol del córner anterior: Roi canvia lent, Miro no entra ràpid, Medina no baixa a defensar. CARADURES. 8-0",    players: ["Roi Seoane", "Roger Miro", "Joan Medina"] },
       { time: "34:07", type: "bona",    text: "Regate exitós de Farreras: ruletinya i se'n va per velocitat",                                                 players: ["Marc Farreras"] },
       { time: "35:00", type: "bona",    text: "Paco surt conduint, bon pase a Miro que xuta fora",                                                            players: ["Paco Montero", "Roger Miro"] },
       { time: "35:28", type: "bona",    text: "Paco veu el desmarque de Telico i l'assisteix, xuta sol contra porter i marca el primer gol! 1-8",             players: ["Paco Montero", "Andreu Cases"] },
