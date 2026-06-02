@@ -128,7 +128,7 @@ export default {
     retransmissio: [
       // ── 1A PART ──────────────────────────────────────────────────────────
       { time: "0:15",  type: "bona",    text: "Parada de Medina",                                                                                              players: ["Joan Medina"] },
-      { time: "0:18",  type: "bona",    text: "Contra: passkey d'Ivan a Telico que xuta al pal",                                                              players: ["Ivan Mico", "Andreu Cases"] },
+      { time: "0:18",  type: "bona",    text: "Contra: key pass d'Ivan a Telico que xuta al pal",                                                              players: ["Ivan Mico", "Andreu Cases"] },
       { time: "1:23",  type: "dolenta", text: "Oriol la deixa caure en una contra i regala la possessió al rival",                                            players: ["Oriol Tomas"] },
       { time: "3:00",  type: "dolenta", text: "Oriol perd la pilota, saque de banda ràpid i gol rival 2-0",                                                   players: ["Oriol Tomas"] },
       { time: "4:05",  type: "bona",    text: "Parada de Medina d'un xut de fora de l'àrea",                                                                  players: ["Joan Medina"] },
@@ -139,16 +139,16 @@ export default {
       { time: "8:50",  type: "bona",    text: "Paradón de Medina per salvar el gol",                                                                          players: ["Joan Medina"] },
       { time: "13:37", type: "bona",    text: "Primera parada de Pau, després intenta sortir amb la bola",                                                    players: ["Pau Ibañez"] },
       { time: "15:20", type: "dolenta", text: "Paco intenta xutar, rebot als peus de Roi sense temps ni espai, roben i marquen 4-0",                          players: ["Paco Montero", "Roi Seoane"] },
-      { time: "17:14", type: "bona",    text: "Xut de Marc a fora amb passkey de Pau",                                                                        players: ["Marc Farreras", "Pau Ibañez"] },
+      { time: "17:14", type: "bona",    text: "Xut de Marc a fora amb key pass de Pau",                                                                        players: ["Marc Farreras", "Pau Ibañez"] },
       { time: "18:25", type: "bona",    text: "Paradón de Pau, un gat al camp que para l'acció al rival",                                                      players: ["Pau Ibañez"] },
       // ── 2A PART (Vídeo 2) ────────────────────────────────────────────────
       { time: "20:03", type: "bona",    text: "Recuperació de Sentis a l'àrea rival, xut fluix que para el porter",                                           players: ["Arnau Sentis"] },
-      { time: "20:30", type: "bona",    text: "Passkey de Chengzhi a Miro que xuta a porta",                                                                  players: ["Chengzhi Li", "Roger Miro"] },
+      { time: "20:30", type: "bona",    text: "Key pass de Chengzhi a Miro que xuta a porta",                                                                  players: ["Chengzhi Li", "Roger Miro"] },
       { time: "21:05", type: "bona",    text: "Parada d'Oriol Tomas",                                                                                         players: ["Oriol Tomas"] },
       // ── TALL entre Vídeo 2 i Vídeo 3 (no gravat) ───────────────────────
       { time: "22:01", type: "dolenta", text: "⚠️ NO GRAVAT — Falta provocada per Miro, el rival marca de falta directa 5-0",                                 players: ["Roger Miro"] },
       // ── 2A PART (Vídeo 3, temps real = temps vídeo + 2:00) ──────────────
-      { time: "24:28", type: "bona",    text: "Pressió alta i bona recuperació de Chengzhi, passkey a Telico que intenta passar en lloc de xutar",            players: ["Chengzhi Li", "Andreu Cases"] },
+      { time: "24:28", type: "bona",    text: "Pressió alta i bona recuperació de Chengzhi, key pass a Telico que intenta passar en lloc de xutar",            players: ["Chengzhi Li", "Andreu Cases"] },
       { time: "25:00", type: "bona",    text: "Paradón d'Oriol, però el rival marca al rebuig 6-0",                                                           players: ["Oriol Tomas"] },
       { time: "27:22", type: "bona",    text: "Robo de Telico, es planta 1 contra 1",                                                                         players: ["Andreu Cases"] },
       { time: "28:12", type: "tactica", text: "Pau s'enfada perquè Roi no va a la marca; recuperem i Roi fa bon pase que Telico quasi aprofita però no s'entenen amb Pau i la pilota es perd", players: ["Roi Seoane", "Pau Ibañez", "Andreu Cases"] },
