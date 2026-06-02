@@ -14,18 +14,19 @@ import j8Vietkong     from './matches/j8-vietkong.js';
 import j9Vikings      from './matches/j9-vikings.js';
 import j10Ensaimada  from './matches/j10-ensaimada.js';
 import j11Uruks      from './matches/j11-uruks.js';
+import j12Touchlas   from './matches/j12-touchlas.js';
 
 export const DATABASE = {
   teamName: "Real Tiesada",
 
   // Proper partit (actualitza cada setmana)
   nextMatch: {
-    opponent: "Touchlas FC",
-    date: "2026-06-01T21:00:00",
-    dateLabel: "01 Jun 2026 · 21:00h",
+    opponent: "Dgeneración X",
+    date: "2026-06-08T21:45:00",
+    dateLabel: "08 Jun 2026 · 21:45h",
     location: "St. Ignasi Sala 1",
-    jornada: "Jornada 12",
-    isHome: false,
+    jornada: "Jornada 13",
+    isHome: true,
   },
 
   // Calendari complet de la temporada
@@ -61,7 +62,7 @@ export const DATABASE = {
 
   matches: [
     j1Vikings, j2Ensaimada, j3Uruks, j4Touchlas, j5Dgeneracion,
-    j6FabbasFC, j7GreatSpirit, j8Vietkong, j9Vikings, j10Ensaimada, j11Uruks,
+    j6FabbasFC, j7GreatSpirit, j8Vietkong, j9Vikings, j10Ensaimada, j11Uruks, j12Touchlas,
   ],
 };
 
