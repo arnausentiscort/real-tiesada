@@ -109,7 +109,7 @@ export default {
       { time: "35:38", type: "dolenta", text: "Córner que acaba amb la pilota botant davant d'Oriol i l'envia molt malament",                                                 players: ["Oriol Tomas"], videoUrl: "https://www.youtube.com/watch?v=uhbrgpIPI5M&t=2135s" },
       { time: "36:16", type: "dolenta", text: "Un exemple perfecte de per què Oriol no ha de jugar com a defensa",                                                            players: ["Oriol Tomas"], videoUrl: "https://www.youtube.com/watch?v=uhbrgpIPI5M&t=2173s" },
       { time: "38:10", type: "bona",    text: "Saque de banda caòtic: Oriol despitat, Pau li pega, la pilota va a Oriol, xuta Marc, la pilota va a Pau, finalment la treiem del perill", players: ["Oriol Tomas", "Pau Ibañez", "Marc Farreras"], videoUrl: "https://www.youtube.com/watch?v=uhbrgpIPI5M&t=2287s" },
-      { time: "40:36", type: "bona",    text: "Jugada increïble d'Oriol regalant i fent un xut a fora",                                                                       players: ["Oriol Tomas"], videoUrl: "https://www.youtube.com/watch?v=uhbrgpIPI5M&t=2433s" },
+      { time: "40:36", type: "bona",    text: "Jugada increïble d'Oriol regatejant i fent un xut a fora",                                                                       players: ["Oriol Tomas"], videoUrl: "https://www.youtube.com/watch?v=uhbrgpIPI5M&t=2433s" },
     ],
   },
 };
