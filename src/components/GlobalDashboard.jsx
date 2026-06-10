@@ -520,7 +520,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
   const [activeMatchId, setActiveMatchId] = useState(null);
   const [collapsed, setCollapsed] = useState({
     timeline: false, rankings: false, barres: false,
-    chances: true, duos: true, lineup: true, impact: true,
+    tirs: true, chances: true, lineup: true, impact: true,
     minutsCamp: true, porter: true, targetes: false, matches: false,
   });
   const toggle = k => setCollapsed(p => ({ ...p, [k]: !p[k] }));
@@ -709,6 +709,60 @@ export default function GlobalDashboard({ onSelectMatch }) {
           </div>
           </Sec>
 
+          <Sec id="tirs" title="🎯 Tirs" collapsed={collapsed.tirs} onToggle={toggle}>
+            {(() => {
+              const goalsMap = Object.fromEntries(stats.topScorers);
+              const allNames = new Set([
+                ...stats.shotsTotal.map(([n]) => n),
+                ...stats.topScorers.map(([n]) => n),
+              ]);
+              const rows = [...allNames].map(name => {
+                const total = stats.shotsTotal.find(([n]) => n === name)?.[1] ?? 0;
+                const onT   = stats.shotsOnTarget.find(([n]) => n === name)?.[1] ?? 0;
+                return { name, onTarget: onT, offTarget: total - onT, gols: goalsMap[name] ?? 0 };
+              }).filter(r => r.onTarget > 0 || r.offTarget > 0 || r.gols > 0)
+                .sort((a, b) => (b.gols + b.onTarget) - (a.gols + a.onTarget));
+              return (
+                <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5 text-[10px] uppercase tracking-wider">
+                    <div className="w-6 h-6 shrink-0"/>
+                    <span className="flex-1 text-gray-600">Jugador</span>
+                    <span className="w-16 text-center text-blue-400">A porta</span>
+                    <span className="w-14 text-center text-gray-500">Fora</span>
+                    <span className="w-12 text-center text-emerald-400">Gols</span>
+                  </div>
+                  <div className="space-y-2">
+                    {rows.map(r => {
+                      const pl = DATABASE.roster.find(p => p.name === r.name);
+                      return (
+                        <div key={r.name} className="flex items-center gap-2">
+                          {pl?.photo ? (
+                            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/10 shrink-0">
+                              <img src={`${BASE}${pl.photo}`} alt={r.name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-[#C0392B]/15 border border-white/10 flex items-center justify-center shrink-0">
+                              <span className="text-[9px] font-black text-[#E5C07B]/40">{r.name[0]}</span>
+                            </div>
+                          )}
+                          <span className="flex-1 text-xs text-gray-400 truncate">{sName(r.name)}</span>
+                          <span className="w-16 text-center text-sm font-black text-blue-400">{r.onTarget}</span>
+                          <span className="w-14 text-center text-sm font-black text-gray-500">{r.offTarget}</span>
+                          <span className="w-12 text-center text-sm font-black text-emerald-400">{r.gols}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-4 pt-3 mt-2 border-t border-white/5 text-[9px] text-gray-600">
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-blue-400"/>Xuts a porta (sense gol)</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-gray-500"/>Xuts fora</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-emerald-400"/>Gols</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </Sec>
+
           <Sec id="impact" title="⚡ Impacte Gols / 40 min" collapsed={collapsed.impact} onToggle={toggle}>
             {(() => {
               const [impactMode, setImpactMode] = React.useState('camp');
@@ -791,9 +845,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
           <Sec id="chances" title="🎨 Creació de Perill" collapsed={collapsed.chances} onToggle={toggle}>
             <ChanceCreationChart />
           </Sec>
-          <Sec id="duos" title="🤝 Estadístiques de Parelles" collapsed={collapsed.duos} onToggle={toggle}>
-            <DuoStats />
-          </Sec>
           <Sec id="lineup" title="👥 Stats per Alineació" collapsed={collapsed.lineup} onToggle={toggle}>
             <LineupStats />
           </Sec>
@@ -874,6 +925,30 @@ export default function GlobalDashboard({ onSelectMatch }) {
                         <StatRow key={name} name={name} value={count}
                           max={Math.max(...stats.saves.map(([,v])=>v),1)}
                           color="#61AFEF" delay={i*60}/>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {stats.goalsAgainstGK.filter(([,v]) => v > 0).length > 0 && (
+                  <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-[#C0392B]/10">
+                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">🥅 Gols encaixats com a porter</h4>
+                    <div className="space-y-2">
+                      {stats.goalsAgainstGK.filter(([,v]) => v > 0).map(([name,count],i) => (
+                        <StatRow key={name} name={name} value={count}
+                          max={Math.max(...stats.goalsAgainstGK.filter(([,v])=>v>0).map(([,v])=>v),1)}
+                          color="#C0392B" delay={i*60}/>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {stats.goalsForGK.filter(([,v]) => v > 0).length > 0 && (
+                  <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-emerald-500/10">
+                    <h4 className="text-xs font-bold text-[#E5C07B] mb-3">⚽ Gols marcats com a porter</h4>
+                    <div className="space-y-2">
+                      {stats.goalsForGK.filter(([,v]) => v > 0).map(([name,count],i) => (
+                        <StatRow key={name} name={name} value={count}
+                          max={Math.max(...stats.goalsForGK.filter(([,v])=>v>0).map(([,v])=>v),1)}
+                          color="#27AE60" delay={i*60}/>
                       ))}
                     </div>
                   </div>
