@@ -53,7 +53,9 @@ export default {
       { time: "36:30", goalkeeper: "Pau Ibañez",  onPitch: ["Oriol Tomas", "Andreu Cases", "Marc Farreras", "Chengzhi Li"] },
       { time: "41:02", goalkeeper: "Pau Ibañez",  onPitch: [] },
     ],
-    cards: [],
+    cards: [
+      { time: "27:05", color: "yellow", player: "Pau Ibañez" },
+    ],
     goals: [
       { time: "1:29",  type: "favor", scorer: "Roger Miro", assist: "Andreu Cases", goalkeeper: "Oriol Tomas",
         zone: "B6", shotPos: { x: 717, y: 175 }, assistPos: { x: 582, y: 217 }, conductPos: null, goalPos: { x: 219, y: 187 },
