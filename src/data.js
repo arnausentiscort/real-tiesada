@@ -16,18 +16,19 @@ import j10Ensaimada  from './matches/j10-ensaimada.js';
 import j11Uruks      from './matches/j11-uruks.js';
 import j12Touchlas   from './matches/j12-touchlas.js';
 import j13Dgeneracion from './matches/j13-dgeneracion.js';
+import j14FabbasFC    from './matches/j14-fabbas-fc.js';
 
 export const DATABASE = {
   teamName: "Real Tiesada",
 
   // Proper partit (actualitza cada setmana)
   nextMatch: {
-    opponent: "Fabbas FC",
-    date: "2026-06-14T21:00:00",
-    dateLabel: "14 Jun 2026 · 21:00h",
+    opponent: "Great Spirit",
+    date: "2026-06-22T23:15:00",
+    dateLabel: "22 Jun 2026 · 23:15h",
     location: "St. Ignasi Sala 1",
-    jornada: "Jornada 14",
-    isHome: false,
+    jornada: "Jornada 15",
+    isHome: true,
   },
 
   // Calendari complet de la temporada
@@ -63,7 +64,7 @@ export const DATABASE = {
 
   matches: [
     j1Vikings, j2Ensaimada, j3Uruks, j4Touchlas, j5Dgeneracion,
-    j6FabbasFC, j7GreatSpirit, j8Vietkong, j9Vikings, j10Ensaimada, j11Uruks, j12Touchlas, j13Dgeneracion,
+    j6FabbasFC, j7GreatSpirit, j8Vietkong, j9Vikings, j10Ensaimada, j11Uruks, j12Touchlas, j13Dgeneracion, j14FabbasFC,
   ],
 };
 
