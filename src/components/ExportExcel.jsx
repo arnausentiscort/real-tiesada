@@ -167,7 +167,7 @@ function sheetMinuts() {
 // ════════════════════════════════════════════════════════════════════════════
 function sheetStatsGlobals() {
   const stats = calcGlobalStats(DATABASE);
-  const findStat = (arr, name) => arr.find(([n])=>n===name)?.[1]||0;
+  const findStat = (arr, name) => (arr||[]).find(([n])=>n===name)?.[1]||0;
 
   const hdr = [
     'Jugador','Dorsal','Posició',
@@ -529,19 +529,20 @@ function sheetJornada(m) {
 async function generateExcel() {
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, sheetResumPartits(),   '📋 Resum Partits');
-  XLSX.utils.book_append_sheet(wb, sheetMinuts(),         '⏱ Minuts Jugadors');
-  XLSX.utils.book_append_sheet(wb, sheetStatsGlobals(),   '📊 Stats Individuals');
-  XLSX.utils.book_append_sheet(wb, sheetTirs(),           '🎯 Tirs per Jornada');
-  XLSX.utils.book_append_sheet(wb, sheetKPReg(),          '🎨 KP i Regats');
-  XLSX.utils.book_append_sheet(wb, sheetGols(),           '⚽ Tots els Gols');
+  XLSX.utils.book_append_sheet(wb, sheetResumPartits(),   'Resum Partits');
+  XLSX.utils.book_append_sheet(wb, sheetMinuts(),         'Minuts Jugadors');
+  XLSX.utils.book_append_sheet(wb, sheetStatsGlobals(),   'Stats Individuals');
+  XLSX.utils.book_append_sheet(wb, sheetTirs(),           'Tirs per Jornada');
+  XLSX.utils.book_append_sheet(wb, sheetKPReg(),          'KP i Regats');
+  XLSX.utils.book_append_sheet(wb, sheetGols(),           'Tots els Gols');
   matches.forEach(m => {
-    const name = `J${m.jornada.replace(/\D/g,'')} ${m.opponent}`.slice(0,31);
+    const num = m.jornada.replace(/\D/g,'');
+    const name = `J${num} ${m.opponent}`.slice(0,31);
     XLSX.utils.book_append_sheet(wb, sheetJornada(m), name);
   });
 
   const date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `real-tiesada-${date}.xlsx`, {cellStyles: true, bookSST: false});
+  XLSX.writeFile(wb, `real-tiesada-${date}.xlsx`, {cellStyles: true});
 }
 
 export default function ExportExcelButton() {
