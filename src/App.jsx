@@ -72,9 +72,9 @@ export default function App() {
     { id: 'dashboard',     icon: '📊', label: 'Stats'         },
     { id: 'squad',         icon: '👥', label: 'Plantilla'     },
     { id: 'clasificacion', icon: '🏆', label: 'Classificació' },
-    { id: 'mvp',           icon: '⭐', label: 'MVP'           },
+    // { id: 'mvp',        icon: '⭐', label: 'MVP'           },  // amagat temporalment
     { id: 'heatmap',       icon: '🎯', label: 'Mapa de Gols'  },
-    { id: 'galeria',       icon: '📸', label: 'Galeria'       },
+    // { id: 'galeria',    icon: '📸', label: 'Galeria'       },  // amagat temporalment
     { id: 'pissarra',      icon: '🎯', label: 'Pissarra'      },
   ];
 
