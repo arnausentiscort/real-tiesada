@@ -31,6 +31,14 @@ async function pushFile(token, sha, newContent, message) {
   return r.json();
 }
 
+// ── Extended roster (base + convidats) ────────────────────────────
+function buildExtRoster(guestNames = []) {
+  return [
+    ...DATABASE.roster,
+    ...(guestNames || []).map(name => ({ name, shirtName: name.toUpperCase(), position: 'Convidat', photo: null, photoCel: null, number: null })),
+  ];
+}
+
 // ── SVG helpers ───────────────────────────────────────────────────
 function svgPoint(svgEl, clientX, clientY) {
   const pt = svgEl.createSVGPoint();
@@ -146,18 +154,18 @@ function GoalClickable({ value, onChange, label }) {
 }
 
 // ── Selector onPitch ──────────────────────────────────────────────
-function OnPitchSelector({ value = [], onChange }) {
-  const roster = DATABASE.roster.map(p => p.name);
+function OnPitchSelector({ value = [], onChange, rosterProp = DATABASE.roster }) {
+  const names = rosterProp.map(p => p.name);
   const toggle = (name) => {
     if (value.includes(name)) onChange(value.filter(n => n !== name));
     else if (value.length < 4) onChange([...value, name]);
   };
-  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
     <div>
       <p className="text-[10px] text-gray-500 mb-1.5">Al camp ({value.length}/4):{value.length === 4 && <span className="text-emerald-400 ml-1">✓</span>}</p>
       <div className="flex flex-wrap gap-1.5">
-        {roster.map(name => {
+        {names.map(name => {
           const sel = value.includes(name);
           return (
             <button key={name} onClick={() => toggle(name)}
@@ -172,9 +180,9 @@ function OnPitchSelector({ value = [], onChange }) {
 }
 
 // ── Formulari de substitució ──────────────────────────────────────
-function SubForm({ sub, onChange, onRemove, idx }) {
-  const roster = DATABASE.roster.map(p => p.name);
-  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+function SubForm({ sub, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
+  const roster = rosterProp.map(p => p.name);
+  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   const isBreak = !sub.onPitch || sub.onPitch.length === 0;
 
   const togglePlayer = (name) => {
@@ -237,9 +245,9 @@ function SubForm({ sub, onChange, onRemove, idx }) {
 }
 
 // ── Formulari de targeta ──────────────────────────────────────────
-function CardForm({ card, onChange, onRemove, idx }) {
-  const roster = DATABASE.roster.map(p => p.name);
-  const sn = (n) => DATABASE.roster.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+function CardForm({ card, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
+  const roster = rosterProp.map(p => p.name);
+  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
     <div className={`rounded-xl p-3 border space-y-2 ${card.color === 'red' ? 'bg-red-600/5 border-red-600/20' : 'bg-yellow-500/5 border-yellow-500/20'}`}>
       <div className="flex items-center justify-between">
@@ -272,8 +280,8 @@ function CardForm({ card, onChange, onRemove, idx }) {
 }
 
 // ── Formulari de gol ──────────────────────────────────────────────
-function GoalForm({ goal, onChange, onRemove, idx }) {
-  const roster = DATABASE.roster.map(p => p.name);
+function GoalForm({ goal, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
+  const roster = rosterProp.map(p => p.name);
   const emptyPts = { assist: null, conduct: null, shot: null };
   const pts = goal.pts || emptyPts;
 
@@ -314,7 +322,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
             <option value="Porter rival">Porter rival (genèric)</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp}/>
           <PitchClickable points={pts}
             onChange={newPts => onChange({...goal, pts: newPts,
               shotPos:   newPts.shot    ? {x:newPts.shot.x,   y:newPts.shot.y}   : null,
@@ -335,7 +343,7 @@ function GoalForm({ goal, onChange, onRemove, idx }) {
             <option value="">Porter nostre...</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})}/>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
             placeholder="Comentari (opcional)" rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
@@ -561,6 +569,7 @@ function matchToForm(m) {
     youtubeUrl: ytUrl,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer || 16.0,
     goals, subs, cards, moments, savesManual, shots, keyPasses, dribbles,
+    guestPlayers: m.guestPlayers || [],
   };
 }
 
@@ -593,8 +602,8 @@ function MatchSelector({ onSelect, onNew }) {
 }
 
 // ── Secció d'events per jugador (tirs / key passes / regats) ─────
-function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange }) {
-  const roster = DATABASE.roster;
+function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange, rosterProp = DATABASE.roster }) {
+  const roster = rosterProp;
   const [inputs, setInputs] = useState({});
 
   const getInp = (name) => inputs[name] || { time: '', onTarget: true, keyPassBy: '' };
@@ -672,6 +681,20 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
 
 // ── Formulari complet ─────────────────────────────────────────────
 function MatchForm({ match, setMatch, onPreview }) {
+  const extRoster = buildExtRoster(match.guestPlayers);
+  const [newGuest, setNewGuest] = useState('');
+
+  const addGuest = () => {
+    const name = newGuest.trim();
+    if (!name || (match.guestPlayers || []).includes(name)) return;
+    setMatch(m => ({ ...m, guestPlayers: [...(m.guestPlayers || []), name] }));
+    setNewGuest('');
+  };
+
+  const removeGuest = (name) => {
+    setMatch(m => ({ ...m, guestPlayers: (m.guestPlayers || []).filter(n => n !== name) }));
+  };
+
   const lastGK = () => {
     const subs = match.subs || [];
     for (let i = subs.length - 1; i >= 0; i--) {
@@ -724,6 +747,34 @@ function MatchForm({ match, setMatch, onPreview }) {
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
       </div>
 
+      {/* Jugadors convidats */}
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">👤 Jugadors Convidats</p>
+        <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
+          <p className="text-[10px] text-gray-500">Afegeix jugadors que no estan a la plantilla (ex: Ivaniño). Apareixeran a tots els selectors.</p>
+          <div className="flex gap-2">
+            <input value={newGuest} onChange={e => setNewGuest(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addGuest()}
+              placeholder="Nom del convidat"
+              className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+            <button onClick={addGuest}
+              className="px-3 py-1.5 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-lg text-xs font-bold hover:bg-[#E5C07B]/25 transition-all">
+              + Afegir
+            </button>
+          </div>
+          {(match.guestPlayers || []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {(match.guestPlayers || []).map(name => (
+                <span key={name} className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 rounded-full px-2 py-0.5 text-[10px] text-purple-300">
+                  {name}
+                  <button onClick={() => removeGuest(name)} className="text-purple-400 hover:text-red-400 ml-0.5">×</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Aturades */}
       <div className="space-y-3">
         <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
@@ -765,7 +816,8 @@ function MatchForm({ match, setMatch, onPreview }) {
           data={match.shots || {}}
           onChange={v => setMatch(m => ({...m, shots: v}))}
           linkedKeyPassData={match.keyPasses || {}}
-          onLinkedKeyPassChange={v => setMatch(m => ({...m, keyPasses: v}))}/>
+          onLinkedKeyPassChange={v => setMatch(m => ({...m, keyPasses: v}))}
+          rosterProp={extRoster}/>
       </div>
 
       {/* ── KEY PASSES ── */}
@@ -774,7 +826,8 @@ function MatchForm({ match, setMatch, onPreview }) {
         <p className="text-[10px] text-gray-600">Passes clau que generen ocasió de gol.</p>
         <PlayerEventSection
           data={match.keyPasses || {}}
-          onChange={v => setMatch(m => ({...m, keyPasses: v}))}/>
+          onChange={v => setMatch(m => ({...m, keyPasses: v}))}
+          rosterProp={extRoster}/>
       </div>
 
       {/* ── REGATS ── */}
@@ -783,12 +836,13 @@ function MatchForm({ match, setMatch, onPreview }) {
         <p className="text-[10px] text-gray-600">Regats completats amb èxit.</p>
         <PlayerEventSection
           data={match.dribbles || {}}
-          onChange={v => setMatch(m => ({...m, dribbles: v}))}/>
+          onChange={v => setMatch(m => ({...m, dribbles: v}))}
+          rosterProp={extRoster}/>
       </div>
 
       {/* ── SUBSTITUCIONS ── */}
       <div className="space-y-3">
-        <SubstitutionTimeline subs={match.subs || []} onChange={updateSubs} />
+        <SubstitutionTimeline subs={match.subs || []} onChange={updateSubs} extraPlayers={match.guestPlayers || []} />
       </div>
 
       {/* ── TARGETES ── */}
@@ -797,7 +851,7 @@ function MatchForm({ match, setMatch, onPreview }) {
           <p className="text-xs font-bold text-[#E5C07B]">🟨 Targetes ({cards.length})</p>
           <AddBtn onClick={addCard} label="Afegir targeta"/>
         </div>
-        {cards.map((c,i) => <CardForm key={i} card={c} idx={i} onChange={c=>updateCard(i,c)} onRemove={()=>removeCard(i)}/>)}
+        {cards.map((c,i) => <CardForm key={i} card={c} idx={i} onChange={c=>updateCard(i,c)} onRemove={()=>removeCard(i)} rosterProp={extRoster}/>)}
         {cards.length > 0 && <AddBtn onClick={addCard} label="+ Targeta" color="gold"/>}
       </div>
 
@@ -807,7 +861,7 @@ function MatchForm({ match, setMatch, onPreview }) {
           <p className="text-xs font-bold text-[#E5C07B]">⚽ Gols ({match.goals.length})</p>
           <AddBtn onClick={addGoal} label="Afegir gol"/>
         </div>
-        {match.goals.map((g,i) => <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)}/>)}
+        {match.goals.map((g,i) => <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)} rosterProp={extRoster}/>)}
         {/* Botó afegir al final */}
         <AddBtn onClick={addGoal} label="+ Gol" color="gold"/>
       </div>
@@ -845,6 +899,7 @@ export default function AdminPanel({ onClose }) {
     opponent: '', date: '', result: '', youtubeUrl: '',
     idealMinutesPerPlayer: 20.0,
     goals: [], subs: [], cards: [], moments: [], savesManual: {}, shots: {}, keyPasses: {}, dribbles: {},
+    guestPlayers: [],
   };
   const [match, setMatch] = useState(emptyMatch);
 

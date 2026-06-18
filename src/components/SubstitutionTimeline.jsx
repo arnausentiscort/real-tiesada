@@ -12,11 +12,13 @@ import { DATABASE } from '../data.js';
  * - Gestor de descans/final fàcil
  */
 
-export default function SubstitutionTimeline({ subs = [], onChange }) {
+export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers = [] }) {
   const [expandedIdx, setExpandedIdx] = useState(null);
-  const roster = DATABASE.roster;
-  const porters = roster.filter(p => p.position === 'Porter');
-  const campions = roster.filter(p => p.position !== 'Porter');
+  const baseRoster = DATABASE.roster;
+  const allPlayers = [
+    ...baseRoster,
+    ...extraPlayers.map(name => ({ name, shirtName: name.toUpperCase(), position: 'Convidat', photo: null, photoCel: null, number: null })),
+  ];
 
   const addSub = () => {
     onChange([...subs, { time: '', goalkeeper: '', onPitch: [], _isBreak: false }]);
@@ -94,7 +96,7 @@ export default function SubstitutionTimeline({ subs = [], onChange }) {
             const isExpanded = expandedIdx === idx;
             const isBreak = sub._isBreak === true;
             const timeInSecs = parseTime(sub.time);
-            const gkName = sub.goalkeeper ? roster.find(p => p.name === sub.goalkeeper)?.shirtName : '?';
+            const gkName = sub.goalkeeper ? allPlayers.find(p => p.name === sub.goalkeeper)?.shirtName || sub.goalkeeper : '?';
             const campSelected = (sub.onPitch || []).length;
 
             return (
@@ -195,29 +197,21 @@ export default function SubstitutionTimeline({ subs = [], onChange }) {
                             className="w-full bg-[#1a1a1a] border border-emerald-500/25 rounded-lg px-2 py-1.5 text-[10px] text-white focus:border-emerald-500/40 outline-none"
                           >
                             <option value="">— Selecciona porter —</option>
-                            {porters.map((p) => (
+                            {allPlayers.map((p) => (
                               <option key={p.name} value={p.name}>
-                                {p.shirtName}
+                                {p.shirtName}{p.position === 'Porter' ? ' 🧤' : p.position === 'Convidat' ? ' (convidat)' : ''}
                               </option>
                             ))}
-                            {/* Opció per jugadors de camp com a porter improvitzat */}
-                            <optgroup label="Jugadors de camp com a porter">
-                              {campions.map((p) => (
-                                <option key={p.name} value={p.name}>
-                                  {p.shirtName} ({p.position})
-                                </option>
-                              ))}
-                            </optgroup>
                           </select>
                         </div>
 
-                        {/* Selector jugadors de camp (4) */}
+                        {/* Selector jugadors de camp (4) — tots els jugadors, inclòs el porter */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-[#E5C07B] block">
                             ⚽ Jugadors de camp ({(sub.onPitch || []).length}/4):
                           </label>
                           <div className="grid grid-cols-2 gap-1.5">
-                            {campions.map((p) => {
+                            {allPlayers.map((p) => {
                               const isSelected = (sub.onPitch || []).includes(p.name);
                               const isGK = p.name === sub.goalkeeper;
                               const isDisabled = isGK || ((sub.onPitch || []).length >= 4 && !isSelected);
