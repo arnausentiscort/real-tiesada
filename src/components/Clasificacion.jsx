@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 
 const TABLA = [
-  { pos: 1, equipo: 'Uruks',        pj:14, pg:11, pe:2, pp:1,  gf:54, gc:35, pts:35, forma: ['V','V','V','V','E'], esNosaltres: false },
-  { pos: 2, equipo: 'Ensaimada',    pj:13, pg:10, pe:0, pp:3,  gf:66, gc:30, pts:30, forma: ['V','V','V','V','D'], esNosaltres: false },
-  { pos: 3, equipo: 'Touchlas FC',  pj:14, pg:9,  pe:2, pp:3,  gf:55, gc:36, pts:29, forma: ['V','V','V','V','V'], esNosaltres: false },
-  { pos: 4, equipo: 'Dgeneracion',  pj:13, pg:7,  pe:1, pp:5,  gf:51, gc:41, pts:22, forma: ['E','V','V','D','V'], esNosaltres: false },
-  { pos: 5, equipo: 'Vikings',      pj:13, pg:6,  pe:3, pp:4,  gf:47, gc:42, pts:21, forma: ['D','V','V','D','E'], esNosaltres: false },
-  { pos: 6, equipo: 'Vietkong',     pj:13, pg:6,  pe:0, pp:7,  gf:42, gc:38, pts:18, forma: ['D','D','D','D','V'], esNosaltres: false },
-  { pos: 7, equipo: 'Real Tiesada', pj:14, pg:2,  pe:1, pp:11, gf:35, gc:67, pts:7,  forma: ['D','D','D','V','V'], esNosaltres: true  },
-  { pos: 8, equipo: 'Fabbas FC',    pj:13, pg:2,  pe:1, pp:10, gf:32, gc:66, pts:7,  forma: ['D','D','D','D','D'], esNosaltres: false },
-  { pos: 9, equipo: 'Great Spirit', pj:13, pg:2,  pe:0, pp:11, gf:19, gc:46, pts:6,  forma: ['D','D','D','D','D'], esNosaltres: false },
+  { pos: 1, equipo: 'Ensaimada',    pj:16, pg:13, pe:0, pp:3,  gf:79, gc:32, pts:39, forma: ['V','V','V','V','V'], esNosaltres: false },
+  { pos: 2, equipo: 'Uruks',        pj:16, pg:12, pe:3, pp:1,  gf:62, gc:40, pts:39, forma: ['V','E','V','V','V'], esNosaltres: false },
+  { pos: 3, equipo: 'Touchlas FC',  pj:16, pg:9,  pe:3, pp:4,  gf:61, gc:44, pts:30, forma: ['V','V','V','V','E'], esNosaltres: false },
+  { pos: 4, equipo: 'Vietkong',     pj:16, pg:9,  pe:0, pp:7,  gf:59, gc:41, pts:27, forma: ['V','V','V','D','V'], esNosaltres: false },
+  { pos: 5, equipo: 'Dgeneracion',  pj:16, pg:8,  pe:1, pp:7,  gf:55, gc:51, pts:25, forma: ['V','V','D','V','D'], esNosaltres: false },
+  { pos: 6, equipo: 'Vikings',      pj:16, pg:7,  pe:3, pp:6,  gf:51, gc:51, pts:24, forma: ['V','D','D','V','D'], esNosaltres: false },
+  { pos: 7, equipo: 'Real Tiesada', pj:16, pg:3,  pe:1, pp:12, gf:40, gc:71, pts:10, forma: ['V','V','V','D','D'], esNosaltres: true  },
+  { pos: 8, equipo: 'Great Spirit', pj:16, pg:3,  pe:0, pp:13, gf:25, gc:56, pts:9,  forma: ['V','D','D','D','D'], esNosaltres: false },
+  { pos: 9, equipo: 'Fabbas FC',    pj:16, pg:2,  pe:1, pp:13, gf:37, gc:83, pts:7,  forma: ['D','D','D','D','D'], esNosaltres: false },
 ];
 
 function FormaCircle({ r }) {
