@@ -40,6 +40,7 @@ export default {
       { time: "33:30", goalkeeper: "Pau Ibañez",   onPitch: ["Roger Miro", "Joan Medina", "Roi Seoane", "Paco Montero"] },
       { time: "34:09", goalkeeper: "Pau Ibañez",   onPitch: ["Roger Miro", "Chengzhi Li", "Paco Montero", "Roi Seoane"] },
       { time: "37:07", goalkeeper: "Pau Ibañez",   onPitch: ["Arnau Sentis", "Roger Miro", "Roi Seoane", "Chengzhi Li"] },
+      { time: "39:41", goalkeeper: null,            onPitch: [], _isBreak: true },
     ],
     cards: [],
     goals: [
