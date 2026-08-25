@@ -248,7 +248,7 @@ export default function ChanceCreationChart() {
                 fill={isHov ? color : 'rgba(255,255,255,0.45)'}
                 fontWeight={isHov ? 'bold' : 'normal'}
                 style={{ ...anim, pointerEvents: 'none' }}>
-                {sName(DATABASE, p.name)}
+                {sName(DATABASE.roster, p.name)}
               </text>
             </g>
           );
@@ -275,7 +275,7 @@ export default function ChanceCreationChart() {
               <rect x={tx} y={ty} width={TW} height={TH} rx="6"
                 fill="#141414" stroke={color} strokeWidth="1" strokeOpacity="0.55" fillOpacity="0.97" />
               <text x={tx + 8} y={ty + 14} fontSize="10" fontWeight="bold" fill={color}>
-                {sName(DATABASE, hovered.name)}
+                {sName(DATABASE.roster, hovered.name)}
               </text>
               {rows.map(([label, val], j) => (
                 <g key={label}>
