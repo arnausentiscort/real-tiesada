@@ -1,3 +1,5 @@
+import { FORMATS } from './formats.js';
+
 export const parseTime = (timeStr) => {
   if (!timeStr) return 0;
   const [m, s] = timeStr.split(':').map(Number);
@@ -5,7 +7,7 @@ export const parseTime = (timeStr) => {
 };
 
 // ── Calcula minuts de porter per un match ─────────────────────────
-export const calcGoalkeeperStints = (match) => {
+export const calcGoalkeeperStints = (match, format = FORMATS.fs5) => {
   // Cas 1: minuts manuals (J1, J2)
   if (match.goalkeeperMinutes) {
     const result = {};
@@ -45,7 +47,7 @@ export const formatTime = (seconds) => {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-export const calcMatchStats = (match) => {
+export const calcMatchStats = (match, format = FORMATS.fs5) => {
   const subs = match.events.substitutions;
 
   // Si hi ha fieldMinutes manuals (J1, J2) usem aquells directament — ja són minuts de CAMP
@@ -54,10 +56,10 @@ export const calcMatchStats = (match) => {
     Object.entries(match.fieldMinutes).forEach(([p, mins]) => {
       totals[p] = mins * 60;
     });
-    const finalTime = 40 * 60;
+    const finalTime = format.totalMinutes * 60;
     const allGKs = Object.keys(match.goalkeeperMinutes || {});
     const numPlayers = new Set([...Object.keys(totals), ...allGKs]).size || 1;
-    const idealSec = (finalTime * 5) / numPlayers;
+    const idealSec = (finalTime * format.playersOnPitch) / numPlayers;
     const stints = Object.entries(totals).map(([player, secs]) => ({ player, start: 0, end: secs }));
     const playerStats = Object.entries(totals)
       .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - idealSec }))
@@ -94,7 +96,7 @@ export const calcMatchStats = (match) => {
 
   const allGKs = [...new Set(subs.map(s => s.goalkeeper).filter(Boolean))];
   const numPlayers = new Set([...Object.keys(totals), ...allGKs]).size || 1;
-  const idealSec = (finalTime * 5) / numPlayers;
+  const idealSec = (finalTime * format.playersOnPitch) / numPlayers;
 
   const playerStats = Object.entries(totals)
     .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - idealSec }))
@@ -103,7 +105,7 @@ export const calcMatchStats = (match) => {
   return { stints, playerStats, finalTime, totals, idealSec };
 };
 
-export const calcGlobalStats = (database) => {
+export const calcGlobalStats = (database, format = FORMATS.fs5) => {
   const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
   const goalsFor = {}, goalsAgainst = {}, yellowCards = {}, saves = {};
   const goalsForGK = {}, goalsAgainstGK = {};
@@ -171,13 +173,13 @@ export const calcGlobalStats = (database) => {
     });
 
     // Minuts de CAMP (ja nets gràcies al filtre del goalkeeper a calcMatchStats)
-    const { totals, stints: matchStints } = calcMatchStats(match);
+    const { totals, stints: matchStints } = calcMatchStats(match, format);
     Object.entries(totals).forEach(([p, secs]) => {
       if (minutesCamp[p] !== undefined) minutesCamp[p] += secs;
     });
 
     // Minuts de PORTER
-    const gkStints = calcGoalkeeperStints(match);
+    const gkStints = calcGoalkeeperStints(match, format);
     Object.entries(gkStints).forEach(([name, stintArr]) => {
       if (minutesPorter[name] !== undefined) {
         stintArr.forEach(s => { minutesPorter[name] += (s.end - s.start); });
