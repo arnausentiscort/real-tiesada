@@ -12,22 +12,26 @@ import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
 import AdminPanel       from './components/AdminPanel.jsx';
 import { DATABASE }     from './data.js';
+import { SEASONS, CURRENT_SEASON_ID, getSeason } from './seasons/index.js';
+import { SeasonProvider } from './SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
 function SeasonToggle({ season, onChange }) {
   return (
     <div className="flex items-center gap-1 bg-[#0d0d0d] border border-white/10 rounded-xl p-1">
-      <button onClick={() => onChange('current')}
-        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-          season === 'current' ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
-        Actual
-      </button>
-      <button onClick={() => onChange('s1')}
-        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-          season === 's1' ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
-        Split 1
-      </button>
+      {SEASONS.map(s => (
+        <button key={s.id}
+          onClick={() => !s.disabled && onChange(s.id)}
+          disabled={s.disabled}
+          title={s.disabled ? 'Pròximament' : undefined}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            s.disabled
+              ? 'text-gray-700 cursor-not-allowed'
+              : season === s.id ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
+          {s.id === CURRENT_SEASON_ID ? 'Actual' : s.disabled ? `${s.label} · Pròximament` : s.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -35,7 +39,7 @@ function SeasonToggle({ season, onChange }) {
 export default function App() {
   const [loading, setLoading]   = useState(true);
   const [view, setView]         = useState('dashboard');
-  const [season, setSeason]     = useState('current');
+  const [season, setSeason]     = useState(CURRENT_SEASON_ID);
   const [confetti, setConfetti] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -103,7 +107,7 @@ export default function App() {
                 {DATABASE.teamName}
               </div>
               <div className="text-[10px] text-gray-600 tracking-wider">
-                {season === 'current' ? 'Actual' : 'Split 1 · 24/25'}
+                {getSeason(season)?.legacy ? `${getSeason(season).label} · ${getSeason(season).period}` : 'Actual'}
               </div>
             </div>
           </button>
@@ -112,7 +116,7 @@ export default function App() {
           <SeasonToggle season={season} onChange={handleSeasonChange} />
 
           {/* Nav desktop */}
-          {season === 'current' && (
+          {!getSeason(season)?.legacy && (
             <div className="hidden md:flex items-center gap-0.5">
               {navCurrent.map(n => (
                 <button key={n.id} onClick={() => navTo(n.id)}
@@ -128,7 +132,7 @@ export default function App() {
         </div>
 
         {/* Breadcrumb match */}
-        {isMatch && season === 'current' && (
+        {isMatch && !getSeason(season)?.legacy && (
           <div className="max-w-6xl mx-auto pb-2 flex items-center gap-2 text-xs text-gray-500 px-1">
             <button onClick={() => setView('dashboard')} className="hover:text-[#E5C07B] transition-colors">
               Estadístiques
@@ -141,19 +145,21 @@ export default function App() {
 
       {/* ── CONTINGUT ── */}
       <main className="max-w-6xl mx-auto px-3 md:px-6 py-5 md:py-8">
-        {season === 'current' && (
-          <>
-            {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
-            {view === 'squad'         && <Squad />}
-            {view === 'clasificacion' && <Clasificacion />}
-            {view === 'mvp'           && <MvpPage />}
-            {view === 'heatmap'       && <GoalHeatmap />}
-            {view === 'galeria'       && <Galeria />}
-            {view === 'pissarra'      && <TacticalBoard />}
-            {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
-          </>
-        )}
-        {season === 's1' && <Split1Dashboard />}
+        <SeasonProvider seasonId={season}>
+          {!getSeason(season)?.legacy && (
+            <>
+              {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
+              {view === 'squad'         && <Squad />}
+              {view === 'clasificacion' && <Clasificacion />}
+              {view === 'mvp'           && <MvpPage />}
+              {view === 'heatmap'       && <GoalHeatmap />}
+              {view === 'galeria'       && <Galeria />}
+              {view === 'pissarra'      && <TacticalBoard />}
+              {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
+            </>
+          )}
+          {getSeason(season)?.legacy && <Split1Dashboard />}
+        </SeasonProvider>
       </main>
 
       {/* ── FOOTER desktop ── */}
@@ -169,7 +175,7 @@ export default function App() {
       </footer>
 
       {/* ── BOTTOM NAV mòbil ── */}
-      {season === 'current' && !isMatch && (
+      {!getSeason(season)?.legacy && !isMatch && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-white/10">
           <div className="flex items-stretch h-16">
             {navCurrent.map(n => (
@@ -193,7 +199,7 @@ export default function App() {
       )}
 
       {/* Bottom nav quan hi ha match obert — botó enrere */}
-      {season === 'current' && isMatch && (
+      {!getSeason(season)?.legacy && isMatch && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-white/10">
           <button onClick={() => setView('dashboard')}
             className="w-full h-14 flex items-center justify-center gap-2 text-[#E5C07B] text-sm font-bold">
