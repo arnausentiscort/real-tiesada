@@ -3,21 +3,25 @@
 // Stats Excel + Events JSON combinats
 // ================================================
 
+import { resolveRoster } from './players.js';
+
+const ROSTER_S1 = [
+  { id: "aron",          name: "Aron",   shirtName: "ARON",   position: "Migcampista" },
+  { id: "coro",          name: "Coro",   shirtName: "CORO",   position: "Davanter" },
+  { id: "lluc",          name: "Lluc",   shirtName: "LLUC",   position: "Davanter" },
+  { id: "marc-farreras", name: "Marc",   shirtName: "MARC",   position: "Davanter" },
+  { id: "joan-medina",   name: "Medina", shirtName: "MEDINA", position: "Porter" },
+  { id: "roger-miro",    name: "Miro",   shirtName: "MIRÓ",   position: "Davanter" },
+  { id: "oriol-tomas",   name: "Oriol",  shirtName: "ORIOL",  position: "Migcampista" },
+  { id: "pau-ibanez",    name: "Pau",    shirtName: "PAU",    position: "Porter" },
+  { id: "roi-seoane",    name: "Roi",    shirtName: "ROI",    position: "Defensa" },
+  { id: "arnau-sentis",  name: "Sentis", shirtName: "SENTIS", position: "Migcampista" },
+];
+
 export const DATABASE_S1 = {
   teamName: 'Real Tiesada',
 
-  roster: [
-    { name: "Aron", shirtName: "ARON", position: "Migcampista", photo: null, photoCel: null },
-    { name: "Coro", shirtName: "CORO", position: "Davanter", photo: null, photoCel: null },
-    { name: "Lluc", shirtName: "LLUC", position: "Davanter", photo: null, photoCel: null },
-    { name: "Marc", shirtName: "MARC", position: "Davanter", photo: null, photoCel: null },
-    { name: "Medina", shirtName: "MEDINA", position: "Porter", photo: null, photoCel: null },
-    { name: "Miro", shirtName: "MIRÓ", position: "Davanter", photo: null, photoCel: null },
-    { name: "Oriol", shirtName: "ORIOL", position: "Migcampista", photo: null, photoCel: null },
-    { name: "Pau", shirtName: "PAU", position: "Porter", photo: null, photoCel: null },
-    { name: "Roi", shirtName: "ROI", position: "Defensa", photo: null, photoCel: null },
-    { name: "Sentis", shirtName: "SENTIS", position: "Migcampista", photo: null, photoCel: null },
-  ],
+  roster: resolveRoster({ roster: ROSTER_S1 }),
 
   matches: [
     // ── Jornada 1 — Real Magic Balompié ────────────────────────

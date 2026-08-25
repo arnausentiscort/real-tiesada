@@ -19,8 +19,23 @@ import j13Dgeneracion from './matches/j13-dgeneracion.js';
 import j14FabbasFC    from './matches/j14-fabbas-fc.js';
 import j15GreatSpirit from './matches/j15-great-spirit.js';
 import j16Vietkong   from './matches/j16-vietkong.js';
+import { resolveRoster } from './players.js';
 
-export const DATABASE = {
+const ROSTER_S2 = [
+  { id: "arnau-sentis",  name: "Arnau Sentis",  number: 8,  shirtName: "SENTIS",      position: "Migcampista" },
+  { id: "roger-miro",    name: "Roger Miro",    number: 9,  shirtName: "MIRÓ",        position: "Davanter" },
+  { id: "joan-medina",   name: "Joan Medina",   number: 11, shirtName: "MEDINA",      position: "Migcampista" },
+  { id: "pau-ibanez",    name: "Pau Ibañez",    number: 10, shirtName: "IBÁÑEZ",      position: "Defensa" },
+  { id: "roi-seoane",    name: "Roi Seoane",    number: 24, shirtName: "ROI",         position: "Davanter" },
+  { id: "oriol-tomas",   name: "Oriol Tomas",   number: 21, shirtName: "ORIOL TOMAS", position: "Davanter" },
+  { id: "paco-montero",  name: "Paco Montero",  number: 22, shirtName: "GABARRI",     position: "Defensa" },
+  { id: "andreu-cases",  name: "Andreu Cases",  number: 80, shirtName: "TELICO",      position: "Migcampista" },
+  { id: "chengzhi-li",   name: "Chengzhi Li",   number: 12, shirtName: "CHENGZHI LI", position: "Migcampista" },
+  { id: "ivan-mico",     name: "Ivan Mico",     number: 4,  shirtName: "QUATRE",      position: "Porter" },
+  { id: "marc-farreras", name: "Marc Farreras", number: 77, shirtName: "FARRERAS",    position: "Davanter" },
+];
+
+export const DATABASE_S2 = {
   teamName: "Real Tiesada",
 
   // Fi de temporada 25/26 — Split 2 finalitzat
@@ -42,26 +57,17 @@ export const DATABASE = {
     { date: "2026-07-06T21:45:00", dateLabel: "06 Jul · 21:45h", jornada: "Jornada 16", opponent: "Vietkong",      location: "St. Ignasi Sala 1", isHome: false },
   ],
 
-  // Plantilla amb foto, dorsal i posició
-  roster: [
-    { name: "Arnau Sentis",  number: 8,  shirtName: "SENTIS",      position: "Migcampista", photo: "players/arnau.png",   photoCel: "players/arnau_cel.png" },
-    { name: "Roger Miro",    number: 9,  shirtName: "MIRÓ",        position: "Davanter",    photo: "players/roger.png",   photoCel: "players/roger_cel.png" },
-    { name: "Joan Medina",   number: 11, shirtName: "MEDINA",      position: "Migcampista", photo: null,                  photoCel: null },
-    { name: "Pau Ibañez",    number: 10, shirtName: "IBÁÑEZ",      position: "Defensa",     photo: "players/pau.png",    photoCel: "players/pau_cel.png" },
-    { name: "Roi Seoane",    number: 24, shirtName: "ROI",         position: "Davanter",    photo: null,                  photoCel: null },
-    { name: "Oriol Tomas",   number: 21, shirtName: "ORIOL TOMAS", position: "Davanter",    photo: "players/oriol.png",   photoCel: "players/oriol_cel.png" },
-    { name: "Paco Montero",  number: 22, shirtName: "GABARRI",     position: "Defensa",     photo: "players/paco.png",    photoCel: "players/paco_cel.png" },
-    { name: "Andreu Cases",  number: 80, shirtName: "TELICO",      position: "Migcampista", photo: "players/andreu.png",  photoCel: "players/andreu_cel.png" },
-    { name: "Chengzhi Li",   number: 12, shirtName: "CHENGZHI LI", position: "Migcampista", photo: "players/chenghy.png", photoCel: "players/chengzhi_cel.png" },
-    { name: "Ivan Mico",     number: 4,  shirtName: "QUATRE",      position: "Porter",      photo: null,                  photoCel: null },
-    { name: "Marc Farreras", number: 77, shirtName: "FARRERAS",    position: "Davanter",    photo: "players/marc.png",    photoCel: "players/marc_cel.png" },
-  ],
+  // Plantilla — dorsal i posició; shirtName/photo/photoCel venen del registre global (players.js)
+  roster: resolveRoster({ roster: ROSTER_S2 }),
 
   matches: [
     j1Vikings, j2Ensaimada, j3Uruks, j4Touchlas, j5Dgeneracion,
     j6FabbasFC, j7GreatSpirit, j8Vietkong, j9Vikings, j10Ensaimada, j11Uruks, j12Touchlas, j13Dgeneracion, j14FabbasFC, j15GreatSpirit, j16Vietkong,
   ],
 };
+
+// Àlies temporal fins la Fase 6 — mantenen vius els ~15 imports existents
+export const DATABASE = DATABASE_S2;
 
 // Helper: retorna l'objecte jugador pel nom
 export const getPlayer = (name) =>

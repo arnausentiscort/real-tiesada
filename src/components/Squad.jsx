@@ -1,42 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { DATABASE } from '../data.js';
 import { calcGlobalStats, calcGoalkeeperStints, calcMatchStats, formatTime, parseTime } from '../utils.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
-// ── GitHub helpers (edició jugador) ───────────────────────────────
-const REPO_OWNER = 'arnausentiscort';
-const REPO_NAME  = 'real-tiesada';
-const GH_FILE    = 'src/data.js';
-
-async function ghGetFile(token) {
-  const r = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GH_FILE}`,
-    { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } }
-  );
-  if (!r.ok) throw new Error(`GitHub error ${r.status}`);
-  const d = await r.json();
-  const binary = atob(d.content.replace(/\n/g, ''));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return { sha: d.sha, content: new TextDecoder('utf-8').decode(bytes) };
-}
-
-async function ghPushFile(token, sha, content, message) {
-  const r = await fetch(
-    `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GH_FILE}`,
-    {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, content: btoa(unescape(encodeURIComponent(content))), sha }),
-    }
-  );
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || `Error ${r.status}`); }
-}
-
 // ── Helpers ───────────────────────────────────────────────────────
-function getVideoUrl(matchId, time) {
-  const match = DATABASE.matches.find(m => m.id === matchId);
+function getVideoUrl(db, matchId, time) {
+  const match = db.matches.find(m => m.id === matchId);
   if (!match || !time) return null;
   const [min, sec] = time.split(':').map(Number);
   const secs = Math.max(0, (min * 60 + (sec || 0)) - 5);
@@ -48,9 +18,9 @@ function getVideoUrl(matchId, time) {
 const TYPE_EMOJI = { bona: '✅', dolenta: '❌', clip: '🎬', tactica: '🧠' };
 
 // ── Calcula moments retransmissio on apareix el jugador ───────────
-function calcPlayerMoments(playerName) {
+function calcPlayerMoments(db, playerName) {
   const moments = [];
-  DATABASE.matches.forEach((match, matchIdx) => {
+  db.matches.forEach((match, matchIdx) => {
     (match.events?.retransmissio || []).forEach(ev => {
       if ((ev.players || []).includes(playerName)) {
         const parts = (ev.time || '0:0').split(':').map(Number);
@@ -69,9 +39,9 @@ function calcPlayerMoments(playerName) {
 }
 
 // ── Calcula top duos del jugador (minuts compartits) ──────────────
-function calcPlayerDuos(playerName) {
+function calcPlayerDuos(db, playerName) {
   const partnerSecs = {};
-  DATABASE.matches.forEach(match => {
+  db.matches.forEach(match => {
     const subs = match.events?.substitutions || [];
     if (subs.length < 2) return;
     for (let i = 0; i < subs.length - 1; i++) {
@@ -152,8 +122,8 @@ function StatBar({ label, value, max, color }) {
 }
 
 // ── Mini avatar ───────────────────────────────────────────────────
-function PlayerAvatar({ name, size = 36 }) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function PlayerAvatar({ name, size = 36, db }) {
+  const pl = db.roster.find(r => r.name === name);
   if (pl?.photo) return (
     <div className="rounded-full overflow-hidden shrink-0" style={{width:size, height:size, border:'2px solid rgba(255,255,255,0.12)'}}>
       <img src={`${BASE}${pl.photo}`} alt={name} className="w-full h-full object-cover object-top"/>
@@ -169,7 +139,7 @@ function PlayerAvatar({ name, size = 36 }) {
 }
 
 // ── Targeta carta ─────────────────────────────────────────────────
-function PlayerCard({ player, stats, onClick }) {
+function PlayerCard({ player, stats, onClick, db }) {
   const [flipped,  setFlipped]  = useState(false);
   const [hovered,  setHovered]  = useState(false);
   const pos = POS_CONFIG[player.position] || POS_CONFIG['Migcampista'];
@@ -184,18 +154,26 @@ function PlayerCard({ player, stats, onClick }) {
   const saves    = stats.saves.find(([n])=>n===player.name)?.[1] || 0;
   const isGK     = player.position === 'Porter';
 
-  const maxGoals   = Math.max(...DATABASE.roster.map(p => stats.topScorers.find(([n])=>n===p.name)?.[1]||0), 1);
-  const maxAssists = Math.max(...DATABASE.roster.map(p => stats.topAssists.find(([n])=>n===p.name)?.[1]||0), 1);
-  const maxGF      = Math.max(...DATABASE.roster.map(p => stats.goalsFor.find(([n])=>n===p.name)?.[1]||0), 1);
-  const maxGA      = Math.max(...DATABASE.roster.map(p => stats.goalsAgainst.find(([n])=>n===p.name)?.[1]||0), 1);
-  const maxMin     = Math.max(...DATABASE.roster.map(p => stats.totalMinutes.find(([n])=>n===p.name)?.[1]||0), 1);
+  const maxGoals   = Math.max(...db.roster.map(p => stats.topScorers.find(([n])=>n===p.name)?.[1]||0), 1);
+  const maxAssists = Math.max(...db.roster.map(p => stats.topAssists.find(([n])=>n===p.name)?.[1]||0), 1);
+  const maxGF      = Math.max(...db.roster.map(p => stats.goalsFor.find(([n])=>n===p.name)?.[1]||0), 1);
+  const maxGA      = Math.max(...db.roster.map(p => stats.goalsAgainst.find(([n])=>n===p.name)?.[1]||0), 1);
+  const maxMin     = Math.max(...db.roster.map(p => stats.totalMinutes.find(([n])=>n===p.name)?.[1]||0), 1);
+  const isInjured  = player.status === 'lesionat';
 
   return (
     <div className="relative cursor-pointer select-none group"
-      style={{perspective: '1000px', aspectRatio: '2/3'}}
+      style={{perspective: '1000px', aspectRatio: '2/3', filter: isInjured ? 'saturate(0.55)' : 'none'}}
       onClick={() => setFlipped(f => !f)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}>
+
+      {isInjured && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 text-base leading-none"
+          title="Lesionat" style={{filter:'saturate(1)'}}>
+          🩹
+        </div>
+      )}
 
       <div className="absolute inset-0 transition-transform duration-500"
         style={{transformStyle:'preserve-3d', WebkitTransformStyle:'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)'}}>
@@ -218,7 +196,7 @@ function PlayerCard({ player, stats, onClick }) {
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="text-6xl mb-2 opacity-20">{pos.emoji}</div>
-              <div className="text-4xl font-black" style={{color:'rgba(255,255,255,0.08)'}}>{player.number}</div>
+              <div className="text-4xl font-black" style={{color:'rgba(255,255,255,0.08)'}}>{player.number ?? '—'}</div>
             </div>
           )}
 
@@ -236,7 +214,7 @@ function PlayerCard({ player, stats, onClick }) {
 
           <div className="absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black"
             style={{background:'rgba(0,0,0,0.6)', color:'rgba(255,255,255,0.7)', border:'1px solid rgba(255,255,255,0.1)'}}>
-            {player.number}
+            {player.number ?? '—'}
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -290,7 +268,7 @@ function PlayerCard({ player, stats, onClick }) {
                 <div className="text-sm font-black truncate" style={{color: pos.accent}}>{player.shirtName}</div>
                 <div className="text-[9px]" style={{color:'rgba(255,255,255,0.3)'}}>{player.position}</div>
               </div>
-              <div className="text-3xl font-black" style={{color:'rgba(255,255,255,0.06)'}}>{player.number}</div>
+              <div className="text-3xl font-black" style={{color:'rgba(255,255,255,0.06)'}}>{player.number ?? '—'}</div>
             </div>
 
             <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{background:'rgba(255,255,255,0.04)'}}>
@@ -338,7 +316,7 @@ function PlayerCard({ player, stats, onClick }) {
 }
 
 // ── Perfil complet (modal) ────────────────────────────────────────
-function PlayerProfile({ player, stats, onClose }) {
+function PlayerProfile({ player, stats, onClose, db, format }) {
   const [activeTab, setActiveTab] = useState('stats');
 
   // Edició jugador
@@ -350,10 +328,6 @@ function PlayerProfile({ player, stats, onClose }) {
     photo:     player.photo     || '',
     photoCel:  player.photoCel  || '',
   });
-  const [ghToken, setGhToken]   = useState(() => localStorage.getItem('gh_token') || '');
-  const [ghStatus, setGhStatus] = useState(null); // null | 'saving' | 'ok' | 'error'
-  const [ghError,  setGhError]  = useState('');
-
   const pos = POS_CONFIG[player.position] || POS_CONFIG['Migcampista'];
   const isGK = player.position === 'Porter';
   const rating = calcRating(player, stats);
@@ -372,19 +346,19 @@ function PlayerProfile({ player, stats, onClose }) {
   // Minuts de porter
   const gkSecs   = stats.minutesPorter?.find?.(([n])=>n===player.name)?.[1] || 0;
 
-  const scoredGoals = DATABASE.matches.flatMap(m =>
+  const scoredGoals = db.matches.flatMap(m =>
     (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.scorer===player.name)
     .map(g=>({...g, matchId:m.id, jornada:m.jornada, opponent:m.opponent}))
   );
-  const assistedGoals = DATABASE.matches.flatMap(m =>
+  const assistedGoals = db.matches.flatMap(m =>
     (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.assist===player.name)
     .map(g=>({...g, matchId:m.id, jornada:m.jornada, opponent:m.opponent}))
   );
 
   // Minuts per jornada
-  const minutesByMatch = DATABASE.matches.map(match => {
-    const { totals } = calcMatchStats(match);
-    const gkStints = calcGoalkeeperStints(match);
+  const minutesByMatch = db.matches.map(match => {
+    const { totals } = calcMatchStats(match, format);
+    const gkStints = calcGoalkeeperStints(match, format);
     const campSecsM = totals[player.name] || 0;
     const gkSecsM   = (gkStints[player.name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
     return { match, campSecs: campSecsM, gkSecs: gkSecsM };
@@ -396,33 +370,10 @@ function PlayerProfile({ player, stats, onClose }) {
   const defEff = campSecs > 0 ? (ga / (campSecs / 60 / 20)).toFixed(2) : '0.00'; // gols encaixats per 20 min al camp
 
   // Moments
-  const moments = useMemo(() => calcPlayerMoments(player.name), [player.name]);
+  const moments = useMemo(() => calcPlayerMoments(db, player.name), [db, player.name]);
 
   // Duos
-  const duos = useMemo(() => calcPlayerDuos(player.name), [player.name]);
-
-  // Desa canvis del jugador a GitHub
-  const handleSave = async () => {
-    if (!ghToken) { setGhError('Cal un token de GitHub'); setGhStatus('error'); return; }
-    localStorage.setItem('gh_token', ghToken);
-    setGhStatus('saving'); setGhError('');
-    try {
-      const { sha, content } = await ghGetFile(ghToken);
-      const photoStr    = editData.photo    ? `"${editData.photo}"`    : 'null';
-      const photoCelStr = editData.photoCel ? `"${editData.photoCel}"` : 'null';
-      const newEntry = `{ name: "${editData.name}", number: ${editData.number}, shirtName: "${editData.shirtName}", position: "${editData.position}", photo: ${photoStr}, photoCel: ${photoCelStr} }`;
-      // Substitueix la línia del roster d'aquest jugador
-      const escaped = player.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex   = new RegExp(`\\{ name: "${escaped}"[^\\n}]+\\}`, 'g');
-      const updated = content.replace(regex, newEntry);
-      if (updated === content) throw new Error('No s\'ha trobat l\'entrada del jugador al fitxer');
-      await ghPushFile(ghToken, sha, updated, `Edita jugador ${editData.name}`);
-      setGhStatus('ok');
-    } catch (err) {
-      setGhStatus('error');
-      setGhError(err.message);
-    }
-  };
+  const duos = useMemo(() => calcPlayerDuos(db, player.name), [db, player.name]);
 
   const TABS = [
     { id: 'stats',   label: 'Stats'    },
@@ -598,7 +549,7 @@ function PlayerProfile({ player, stats, onClose }) {
                   <p className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold mb-2">⚽ Gols marcats</p>
                   <div className="space-y-1.5">
                     {scoredGoals.map((g,i) => {
-                      const vidUrl = getVideoUrl(g.matchId, g.time);
+                      const vidUrl = getVideoUrl(db, g.matchId, g.time);
                       return (
                         <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
                           style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.05)'}}>
@@ -629,7 +580,7 @@ function PlayerProfile({ player, stats, onClose }) {
                   <p className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold mb-2">👟 Assistències</p>
                   <div className="space-y-1.5">
                     {assistedGoals.map((g,i) => {
-                      const vidUrl = getVideoUrl(g.matchId, g.time);
+                      const vidUrl = getVideoUrl(db, g.matchId, g.time);
                       return (
                         <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
                           style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.05)'}}>
@@ -675,7 +626,7 @@ function PlayerProfile({ player, stats, onClose }) {
                   </p>
                   {moments.map((ev, i) => {
                     const emoji = TYPE_EMOJI[ev.type] || '📌';
-                    const vidUrl = ev.videoUrl || getVideoUrl(ev.matchId, ev.time);
+                    const vidUrl = ev.videoUrl || getVideoUrl(db, ev.matchId, ev.time);
                     return (
                       <div key={i} className="rounded-xl p-3"
                         style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.05)'}}>
@@ -732,7 +683,7 @@ function PlayerProfile({ player, stats, onClose }) {
                     🤝 Duo preferit · Top 3 minuts compartits
                   </p>
                   {duos.map(({ name, secs }, i) => {
-                    const partner = DATABASE.roster.find(r => r.name === name);
+                    const partner = db.roster.find(r => r.name === name);
                     const mins = Math.round(secs / 60);
                     const maxSecs = duos[0].secs;
                     const pct = (secs / maxSecs) * 100;
@@ -745,12 +696,12 @@ function PlayerProfile({ player, stats, onClose }) {
                           <span className="text-xl shrink-0">{medals[i]}</span>
                           {/* Avatars duo */}
                           <div className="flex items-center shrink-0">
-                            <PlayerAvatar name={player.name} size={44}/>
+                            <PlayerAvatar name={player.name} size={44} db={db}/>
                             <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-black z-10 -mx-1"
                               style={{background:'#E5C07B', color:'#000'}}>
                               +
                             </div>
-                            <PlayerAvatar name={name} size={44}/>
+                            <PlayerAvatar name={name} size={44} db={db}/>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-baseline gap-2">
@@ -796,7 +747,7 @@ function PlayerProfile({ player, stats, onClose }) {
                   <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>{label}</label>
                   <input
                     type={type}
-                    value={editData[key]}
+                    value={key === 'number' ? (editData.number ?? '') : editData[key]}
                     onChange={e => setEditData(d => ({ ...d, [key]: type === 'number' ? Number(e.target.value) : e.target.value }))}
                     placeholder={placeholder}
                     className="w-full rounded-xl px-3 py-2 text-sm outline-none"
@@ -837,51 +788,18 @@ function PlayerProfile({ player, stats, onClose }) {
                 </div>
               ))}
 
-              {/* Separador */}
-              <div style={{borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:'12px'}}>
-                <label className="block text-[10px] font-bold mb-1" style={{color:'rgba(255,255,255,0.4)'}}>Token GitHub</label>
-                <input
-                  type="password"
-                  value={ghToken}
-                  onChange={e => setGhToken(e.target.value)}
-                  placeholder="ghp_..."
-                  className="w-full rounded-xl px-3 py-2 text-sm font-mono outline-none"
-                  style={{background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.7)'}}
-                />
-                {ghToken && (
-                  <p className="text-[9px] mt-1" style={{color:'rgba(255,255,255,0.25)'}}>
-                    Token guardat localment
-                  </p>
-                )}
-              </div>
-
-              {/* Botó guardar */}
+              {/* Botó guardar — inhabilitat fins que es migri a AdminPanel (Fase 5) */}
               <button
-                onClick={handleSave}
-                disabled={ghStatus === 'saving'}
-                className="w-full py-3 rounded-xl text-sm font-black tracking-wider transition-all"
-                style={{
-                  background: ghStatus === 'ok' ? '#10B981' : ghStatus === 'error' ? '#EF4444' : '#E5C07B',
-                  color: '#000',
-                  opacity: ghStatus === 'saving' ? 0.6 : 1,
-                }}>
-                {ghStatus === 'saving' ? '⏳ Guardant...'
-                  : ghStatus === 'ok'   ? '✓ Guardat! (refresca la pàgina)'
-                  : ghStatus === 'error' ? '✕ Error — reintenta'
-                  : '⬆ Guardar a GitHub'}
+                disabled
+                title="Pendent de migració"
+                className="w-full py-3 rounded-xl text-sm font-black tracking-wider cursor-not-allowed"
+                style={{background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.35)'}}>
+                🔒 Pendent de migració
               </button>
-
-              {ghError && (
-                <p className="text-xs rounded-xl px-3 py-2" style={{background:'rgba(239,68,68,0.1)', color:'#EF4444', border:'1px solid rgba(239,68,68,0.2)'}}>
-                  {ghError}
-                </p>
-              )}
-
-              {ghStatus === 'ok' && (
-                <p className="text-[10px] text-center" style={{color:'rgba(255,255,255,0.3)'}}>
-                  Els canvis s'han pujat a GitHub. Espera ~2 min per al deploy automàtic.
-                </p>
-              )}
+              <p className="text-[10px] text-center" style={{color:'rgba(255,255,255,0.25)'}}>
+                El desat a GitHub d'aquest formulari encara escriu amb el format antic del roster.
+                Es refarà juntament amb el panel d'administració.
+              </p>
             </div>
           )}
 
@@ -894,23 +812,28 @@ function PlayerProfile({ player, stats, onClose }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function Squad() {
-  const stats   = useMemo(() => calcGlobalStats(DATABASE), []);
+  const { db: DATABASE, format } = useSeason();
+  const stats   = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter]     = useState('all');
+  const [showPast, setShowPast] = useState(false);
+
+  const activeRoster = useMemo(() => DATABASE.roster.filter(p => p.status !== 'baixa'), [DATABASE]);
+  const pastPlayers  = useMemo(() => DATABASE.roster.filter(p => p.status === 'baixa'), [DATABASE]);
 
   const sorted = useMemo(() => {
-    const r = [...DATABASE.roster].sort((a,b) => a.number - b.number);
+    const r = [...activeRoster].sort((a,b) => (a.number ?? 999) - (b.number ?? 999));
     if (filter === 'all') return r;
     return r.filter(p => p.position === filter);
-  }, [filter]);
+  }, [activeRoster, filter]);
 
-  const positions = [...new Set(DATABASE.roster.map(p=>p.position))];
+  const positions = [...new Set(activeRoster.map(p=>p.position))];
 
   return (
     <div className="animate-fade-in">
       <div className="mb-6">
         <h2 className="text-3xl font-black text-white mb-1">La Plantilla</h2>
-        <p className="text-gray-500 text-sm">{DATABASE.roster.length} jugadors · Clica per girar · Usa el botó per veure el perfil</p>
+        <p className="text-gray-500 text-sm">{activeRoster.length} jugadors · Clica per girar · Usa el botó per veure el perfil</p>
       </div>
 
       {/* Filtre per posició */}
@@ -934,7 +857,7 @@ export default function Squad() {
       {/* Grid cartes */}
       <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {sorted.map(player => (
-          <PlayerCard key={player.name} player={player} stats={stats}
+          <PlayerCard key={player.name} player={player} stats={stats} db={DATABASE}
             onClick={() => setSelected(player)}/>
         ))}
       </div>
@@ -945,7 +868,7 @@ export default function Squad() {
           style={{scrollbarWidth:'none', msOverflowStyle:'none'}}>
           {sorted.map(player => (
             <div key={player.name} className="snap-start shrink-0" style={{width:'72vw', maxWidth:'240px'}}>
-              <PlayerCard player={player} stats={stats}
+              <PlayerCard player={player} stats={stats} db={DATABASE}
                 onClick={() => setSelected(player)}/>
             </div>
           ))}
@@ -953,9 +876,39 @@ export default function Squad() {
         <p className="text-center text-xs text-gray-700 mt-1">← Llisca · Toca per girar · Botó per veure perfil</p>
       </div>
 
+      {/* Han passat per l'equip — baixes, col·lapsable */}
+      {pastPlayers.length > 0 && (
+        <div className="mt-8">
+          <button onClick={() => setShowPast(p => !p)}
+            className="flex items-center gap-2 text-left mb-3 group">
+            <span className="text-sm font-black text-white">Han passat per l'equip</span>
+            <span className="text-xs text-gray-600">({pastPlayers.length})</span>
+            <span className={`text-gray-600 transition-transform duration-200 group-hover:text-gray-400 ${showPast ? '' : '-rotate-90'}`}>▾</span>
+          </button>
+          {showPast && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {pastPlayers.map(player => {
+                const cfg = POS_CONFIG[player.position] || POS_CONFIG['Migcampista'];
+                return (
+                  <div key={player.name} onClick={() => setSelected(player)}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-[#1a1a1a] cursor-pointer hover:border-white/15 transition-all"
+                    style={{filter:'saturate(0.5)', opacity:0.75}}>
+                    <PlayerAvatar name={player.name} size={36} db={DATABASE}/>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{player.shirtName || player.name}</p>
+                      <p className="text-[10px] text-gray-600 truncate">{player.note || cfg.badge}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Modal perfil */}
       {selected && (
-        <PlayerProfile player={selected} stats={stats} onClose={() => setSelected(null)}/>
+        <PlayerProfile player={selected} stats={stats} onClose={() => setSelected(null)} db={DATABASE} format={format}/>
       )}
     </div>
   );
