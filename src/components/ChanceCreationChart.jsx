@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { DATABASE } from '../data.js';
 import { calcGlobalStats } from '../utils.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -36,12 +36,13 @@ function useInView(threshold = 0.15) {
   return [ref, inView];
 }
 
-function sName(name) {
-  return DATABASE.roster.find(p => p.name === name)?.shirtName || name.split(' ')[0];
+function sName(roster, name) {
+  return roster.find(p => p.name === name)?.shirtName || name.split(' ')[0];
 }
 
 export default function ChanceCreationChart() {
-  const stats = useMemo(() => calcGlobalStats(DATABASE), []);
+  const { db: DATABASE, format } = useSeason();
+  const stats = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
   const [hovered, setHovered] = useState(null);
   const [ref, inView] = useInView();
 
@@ -57,7 +58,7 @@ export default function ChanceCreationChart() {
       const fantasies = kp + dribs;
       return { name: p.name, photo: p.photo, kp, goals, assists, y: goals + assists, x: fantasies, mins, shotsOT, shotsAll, dribs };
     }).filter(p => p.mins > 0);
-  }, [stats]);
+  }, [DATABASE, stats]);
 
   const W = 480, H = 300;
   const PAD = { top: 28, right: 24, bottom: 38, left: 38 };
@@ -247,7 +248,7 @@ export default function ChanceCreationChart() {
                 fill={isHov ? color : 'rgba(255,255,255,0.45)'}
                 fontWeight={isHov ? 'bold' : 'normal'}
                 style={{ ...anim, pointerEvents: 'none' }}>
-                {sName(p.name)}
+                {sName(DATABASE, p.name)}
               </text>
             </g>
           );
@@ -274,7 +275,7 @@ export default function ChanceCreationChart() {
               <rect x={tx} y={ty} width={TW} height={TH} rx="6"
                 fill="#141414" stroke={color} strokeWidth="1" strokeOpacity="0.55" fillOpacity="0.97" />
               <text x={tx + 8} y={ty + 14} fontSize="10" fontWeight="bold" fill={color}>
-                {sName(hovered.name)}
+                {sName(DATABASE, hovered.name)}
               </text>
               {rows.map(([label, val], j) => (
                 <g key={label}>

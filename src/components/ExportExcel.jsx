@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
-import { DATABASE } from '../data.js';
 import { calcMatchStats, calcGoalkeeperStints, calcGlobalStats, formatTime } from '../utils.js';
+import { useSeason } from '../SeasonContext.jsx';
 
-const matches  = DATABASE.matches;
-const roster   = DATABASE.roster;
-const PLAYERS  = roster.map(p => p.name);
-
-const pl = (name) => roster.find(p => p.name === name);
-const shirt = (name) => pl(name)?.shirtName || name.split(' ')[0].toUpperCase();
+const pl = (roster, name) => roster.find(p => p.name === name);
+const shirt = (roster, name) => pl(roster, name)?.shirtName || name.split(' ')[0].toUpperCase();
 const toSecs = (t) => { if (!t) return 0; const [m,s]=(t||'0:0').split(':').map(Number); return (m||0)*60+(s||0); };
 const num = (v) => (v === 0 || v === '-') ? (v === 0 ? 0 : '-') : v;
 
@@ -56,7 +52,7 @@ function makeSheet(rows, colWidths) {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 1 — Resum de Partits
 // ════════════════════════════════════════════════════════════════════════════
-function sheetResumPartits() {
+function sheetResumPartits(matches) {
   const hdr = [
     'Jornada','Data','Rival','Casa/Fora','Resultat','GF','GC','DG',
     'Gols a favor','Gols en contra','Tirs totals','Tirs a porta','Key Passes','Regats','Targetes',
@@ -117,7 +113,7 @@ function sheetResumPartits() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 2 — Minuts per Jugador (camp + porter per jornada)
 // ════════════════════════════════════════════════════════════════════════════
-function sheetMinuts() {
+function sheetMinuts(matches, roster, format) {
   const hdrBase = ['Jugador','Dorsal','Posició'];
   const hdrM = [];
   matches.forEach(m => hdrM.push(`J${m.jornada.replace(/\D/g,'')} Camp`, `J${m.jornada.replace(/\D/g,'')} Porter`));
@@ -125,19 +121,19 @@ function sheetMinuts() {
   const hdr = [...hdrBase,...hdrM,...hdrTot];
   const rows = [hdr];
 
-  const allNames = new Set(PLAYERS);
+  const allNames = new Set(roster.map(p => p.name));
   matches.forEach(m => {
     const subs = m.events?.substitutions||[];
     subs.forEach(s => { if(s.goalkeeper) allNames.add(s.goalkeeper); (s.onPitch||[]).forEach(p=>allNames.add(p)); });
   });
 
   [...allNames].forEach(name => {
-    const p = pl(name);
+    const p = pl(roster, name);
     const row = [name, p ? `#${p.number}` : '-', p?.position||'Convidat'];
     let tC=0, tG=0, pj=0;
     matches.forEach(m => {
-      const {totals} = calcMatchStats(m);
-      const gkS = calcGoalkeeperStints(m);
+      const {totals} = calcMatchStats(m, format);
+      const gkS = calcGoalkeeperStints(m, format);
       const c = totals[name]||0;
       const g = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
       row.push(c>0?formatTime(c):'-', g>0?formatTime(g):'-');
@@ -165,8 +161,9 @@ function sheetMinuts() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 3 — Stats Individuals Globals
 // ════════════════════════════════════════════════════════════════════════════
-function sheetStatsGlobals() {
-  const stats = calcGlobalStats(DATABASE);
+function sheetStatsGlobals(db, format) {
+  const { matches, roster } = db;
+  const stats = calcGlobalStats(db, format);
   const findStat = (arr, name) => (arr||[]).find(([n])=>n===name)?.[1]||0;
 
   const hdr = [
@@ -182,7 +179,7 @@ function sheetStatsGlobals() {
   ];
   const rows = [hdr];
 
-  const allNames = new Set(PLAYERS);
+  const allNames = new Set(roster.map(p => p.name));
   matches.forEach(m => {
     const subs = m.events?.substitutions||[];
     subs.forEach(s => { if(s.goalkeeper) allNames.add(s.goalkeeper); (s.onPitch||[]).forEach(p=>allNames.add(p)); });
@@ -194,8 +191,8 @@ function sheetStatsGlobals() {
   const minutesCampMap = {}, minutesPorterMap = {}, pjMap = {};
   [...allNames].forEach(n => { minutesCampMap[n]=0; minutesPorterMap[n]=0; pjMap[n]=0; });
   matches.forEach(m => {
-    const {totals} = calcMatchStats(m);
-    const gkS = calcGoalkeeperStints(m);
+    const {totals} = calcMatchStats(m, format);
+    const gkS = calcGoalkeeperStints(m, format);
     Object.entries(totals).forEach(([n,s]) => { if(minutesCampMap[n]!==undefined) minutesCampMap[n]+=s; });
     Object.entries(gkS).forEach(([n,arr]) => { if(minutesPorterMap[n]!==undefined) minutesPorterMap[n]+=arr.reduce((a,s)=>a+(s.end-s.start),0); });
     const used = new Set();
@@ -222,7 +219,7 @@ function sheetStatsGlobals() {
   });
 
   sorted.forEach(name => {
-    const p = pl(name);
+    const p = pl(roster, name);
     const g = findStat(stats.topScorers,name);
     const a = findStat(stats.topAssists,name);
     const tirs = shotsMap[name]||0;
@@ -264,7 +261,7 @@ function sheetStatsGlobals() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 4 — Tirs per Jugador i Jornada
 // ════════════════════════════════════════════════════════════════════════════
-function sheetTirs() {
+function sheetTirs(matches, roster) {
   const hdrBase = ['Jugador','Dorsal'];
   const hdrM = [];
   matches.forEach(m => { const j=m.jornada.replace(/\D/g,''); hdrM.push(`J${j} Tirs`,`J${j} Porta`); });
@@ -275,7 +272,7 @@ function sheetTirs() {
   matches.forEach(m => Object.keys(m.shots||{}).forEach(n=>allNames.add(n)));
 
   [...allNames].sort().forEach(name => {
-    const p = pl(name);
+    const p = pl(roster, name);
     const row = [name, p?`#${p.number}`:'-'];
     let tT=0, tP=0;
     matches.forEach(m => {
@@ -301,7 +298,7 @@ function sheetTirs() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 5 — Key Passes i Regats per Jornada
 // ════════════════════════════════════════════════════════════════════════════
-function sheetKPReg() {
+function sheetKPReg(matches, roster) {
   const hdrBase = ['Jugador','Dorsal'];
   const hdrM = [];
   matches.forEach(m => { const j=m.jornada.replace(/\D/g,''); hdrM.push(`J${j} KP`,`J${j} Reg`); });
@@ -312,7 +309,7 @@ function sheetKPReg() {
   matches.forEach(m => { Object.keys(m.keyPasses||{}).forEach(n=>allNames.add(n)); Object.keys(m.dribbles||{}).forEach(n=>allNames.add(n)); });
 
   [...allNames].sort().forEach(name => {
-    const p = pl(name);
+    const p = pl(roster, name);
     const row = [name, p?`#${p.number}`:'-'];
     let tKP=0, tReg=0;
     matches.forEach(m => {
@@ -338,7 +335,7 @@ function sheetKPReg() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULL 6 — Tots els Gols de la temporada
 // ════════════════════════════════════════════════════════════════════════════
-function sheetGols() {
+function sheetGols(matches) {
   const hdr = [
     'Jornada','Rival','Minut','Tipus','Marcador\nParcial','Marcador','Gol','Porter','Assist',
     'J1 camp','J2 camp','J3 camp','J4 camp','Zona','Notes',
@@ -380,7 +377,7 @@ function sheetGols() {
 // ════════════════════════════════════════════════════════════════════════════
 // FULLS 7+ — Detall per Jornada
 // ════════════════════════════════════════════════════════════════════════════
-function sheetJornada(m) {
+function sheetJornada(m, roster, format) {
   const [gfRes, gcRes] = (m.result||'0-0').split('-').map(s=>parseInt(s.trim())||0);
   const goals = (m.events?.goals||[]).slice().sort((a,b)=>toSecs(a.time)-toSecs(b.time));
   const subs = m.events?.substitutions||[];
@@ -454,8 +451,8 @@ function sheetJornada(m) {
   // ── Secció E: Estadístiques del partit per jugador ──
   rows.push(['📊 RESUM JUGADOR (aquest partit)','','','','','','','','','']);
   rows.push(['Jugador','Dorsal','Min Camp','Min Porter','Gols','Assist','Tirs','A porta','KP','Reg','Gols enc.','Aturades']);
-  const {totals} = calcMatchStats(m);
-  const gkS = calcGoalkeeperStints(m);
+  const {totals} = calcMatchStats(m, format);
+  const gkS = calcGoalkeeperStints(m, format);
   const matchG = {}, matchA = {}, matchEnc = {};
   [...matchNames].forEach(n => { matchG[n]=0; matchA[n]=0; matchEnc[n]=0; });
   goals.forEach(g => {
@@ -463,7 +460,7 @@ function sheetJornada(m) {
     else { if(g.goalkeeper&&matchEnc[g.goalkeeper]!==undefined) matchEnc[g.goalkeeper]++; }
   });
   [...matchNames].sort().forEach(name => {
-    const p = pl(name);
+    const p = pl(roster, name);
     const mC = totals[name]||0;
     const mP = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
     if(mC===0&&mP===0) return;
@@ -526,19 +523,20 @@ function sheetJornada(m) {
 // ════════════════════════════════════════════════════════════════════════════
 // GENERACIÓ EXCEL
 // ════════════════════════════════════════════════════════════════════════════
-async function generateExcel() {
+async function generateExcel(db, format) {
+  const { matches, roster } = db;
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, sheetResumPartits(),   'Resum Partits');
-  XLSX.utils.book_append_sheet(wb, sheetMinuts(),         'Minuts Jugadors');
-  XLSX.utils.book_append_sheet(wb, sheetStatsGlobals(),   'Stats Individuals');
-  XLSX.utils.book_append_sheet(wb, sheetTirs(),           'Tirs per Jornada');
-  XLSX.utils.book_append_sheet(wb, sheetKPReg(),          'KP i Regats');
-  XLSX.utils.book_append_sheet(wb, sheetGols(),           'Tots els Gols');
+  XLSX.utils.book_append_sheet(wb, sheetResumPartits(matches),          'Resum Partits');
+  XLSX.utils.book_append_sheet(wb, sheetMinuts(matches, roster, format), 'Minuts Jugadors');
+  XLSX.utils.book_append_sheet(wb, sheetStatsGlobals(db, format),       'Stats Individuals');
+  XLSX.utils.book_append_sheet(wb, sheetTirs(matches, roster),          'Tirs per Jornada');
+  XLSX.utils.book_append_sheet(wb, sheetKPReg(matches, roster),         'KP i Regats');
+  XLSX.utils.book_append_sheet(wb, sheetGols(matches),                  'Tots els Gols');
   matches.forEach(m => {
     const num = m.jornada.replace(/\D/g,'');
     const name = `J${num} ${m.opponent}`.slice(0,31);
-    XLSX.utils.book_append_sheet(wb, sheetJornada(m), name);
+    XLSX.utils.book_append_sheet(wb, sheetJornada(m, roster, format), name);
   });
 
   const date = new Date().toISOString().slice(0,10);
@@ -546,10 +544,11 @@ async function generateExcel() {
 }
 
 export default function ExportExcelButton() {
+  const { db, format } = useSeason();
   const [loading, setLoading] = useState(false);
   const handleExport = async () => {
     setLoading(true);
-    try { await generateExcel(); }
+    try { await generateExcel(db, format); }
     catch(e) { console.error(e); alert('Error exportant: ' + e.message); }
     finally { setLoading(false); }
   };

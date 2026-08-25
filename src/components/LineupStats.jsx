@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const MEDALS = ['🥇','🥈','🥉'];
 
-function getShirt(name) {
-  return DATABASE.roster.find(r => r.name === name)?.shirtName || name.split(' ')[0];
+function getShirt(roster, name) {
+  return roster.find(r => r.name === name)?.shirtName || name.split(' ')[0];
 }
 
-function PlayerAvatar({ name, size = 28 }) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function PlayerAvatar({ name, size = 28, roster }) {
+  const pl = roster.find(r => r.name === name);
   if (pl?.photo) return (
     <div className="rounded-full overflow-hidden shrink-0"
       style={{width:size, height:size, border:'2px solid #121212'}}>
@@ -41,7 +41,7 @@ function parseSeconds(timeStr) {
   return m * 60 + (s || 0);
 }
 
-function calcLineupStats() {
+function calcLineupStats(matches) {
   const pairData = {};
   const trioData = {};
 
@@ -58,7 +58,7 @@ function calcLineupStats() {
     return trioData[key];
   };
 
-  DATABASE.matches.forEach(match => {
+  matches.forEach(match => {
     const subs = match.events?.substitutions || [];
 
     if (subs.length >= 2) {
@@ -114,7 +114,7 @@ function calcLineupStats() {
 }
 
 // ── Secció 1: Top Parelles ────────────────────────────────────────
-function TopPairs({ pairs }) {
+function TopPairs({ pairs, roster }) {
   const maxFor = Math.max(...pairs.map(p => p.goalsFor), 1);
 
   return (
@@ -143,9 +143,9 @@ function TopPairs({ pairs }) {
 
                 {/* Avatars solapats */}
                 <div className="flex shrink-0">
-                  <PlayerAvatar name={nameA} size={26}/>
+                  <PlayerAvatar name={nameA} size={26} roster={roster}/>
                   <div style={{marginLeft:-9}}>
-                    <PlayerAvatar name={nameB} size={26}/>
+                    <PlayerAvatar name={nameB} size={26} roster={roster}/>
                   </div>
                 </div>
 
@@ -154,12 +154,12 @@ function TopPairs({ pairs }) {
                   <div className="flex items-center gap-1 flex-wrap mb-1">
                     <span className="text-xs font-black"
                       style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'}}>
-                      {getShirt(nameA)}
+                      {getShirt(roster, nameA)}
                     </span>
                     <span className="text-[9px] text-gray-700">+</span>
                     <span className="text-xs font-black"
                       style={{color: isTop3 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)'}}>
-                      {getShirt(nameB)}
+                      {getShirt(roster, nameB)}
                     </span>
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
@@ -193,7 +193,7 @@ function TopPairs({ pairs }) {
 }
 
 // ── Secció 2: Top Trios (3 jugadors de camp) ─────────────────────
-function TopTrios({ trios }) {
+function TopTrios({ trios, roster }) {
   const maxFor = Math.max(...trios.map(t => t.goalsFor), 1);
 
   if (!trios.length) return null;
@@ -225,7 +225,7 @@ function TopTrios({ trios }) {
                 <div className="flex shrink-0 pt-0.5">
                   {players.map((name, j) => (
                     <div key={name} style={{marginLeft: j > 0 ? -10 : 0}}>
-                      <PlayerAvatar name={name} size={24}/>
+                      <PlayerAvatar name={name} size={24} roster={roster}/>
                     </div>
                   ))}
                 </div>
@@ -236,7 +236,7 @@ function TopTrios({ trios }) {
                     {players.map((name, j) => (
                       <span key={name} className="text-[10px] font-black"
                         style={{color: isTop3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)'}}>
-                        {getShirt(name)}{j < players.length - 1 && <span className="text-gray-700 font-normal"> ·</span>}
+                        {getShirt(roster, name)}{j < players.length - 1 && <span className="text-gray-700 font-normal"> ·</span>}
                       </span>
                     ))}
                   </div>
@@ -274,13 +274,14 @@ function TopTrios({ trios }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function LineupStats() {
-  const { pairs, trios } = useMemo(() => calcLineupStats(), []);
+  const { db } = useSeason();
+  const { pairs, trios } = useMemo(() => calcLineupStats(db.matches), [db]);
   if (!pairs.length && !trios.length) return null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <TopPairs pairs={pairs}/>
-      <TopTrios trios={trios}/>
+      <TopPairs pairs={pairs} roster={db.roster}/>
+      <TopTrios trios={trios} roster={db.roster}/>
     </div>
   );
 }

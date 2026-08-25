@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, ChevronDown, Clock, Calendar } from 'lucide-react';
-import { DATABASE } from '../data.js';
 import { calcGlobalStats, formatTime } from '../utils.js';
+import { useSeason } from '../SeasonContext.jsx';
 import ExportExcelButton from './ExportExcel.jsx';
 import DuoStats from './DuoStats.jsx';
 import LineupStats from './LineupStats.jsx';
@@ -12,8 +12,8 @@ const ACCENT = '#E5C07B';
 const GARNET = '#C0392B';
 
 // ── Nom de dorsal ─────────────────────────────────────────────────
-function sName(fullName) {
-  const p = DATABASE.roster.find(r => r.name === fullName);
+function sName(db, fullName) {
+  const p = db.roster.find(r => r.name === fullName);
   return p?.shirtName || fullName.split(' ')[0].toUpperCase();
 }
 
@@ -38,17 +38,16 @@ function useCountdown(targetDate) {
   return timeLeft;
 }
 
-function CountdownHero({ onSelectMatch }) {
+function CountdownHero({ onSelectMatch, db }) {
   // Detecta el proper partit no jugat del calendari
   const now = new Date();
-  const upcoming = (DATABASE.calendar || [])
+  const upcoming = (db.calendar || [])
     .filter(c => new Date(c.date) > now)
     .sort((a,b) => new Date(a.date) - new Date(b.date));
-  const next = upcoming[0] || DATABASE.nextMatch;
+  const next = upcoming[0] || db.nextMatch;
 
-  const lastMatch = DATABASE.matches[DATABASE.matches.length - 1];
-  const [lf, la] = lastMatch.result.split('-').map(s=>parseInt(s.trim()));
-  const lastRS = getRS(lf, la);
+  const lastMatch = db.matches[db.matches.length - 1];
+  const lastRS = lastMatch ? getRS(...lastMatch.result.split('-').map(s=>parseInt(s.trim()))) : null;
   const t = useCountdown(next?.date);
   const [pulse, setPulse] = useState(false);
 
@@ -159,25 +158,27 @@ function CountdownHero({ onSelectMatch }) {
           <div className="hidden md:block w-px bg-white/6"/>
 
           {/* Últim resultat */}
-          <div className="flex-shrink-0 md:w-52">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Últim Resultat</span>
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`text-3xl font-black font-mono px-3 py-1.5 rounded-xl ${lastRS.color}`}
-                style={{background:'rgba(0,0,0,0.3)'}}>
-                {lastMatch.result}
+          {lastMatch && (
+            <div className="flex-shrink-0 md:w-52">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Últim Resultat</span>
               </div>
-              <div>
-                <div className="text-sm font-bold text-white">{lastMatch.opponent}</div>
-                <div className="text-[10px] text-gray-600">{lastMatch.jornada} · {lastMatch.date}</div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`text-3xl font-black font-mono px-3 py-1.5 rounded-xl ${lastRS.color}`}
+                  style={{background:'rgba(0,0,0,0.3)'}}>
+                  {lastMatch.result}
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">{lastMatch.opponent}</div>
+                  <div className="text-[10px] text-gray-600">{lastMatch.jornada} · {lastMatch.date}</div>
+                </div>
               </div>
+              <button onClick={() => onSelectMatch(lastMatch)}
+                className="text-[11px] text-[#E5C07B]/60 hover:text-[#E5C07B] transition-colors flex items-center gap-1 mt-2">
+                Veure crònica <ChevronRight className="w-3 h-3"/>
+              </button>
             </div>
-            <button onClick={() => onSelectMatch(lastMatch)}
-              className="text-[11px] text-[#E5C07B]/60 hover:text-[#E5C07B] transition-colors flex items-center gap-1 mt-2">
-              Veure crònica <ChevronRight className="w-3 h-3"/>
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -227,9 +228,9 @@ const getRS = (f, a) => {
 };
 
 // ── Barra stat ────────────────────────────────────────────────────
-function StatRow({ name, value, max, color, delay = 0 }) {
+function StatRow({ name, value, max, color, delay = 0, db }) {
   const [ref, inView] = useInView();
-  const player = DATABASE.roster.find(p => p.name === name);
+  const player = db.roster.find(p => p.name === name);
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
     <div ref={ref} className="flex items-center gap-3 group"
@@ -244,7 +245,7 @@ function StatRow({ name, value, max, color, delay = 0 }) {
           <span className="text-[9px] font-black text-[#E5C07B]/40">{name[0]}</span>
         </div>
       )}
-      <span className="text-xs text-gray-500 w-16 truncate shrink-0">{sName(name)}</span>
+      <span className="text-xs text-gray-500 w-16 truncate shrink-0">{sName(db, name)}</span>
       <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
         <div className="h-full rounded-lg"
           style={{ width: inView?`${Math.max(pct,value>0?4:0)}%`:'0%', background: color,
@@ -256,10 +257,10 @@ function StatRow({ name, value, max, color, delay = 0 }) {
 }
 
 // ── Targeta jugador ranking ───────────────────────────────────────
-function PlayerCard({ rank, name, value, label, emoji }) {
+function PlayerCard({ rank, name, value, label, emoji, db }) {
   const [hover, setHover] = useState(false);
   const [ref, inView] = useInView(0.05);
-  const player = DATABASE.roster.find(p => p.name === name);
+  const player = db.roster.find(p => p.name === name);
   const medals = ['🥇','🥈','🥉'];
   const photoSrc = hover && player?.photoCel ? player.photoCel : player?.photo;
   const isTop = rank === 0;
@@ -283,7 +284,7 @@ function PlayerCard({ rank, name, value, label, emoji }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] text-gray-600 uppercase tracking-wider">{label}</p>
-        <p className={`font-bold truncate text-sm ${isTop?'text-[#E5C07B]':'text-white'}`}>{sName(name)}</p>
+        <p className={`font-bold truncate text-sm ${isTop?'text-[#E5C07B]':'text-white'}`}>{sName(db, name)}</p>
       </div>
       <div className="flex flex-col items-center shrink-0">
         <span className={`font-black font-mono ${isTop?'text-2xl text-[#E5C07B]':'text-lg text-white'}`}>{value}</span>
@@ -294,8 +295,8 @@ function PlayerCard({ rank, name, value, label, emoji }) {
 }
 
 // ── Modal jugador ─────────────────────────────────────────────────
-function PlayerModal({ player, stats, onClose }) {
-  const perMatch = DATABASE.matches.map(m => {
+function PlayerModal({ player, stats, onClose, db }) {
+  const perMatch = db.matches.map(m => {
     const gf = (m.events?.goals||[]).filter(g => g.type==='favor' && g.scorer===player.name).length;
     const gc = (m.events?.goals||[]).filter(g => g.type==='contra' && (g.onPitch||[]).includes(player.name)).length;
     const gfOnPitch = (m.events?.goals||[]).filter(g => g.type==='favor' && (g.onPitch||[]).includes(player.name)).length;
@@ -338,7 +339,7 @@ function PlayerModal({ player, stats, onClose }) {
             </div>
             <div>
               <p className="text-[10px] text-[#E5C07B]/50 uppercase tracking-wider">#{player.number} · {player.position}</p>
-              <h3 className="text-2xl font-black text-white">{sName(player.name)}</h3>
+              <h3 className="text-2xl font-black text-white">{sName(db, player.name)}</h3>
               <p className="text-gray-500 text-sm">{player.name}</p>
             </div>
           </div>
@@ -361,7 +362,7 @@ function PlayerModal({ player, stats, onClose }) {
           <div className="p-4">
             <p className="text-xs text-gray-600 uppercase tracking-wider mb-3">Per jornada</p>
             <div className="space-y-2">
-              {DATABASE.matches.map(m => {
+              {db.matches.map(m => {
                 const gf        = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.scorer===player.name).length;
                 const ast       = (m.events?.goals||[]).filter(g=>g.type==='favor'&&g.assist===player.name).length;
                 const gc        = (m.events?.goals||[]).filter(g=>g.type==='contra'&&(g.onPitch||[]).includes(player.name)).length;
@@ -472,11 +473,11 @@ function SeasonTimeline({ matches, onSelectMatch }) {
 }
 
 // ── Targeta de partit (columna dreta) ─────────────────────────────
-function MatchSideCard({ match, onSelect, isActive }) {
+function MatchSideCard({ match, onSelect, isActive, db }) {
   const [f,a] = match.result.split('-').map(s=>parseInt(s.trim()));
   const rs = getRS(f,a);
   const goalsF = (match.events?.goals||[]).filter(g=>g.type==='favor');
-  const topScorer = goalsF.length > 0 ? sName(goalsF[0].scorer) : null;
+  const topScorer = goalsF.length > 0 ? sName(db, goalsF[0].scorer) : null;
 
   return (
     <div onClick={() => onSelect(match)}
@@ -515,7 +516,8 @@ function Sec({ id, title, collapsed, onToggle, children }) {
 
 // ── Dashboard principal ───────────────────────────────────────────
 export default function GlobalDashboard({ onSelectMatch }) {
-  const stats = useMemo(() => calcGlobalStats(DATABASE), []);
+  const { db: DATABASE, format, season } = useSeason();
+  const stats = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activeMatchId, setActiveMatchId] = useState(null);
   const [collapsed, setCollapsed] = useState({
@@ -536,8 +538,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
   const draws   = matchHistory.filter(m => m.for === m.against).length;
   const losses  = matchHistory.filter(m => m.for < m.against).length;
   const lastMatch = matchHistory[matchHistory.length - 1];
-  const [lf, la] = lastMatch.result.split('-').map(s=>parseInt(s.trim()));
-  const lastRS = getRS(lf, la);
+  const lastRS = lastMatch ? getRS(lastMatch.for, lastMatch.against) : null;
 
   const maxGF = Math.max(...stats.goalsFor.map(([,v]) => v), 1);
   const maxGA = Math.max(...stats.goalsAgainst.map(([,v]) => v), 1);
@@ -563,7 +564,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
     <div className="space-y-5 animate-fade-in">
 
       {/* ── HERO — Countdown + últim resultat ── */}
-      <CountdownHero onSelectMatch={handleMatchSelect}/>
+      <CountdownHero onSelectMatch={handleMatchSelect} db={DATABASE}/>
 
       {/* ── Xifres temporada animades ── */}
       <div className="grid grid-cols-5 gap-2">
@@ -616,7 +617,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   {stats.topScorers.map(([name, count], idx) => (
                     <div key={name} onClick={() => setSelectedPlayer(DATABASE.roster.find(p=>p.name===name))}
                       className="cursor-pointer hover:scale-[1.01] transition-transform">
-                      <PlayerCard rank={idx} name={name} value={count} emoji="⚽" label="Gols"/>
+                      <PlayerCard rank={idx} name={name} value={count} emoji="⚽" label="Gols" db={DATABASE}/>
                     </div>
                   ))}
                 </div>
@@ -631,7 +632,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   {stats.topAssists.map(([name, count], idx) => (
                     <div key={name} onClick={() => setSelectedPlayer(DATABASE.roster.find(p=>p.name===name))}
                       className="cursor-pointer hover:scale-[1.01] transition-transform">
-                      <PlayerCard rank={idx} name={name} value={count} emoji="👟" label="Assists"/>
+                      <PlayerCard rank={idx} name={name} value={count} emoji="👟" label="Assists" db={DATABASE}/>
                     </div>
                   ))}
                 </div>
@@ -649,7 +650,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </h4>
               <div className="space-y-2">
                 {stats.goalsFor.filter(([,v])=>v>0).map(([name,count],i) => (
-                  <StatRow key={name} name={name} value={count} max={maxGF} color="#27AE60" delay={i*60}/>
+                  <StatRow key={name} name={name} value={count} max={maxGF} color="#27AE60" delay={i*60} db={DATABASE}/>
                 ))}
               </div>
             </div>
@@ -659,7 +660,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </h4>
               <div className="space-y-2">
                 {stats.goalsAgainst.filter(([,v])=>v>0).map(([name,count],i) => (
-                  <StatRow key={name} name={name} value={count} max={maxGA} color="#C0392B" delay={i*60}/>
+                  <StatRow key={name} name={name} value={count} max={maxGA} color="#C0392B" delay={i*60} db={DATABASE}/>
                 ))}
               </div>
             </div>
@@ -687,7 +688,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           <span className="text-[9px] font-bold text-[#E5C07B]/40">{p.name[0]}</span>
                         </div>
                       )}
-                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(p.name)}</span>
+                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(DATABASE, p.name)}</span>
                       <div className="flex-1 flex flex-col gap-0.5">
                         <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
                           <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{width:`${(gf/maxV)*100}%`}}/>
@@ -745,7 +746,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                               <span className="text-[9px] font-black text-[#E5C07B]/40">{r.name[0]}</span>
                             </div>
                           )}
-                          <span className="flex-1 text-xs text-gray-400 truncate">{sName(r.name)}</span>
+                          <span className="flex-1 text-xs text-gray-400 truncate">{sName(DATABASE, r.name)}</span>
                           <span className="w-16 text-center text-sm font-black text-blue-400">{r.onTarget}</span>
                           <span className="w-14 text-center text-sm font-black text-gray-500">{r.offTarget}</span>
                           <span className="w-12 text-center text-sm font-black text-emerald-400">{r.gols}</span>
@@ -813,7 +814,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           <span className="text-[9px] font-bold text-[#E5C07B]/40">{d.p.name[0]}</span>
                         </div>
                       )}
-                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(d.p.name)}</span>
+                      <span className="text-xs text-gray-500 w-14 truncate shrink-0">{sName(DATABASE, d.p.name)}</span>
                       <div className="flex-1 flex flex-col gap-0.5">
                         <div className="h-2 bg-[#0d0d0d] rounded-full overflow-hidden">
                           <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{width:`${(d.gf40/maxVal)*100}%`}}/>
@@ -869,7 +870,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                             <span className="text-[8px] font-black text-[#E5C07B]/40">{name[0]}</span>
                           </div>
                         )}
-                        <span className="w-20 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(name)}</span>
+                        <span className="w-20 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(DATABASE, name)}</span>
                         <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
                           <div className="h-full rounded-lg bg-[#C0392B] transition-all duration-700" style={{width:`${(secs/maxSecs)*100}%`}}/>
                         </div>
@@ -906,7 +907,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                                 <span className="text-[8px] font-black text-emerald-400/50">{name[0]}</span>
                               </div>
                             )}
-                            <span className="w-16 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(name)}</span>
+                            <span className="w-16 text-xs text-right text-gray-500 group-hover:text-white shrink-0 font-semibold truncate">{sName(DATABASE, name)}</span>
                             <div className="flex-1 h-4 bg-[#0d0d0d] rounded-lg overflow-hidden border border-white/5">
                               <div className="h-full rounded-lg bg-emerald-500 transition-all duration-700" style={{width:`${(secs/maxSecs)*100}%`}}/>
                             </div>
@@ -924,7 +925,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       {stats.saves.map(([name,count],i) => (
                         <StatRow key={name} name={name} value={count}
                           max={Math.max(...stats.saves.map(([,v])=>v),1)}
-                          color="#61AFEF" delay={i*60}/>
+                          color="#61AFEF" delay={i*60} db={DATABASE}/>
                       ))}
                     </div>
                   </div>
@@ -936,7 +937,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       {stats.goalsAgainstGK.filter(([,v]) => v > 0).map(([name,count],i) => (
                         <StatRow key={name} name={name} value={count}
                           max={Math.max(...stats.goalsAgainstGK.filter(([,v])=>v>0).map(([,v])=>v),1)}
-                          color="#C0392B" delay={i*60}/>
+                          color="#C0392B" delay={i*60} db={DATABASE}/>
                       ))}
                     </div>
                   </div>
@@ -948,7 +949,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       {stats.goalsForGK.filter(([,v]) => v > 0).map(([name,count],i) => (
                         <StatRow key={name} name={name} value={count}
                           max={Math.max(...stats.goalsForGK.filter(([,v])=>v>0).map(([,v])=>v),1)}
-                          color="#27AE60" delay={i*60}/>
+                          color="#27AE60" delay={i*60} db={DATABASE}/>
                       ))}
                     </div>
                   </div>
@@ -971,7 +972,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{objectPosition:'center 15%'}}/>
                         </div>
                       )}
-                      <span className="flex-1 text-sm font-bold text-yellow-200">{sName(name)}</span>
+                      <span className="flex-1 text-sm font-bold text-yellow-200">{sName(DATABASE, name)}</span>
                       <span className="text-xl font-black text-yellow-400">{count} 🟨</span>
                     </div>
                   );
@@ -989,7 +990,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
               {[...DATABASE.matches].reverse().map(match => (
                 <MatchSideCard key={match.id} match={match}
                   onSelect={handleMatchSelect}
-                  isActive={activeMatchId === match.id}/>
+                  isActive={activeMatchId === match.id} db={DATABASE}/>
               ))}
             </div>
             {/* Taula resum */}
@@ -1002,7 +1003,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   <span className="text-[#C0392B]">{totalGA}</span>
                 </span>
               </div>
-              <p className="text-[10px] text-gray-700 mt-2 text-center">Temporada 25/26 · Futbol Sala</p>
+              <p className="text-[10px] text-gray-700 mt-2 text-center">{season.period} · {format.label}</p>
             </div>
           </Sec>
         </div>
@@ -1014,6 +1015,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
           player={selectedPlayer}
           stats={playerStatsMap[selectedPlayer.name]}
           onClose={() => setSelectedPlayer(null)}
+          db={DATABASE}
         />
       )}
     </div>

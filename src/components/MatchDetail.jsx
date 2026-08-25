@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
-import { DATABASE } from '../data.js';
 import { parseTime, formatTime, calcMatchStats } from '../utils.js';
+import { useSeason } from '../SeasonContext.jsx';
 import MvpVoting from './MvpVoting.jsx';
 
 const BASE = import.meta.env.BASE_URL;
@@ -41,8 +41,8 @@ function AnimatedScore({ home, away, resultColor }) {
 }
 
 // ── Nom de dorsal ─────────────────────────────────────────────────
-function shirtName(fullName) {
-  const p = DATABASE.roster.find(r => r.name === fullName);
+function shirtName(db, fullName) {
+  const p = db.roster.find(r => r.name === fullName);
   return p?.shirtName || fullName.split(' ')[0].toUpperCase();
 }
 
@@ -89,7 +89,7 @@ function buildCronica(match) {
 }
 
 // ── Targeta gran de gol ───────────────────────────────────────────
-function GoalCard({ item, onJump }) {
+function GoalCard({ item, onJump, db }) {
   const [showLocalVideo, setShowLocalVideo] = useState(false);
   const [showCel, setShowCel] = useState(false);
   const isFavor = item.kind === 'goal_favor';
@@ -97,7 +97,7 @@ function GoalCard({ item, onJump }) {
   const bg      = isFavor ? 'rgba(39,174,96,0.08)' : 'rgba(192,57,43,0.08)';
   const border  = isFavor ? 'rgba(39,174,96,0.3)'  : 'rgba(192,57,43,0.3)';
 
-  const scorer    = isFavor ? DATABASE.roster.find(r => r.name === item.scorer) : null;
+  const scorer    = isFavor ? db.roster.find(r => r.name === item.scorer) : null;
   const celPhoto  = scorer?.photoCel;
   const normPhoto = scorer?.photo;
   const hasBoth   = !!(celPhoto && normPhoto);
@@ -148,8 +148,8 @@ function GoalCard({ item, onJump }) {
           </div>
           {isFavor ? (
             <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="text-white font-black text-xl">{shirtName(item.scorer)}</span>
-              {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{shirtName(item.assist)}</span></span>}
+              <span className="text-white font-black text-xl">{shirtName(db, item.scorer)}</span>
+              {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{shirtName(db, item.assist)}</span></span>}
             </div>
           ) : (
             item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
@@ -189,7 +189,7 @@ function GoalCard({ item, onJump }) {
 }
 
 // ── Targeta moment ────────────────────────────────────────────────
-function MomentCard({ item, onJump }) {
+function MomentCard({ item, onJump, db }) {
   const [hovered, setHovered] = useState(false);
   const hasPhoto = !!item.photo;
   return (
@@ -224,11 +224,11 @@ function MomentCard({ item, onJump }) {
           {item.players?.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {item.players.map(p => {
-                const pl = DATABASE.roster.find(r => r.name === p);
+                const pl = db.roster.find(r => r.name === p);
                 return (
                   <span key={p} className="flex items-center gap-1 text-[10px] bg-black/30 border border-white/8 rounded-full px-2 py-0.5 text-gray-400">
                     {pl?.photo && <img src={`${BASE}${pl.photo}`} alt={p} className="w-3 h-3 rounded-full object-cover object-top"/>}
-                    {shirtName(p)}
+                    {shirtName(db, p)}
                   </span>
                 );
               })}
@@ -248,7 +248,7 @@ function MomentCard({ item, onJump }) {
 }
 
 // ── Stats per jugador (tirs / key passes / regats) ───────────────
-function MatchPlayerStats({ match, onJumpToVideo }) {
+function MatchPlayerStats({ match, onJumpToVideo, db }) {
   const shots     = match.shots     || {};
   const keyPasses = match.keyPasses || {};
   const dribbles  = match.dribbles  || {};
@@ -304,7 +304,7 @@ function MatchPlayerStats({ match, onJumpToVideo }) {
               {shotStats.map(({ name, evs, total, onTarget }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
-                    <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
+                    <span className="text-[11px] font-bold text-gray-300">{shirtName(db, name)}</span>
                     <span className="text-[10px] font-mono text-gray-500">{onTarget}<span className="text-gray-700">/{total}</span></span>
                   </div>
                   <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
@@ -328,7 +328,7 @@ function MatchPlayerStats({ match, onJumpToVideo }) {
               {kpStats.map(({ name, evs, count }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
-                    <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
+                    <span className="text-[11px] font-bold text-gray-300">{shirtName(db, name)}</span>
                     <span className="text-[10px] font-mono text-blue-400">{count}</span>
                   </div>
                   <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
@@ -350,7 +350,7 @@ function MatchPlayerStats({ match, onJumpToVideo }) {
               {dribStats.map(({ name, evs, count }) => (
                 <div key={name}>
                   <div className="flex justify-between mb-0.5">
-                    <span className="text-[11px] font-bold text-gray-300">{shirtName(name)}</span>
+                    <span className="text-[11px] font-bold text-gray-300">{shirtName(db, name)}</span>
                     <span className="text-[10px] font-mono text-purple-400">{count}</span>
                   </div>
                   <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
@@ -371,7 +371,7 @@ function MatchPlayerStats({ match, onJumpToVideo }) {
 }
 
 // ── Gràfic de temps ───────────────────────────────────────────────
-function TimelineChart({ match, matchStats }) {
+function TimelineChart({ match, matchStats, db }) {
   if (!matchStats) return null;
   const { stints, playerStats, finalTime, idealSec } = matchStats;
 
@@ -471,7 +471,7 @@ function TimelineChart({ match, matchStats }) {
                   <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#0a0a0a] border border-white/15 rounded-lg px-2 py-1
                     text-[9px] whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-20">
                     <span style={{color:g.type==='favor'?'#4ade80':'#f87171'}}>{g.time}</span>
-                    {g.scorer && <span className="text-gray-400 ml-1">{shirtName(g.scorer)}</span>}
+                    {g.scorer && <span className="text-gray-400 ml-1">{shirtName(db, g.scorer)}</span>}
                   </div>
                 </div>
               ))}
@@ -497,7 +497,7 @@ function TimelineChart({ match, matchStats }) {
               });
               if (cur < gs.end) gkSplitted.push({start:cur, end:gs.end});
             });
-            const pl = DATABASE.roster.find(p=>p.name===name);
+            const pl = db.roster.find(p=>p.name===name);
             const dev = cSecs - idealSecs;
 
             return (
@@ -577,7 +577,7 @@ function TimelineChart({ match, matchStats }) {
             const cSecs  = campSecs(name);
             const gSecs  = gkSecs(name);
             const dev    = cSecs - idealSecs;
-            const pl     = DATABASE.roster.find(p=>p.name===name);
+            const pl     = db.roster.find(p=>p.name===name);
             const campW  = (cSecs / finalTime) * 100;
             const gkW    = (gSecs / finalTime) * 100;
             const idealW = (idealSecs / finalTime) * 100;
@@ -627,6 +627,7 @@ function TimelineChart({ match, matchStats }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function MatchDetail({ match, onBack, onNavigate }) {
+  const { db: DATABASE, format } = useSeason();
   const [videoStart, setVideoStart] = useState(0);
   const [videoOpen, setVideoOpen] = useState(true);
 
@@ -638,8 +639,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   const hasSubstitutions = (match.substitutions || match.events?.substitutions || []).length > 1;
   const matchStats = useMemo(() => {
     if (!hasSubstitutions) return null;
-    return calcMatchStats(match);
-  }, [match, hasSubstitutions]);
+    return calcMatchStats(match, format);
+  }, [match, hasSubstitutions, format]);
 
   const [home, away] = match.result.split('-').map(s => parseInt(s.trim()));
   const resultColor = home > away ? 'text-emerald-400' : home < away ? 'text-[#C0392B]' : 'text-yellow-400';
@@ -751,7 +752,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
       )}
 
       {/* Estadístiques per jugador */}
-      <MatchPlayerStats match={match} onJumpToVideo={hasVideo ? jumpToGoal : null} />
+      <MatchPlayerStats match={match} onJumpToVideo={hasVideo ? jumpToGoal : null} db={DATABASE} />
 
       {/* Crònica — scroll natural de la pàgina, gran */}
       {cronica.length > 0 && (
@@ -764,8 +765,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           <div className="p-4 space-y-3">
             {cronica.map((item, idx) => {
               if (item.kind === 'goal_favor' || item.kind === 'goal_contra')
-                return <GoalCard key={idx} item={item} onJump={jumpToGoal}/>;
-              return <MomentCard key={idx} item={item} onJump={jumpToGoal}/>;
+                return <GoalCard key={idx} item={item} onJump={jumpToGoal} db={DATABASE}/>;
+              return <MomentCard key={idx} item={item} onJump={jumpToGoal} db={DATABASE}/>;
             })}
           </div>
         </div>
@@ -773,7 +774,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
 
       {/* Gràfics de temps */}
       {(hasSubstitutions || match.id === 'j4-touchlas') && (
-        <TimelineChart match={match} matchStats={matchStats}/>
+        <TimelineChart match={match} matchStats={matchStats} db={DATABASE}/>
       )}
 
       {/* Sense substitucions */}
