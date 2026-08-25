@@ -8,5 +8,5 @@ export const SEASONS = [
   { id: 's3', label: 'Split 3', period: '26/27', format: 'f7',  db: DATABASE_S3 },
 ];
 
-export const CURRENT_SEASON_ID = 's2';
+export const CURRENT_SEASON_ID = 's3';
 export const getSeason = (id) => SEASONS.find(s => s.id === id);

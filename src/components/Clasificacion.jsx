@@ -10,7 +10,7 @@ export default function Clasificacion() {
   const { db: DATABASE, season } = useSeason();
   const [showIframe, setShowIframe] = useState(false);
 
-  const TABLA = DATABASE.classification || [];
+  const TABLA = DATABASE.classification;
   const nosaltres = TABLA.find(e => e.esNosaltres);
   const lastPos = TABLA.length;
 

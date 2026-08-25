@@ -8,6 +8,7 @@ export const DATABASE_S3 = {
 
   nextMatch: null,
   calendar: [],
+  classification: [],
 
   roster: [
     { id: 'arnau-sentis',  name: 'Arnau Sentis',  number: 8,    position: 'Migcampista', status: 'actiu' },

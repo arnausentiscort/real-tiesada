@@ -21,6 +21,8 @@ const ROSTER_S1 = [
 export const DATABASE_S1 = {
   teamName: 'Real Tiesada',
 
+  classification: [],
+
   roster: resolveRoster({ roster: ROSTER_S1 }),
 
   matches: [
