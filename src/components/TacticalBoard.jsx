@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, memo, useEffect } from 'react';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -39,16 +39,21 @@ const MODES = {
 };
 
 // ── Posicions per defecte (% camp) ───────────────────────────────
+// Sempre a la meitat inferior (>=~52%) perquè quedi un marge net amb
+// els rivals (RIVAL_PCT, meitat superior) i eviti la col·lisió inicial.
 const DEF_PCT = {
-  fs5: [[50,90],[25,70],[75,70],[25,40],[75,40]],
-  f7:  [[50,90],[30,75],[70,75],[20,50],[50,50],[80,50],[50,25]],
-  f11: [[50,90],[15,75],[35,75],[65,75],[85,75],[35,55],[65,55],[15,25],[50,35],[85,25],[50,15]],
+  fs5: [[50,92],[25,75],[75,75],[25,55],[75,55]],
+  f7:  [[50,92],[25,80],[75,80],[20,62],[50,62],[80,62],[50,52]],
+  f11: [[50,92],[15,80],[38,80],[62,80],[85,80],[25,65],[50,65],[75,65],[20,52],[50,52],[80,52]],
 };
 
+// Rivals sempre a la meitat superior del camp (y SVG entre ~30 i ~300,
+// per sota de VB_H=660) i els nostres a la inferior — vegeu DEF_PCT.
+// Cap punt d'aquí ha de superar el ~42% perquè no s'apropi als nostres.
 const RIVAL_PCT = {
-  fs5: [[50,10],[25,30],[75,30],[25,55],[75,55]],
-  f7:  [[50,10],[30,25],[70,25],[20,50],[50,50],[80,50],[50,75]],
-  f11: [[50,10],[20,20],[40,20],[60,20],[80,20],[25,45],[50,45],[75,45],[25,70],[50,70],[75,70]],
+  fs5: [[50,8],[25,25],[75,25],[25,42],[75,42]],
+  f7:  [[50,6],[25,18],[75,18],[15,30],[50,30],[85,30],[50,40]],
+  f11: [[50,5],[15,18],[38,18],[62,18],[85,18],[25,30],[50,30],[75,30],[20,40],[50,40],[80,40]],
 };
 
 // ── Alineacions per defecte ───────────────────────────────────────
@@ -64,6 +69,26 @@ const pct2svg = ([px, py]) => ({ x: F.x + (px/100)*F.w, y: F.y + (py/100)*F.h })
 const mkField  = m => DEF_LINEUP[m].map((name, i) => ({ name, ...pct2svg(DEF_PCT[m][i]) }));
 const mkRivals = m => RIVAL_PCT[m].map(pct2svg);
 const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Distància mínima entre centres de dos tokens perquè no quedin superposats
+const MIN_DIST = 2 * R; // 44px
+
+// Empeny `pos` lluny de qualsevol token de `others` que quedi a menys de
+// MIN_DIST, fins a la distància mínima — no el deixa mai a sobre.
+function resolveCollisions(pos, others) {
+  let { x, y } = pos;
+  others.forEach(o => {
+    const dx = x - o.x, dy = y - o.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist === 0) { x += MIN_DIST; return; }
+    if (dist < MIN_DIST) {
+      const push = MIN_DIST - dist;
+      x += (dx / dist) * push;
+      y += (dy / dist) * push;
+    }
+  });
+  return { x, y };
+}
 
 // ── Component Pilota ──────────────────────────────────────────────
 const Ball = memo(({ ball, onDown, onMove, onUp }) => {
@@ -221,6 +246,10 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
         style={{pointerEvents:'none'}}>
         {(info?.shirtName || p.name.split(' ')[0]).slice(0,12)}
       </text>
+      {info?.status === 'lesionat' && (
+        <text x={p.x+adaptiveR*0.7} y={p.y-adaptiveR*0.7} textAnchor="middle" fontSize={12}
+          style={{pointerEvents:'none'}}>🩹</text>
+      )}
     </g>
   );
 });
@@ -243,19 +272,27 @@ const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
 
 // ── Component principal ───────────────────────────────────────────
 export default function TacticalBoard() {
-  const roster = DATABASE.roster;
+  const { db: DATABASE, format } = useSeason();
+  // Els 'baixa' ja no formen part de l'equip — no surten enlloc de la
+  // pissarra (alineació per defecte, banquillo ni convocatòria). Els
+  // 'lesionat' sí que hi surten, amb el badge 🩹.
+  const roster = DATABASE.roster.filter(p => p.status !== 'baixa');
+  const baixaNames = new Set(DATABASE.roster.filter(p => p.status === 'baixa').map(p => p.name));
   const svgRef = useRef(null);
-  const fieldDrag = useRef(null); 
+  const fieldDrag = useRef(null);
   const benchDrag = useRef(null);
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
-  const [mode, setMode] = useState('fs5');
+  // Mode per defecte derivat de la temporada activa (fs5 a S1/S2, f7 a
+  // S3) — ara que consumim useSeason() ja no cal el TODO de la Fase 1c.
+  const [mode, setMode] = useState(format.id);
   const [unavailable, setUnavailable] = useState([]);
   const [showConv, setShowConv] = useState(false);
-  
-  const [fieldPlayers, setFieldPlayers] = useState(mkField('fs5'));
-  const [rivalPos, setRivalPos] = useState(mkRivals('fs5'));
+  const [showRivals, setShowRivals] = useState(false);
+
+  const [fieldPlayers, setFieldPlayers] = useState(() => mkField(format.id).filter(p => !baixaNames.has(p.name)));
+  const [rivalPos, setRivalPos] = useState(() => mkRivals(format.id));
   const [ghost, setGhost] = useState(null);
   const [ball, setBall] = useState({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
 
@@ -272,15 +309,15 @@ export default function TacticalBoard() {
   }, []);
 
   const switchMode = m => {
-    setMode(m); 
-    setFieldPlayers(mkField(m).filter(p => !unavailable.includes(p.name))); 
+    setMode(m);
+    setFieldPlayers(mkField(m).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
     setRivalPos(mkRivals(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
   };
 
   const reset = () => {
-    setFieldPlayers(mkField(mode).filter(p => !unavailable.includes(p.name))); 
+    setFieldPlayers(mkField(mode).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
     setRivalPos(mkRivals(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
@@ -314,9 +351,19 @@ export default function TacticalBoard() {
     setFieldPlayers(prev => prev.map((p,i) => i===idx ? {...p,x:nx,y:ny} : p));
   }, [toSvg, adaptiveR]);
   
-  const onOwnUp = useCallback(e => { 
-    if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
-  }, []);
+  const onOwnUp = useCallback(e => {
+    const d = fieldDrag.current;
+    if (!d || d.type!=='own' || d.pid!==e.pointerId) return;
+    const { idx } = d;
+    fieldDrag.current = null;
+    setFieldPlayers(prev => {
+      const others = [...prev.filter((_,i) => i!==idx), ...rivalPos];
+      const moved = resolveCollisions(prev[idx], others);
+      const nx = clamp(moved.x, F.x+adaptiveR, F.x+F.w-adaptiveR);
+      const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
+      return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
+    });
+  }, [rivalPos, adaptiveR]);
 
   // ── Drag rivals ──────────────────────────────────────────────────
   const onRivDown = useCallback((idx, e) => {
@@ -336,9 +383,19 @@ export default function TacticalBoard() {
     setRivalPos(prev => prev.map((p,i) => i===idx ? {x:nx,y:ny} : p));
   }, [toSvg, adaptiveR]);
   
-  const onRivUp = useCallback(e => { 
-    if (fieldDrag.current?.pid===e.pointerId) fieldDrag.current=null; 
-  }, []);
+  const onRivUp = useCallback(e => {
+    const d = fieldDrag.current;
+    if (!d || d.type!=='rival' || d.pid!==e.pointerId) return;
+    const { idx } = d;
+    fieldDrag.current = null;
+    setRivalPos(prev => {
+      const others = [...prev.filter((_,i) => i!==idx), ...fieldPlayers];
+      const moved = resolveCollisions(prev[idx], others);
+      const nx = clamp(moved.x, F.x+adaptiveR, F.x+F.w-adaptiveR);
+      const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
+      return prev.map((p,i) => i===idx ? {x:nx, y:ny} : p);
+    });
+  }, [fieldPlayers, adaptiveR]);
 
   // ── Drag pilota ──────────────────────────────────────────────────
   const onBallDown = useCallback((e) => {
@@ -418,6 +475,14 @@ export default function TacticalBoard() {
               className="px-2.5 md:px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-[11px] md:text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1 flex-shrink-0">
               <span>👥</span> <span className="hidden sm:inline">Convocatòria</span>
             </button>
+            <button onClick={() => setShowRivals(v => !v)}
+              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
+                showRivals
+                  ? 'bg-[#C0392B]/15 border-[#C0392B]/40 text-[#C0392B] hover:bg-[#C0392B]/25'
+                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
+              <span>{showRivals ? '🙈' : '👁️'}</span>
+              <span className="hidden sm:inline">{showRivals ? 'Amagar rivals' : 'Mostrar rivals'}</span>
+            </button>
             <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
               {Object.entries(MODES).map(([key, {label}]) => (
                 <button key={key} onClick={() => switchMode(key)}
@@ -469,7 +534,7 @@ export default function TacticalBoard() {
               <text x={F.x+F.w/2} y={F.y+18} textAnchor="middle" fontSize={9}
                 fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>
 
-              {rivalPos.map((pos, i) => (
+              {showRivals && rivalPos.map((pos, i) => (
                 <RivalToken key={`r-${i}`} pos={pos} idx={i} onDown={onRivDown} onMove={onRivMove} onUp={onRivUp} adaptiveR={adaptiveR}/>
               ))}
 
@@ -487,8 +552,8 @@ export default function TacticalBoard() {
             <p className="text-[9px] md:text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-1.5 md:mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
-            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 md:overflow-y-auto`}
-              style={{ maxHeight: isMobile ? undefined : 'calc(100vh - 220px)' }}>
+            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 overflow-y-auto`}
+              style={{ maxHeight: isMobile ? '32vh' : 'calc(100vh - 220px)' }}>
               {benchPlayers.map(p => (
                 <div key={p.name}
                   className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0"
@@ -507,6 +572,9 @@ export default function TacticalBoard() {
                         style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top', pointerEvents:'none' }}/>
                     ) : (
                       <span style={{ color:'#E5C07B', fontWeight:900, fontSize:16, pointerEvents:'none' }}>{p.name[0]}</span>
+                    )}
+                    {p.status === 'lesionat' && (
+                      <span style={{ position:'absolute', top:-2, right:-2, fontSize:11, lineHeight:1 }}>🩹</span>
                     )}
                   </div>
                   <span className="text-[8px] md:text-[8.5px] text-gray-500 font-bold text-center leading-tight"
@@ -605,6 +673,7 @@ export default function TacticalBoard() {
                       {p.photo ? <img src={`${BASE}${p.photo}`} className="w-full h-full object-cover object-top" /> : <span className="text-[#E5C07B] text-[9px] md:text-xs font-bold">{p.name[0]}</span>}
                     </div>
                     <span className={`font-bold text-xs md:text-sm ${isAvail ? 'text-white' : 'text-gray-500 line-through'}`}>{p.name}</span>
+                    {p.status === 'lesionat' && <span title="Lesionat">🩹</span>}
                   </label>
                 )
               })}
