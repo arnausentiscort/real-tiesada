@@ -1,7 +1,16 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { X, Plus, Trash2, ChevronLeft, Github, Check, AlertCircle, Loader } from 'lucide-react';
 import { DATABASE } from '../data.js';
+import { FORMATS } from '../formats.js';
+import GoalFrame from './pitch/GoalFrame.jsx';
+import Pitch from './pitch/Pitch.jsx';
 import SubstitutionTimeline from './SubstitutionTimeline';
+
+// TODO: resoldre per partit quan AdminPanel consumeixi useSeason() —
+// de moment només escriu al Split 2 (FILE_PATH apunta a data.js), així
+// que fixem-ho explícit a fs5 en comptes de simular una resolució
+// que no fem de veritat.
+const ADMIN_FORMAT = FORMATS.fs5;
 
 const BASE = import.meta.env.BASE_URL;
 const REPO_OWNER = 'arnausentiscort';
@@ -81,21 +90,8 @@ function PitchClickable({ points, onChange }) {
       <p className="text-[10px] text-gray-600">
         Mode: <span className="text-white font-bold">{mode === 'assist' ? 'Punt assistència' : mode === 'conduct' ? 'Fi conducció' : 'Punt de tir'}</span> — clica al camp
       </p>
-      <svg ref={svgRef} viewBox="0 0 800 420" onClick={handleClick}
-        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{display:'block', maxHeight:220}}>
-        <rect width="800" height="420" fill="#1c3d1c"/>
-        {[0,2,4,6].map(i=><rect key={i} x="0" y={i*60} width="800" height="60" fill="rgba(0,0,0,0.07)"/>)}
-        <rect x="18" y="18" width="764" height="384" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2"/>
-        <line x1="400" y1="18" x2="400" y2="402" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5"/>
-        <circle cx="400" cy="210" r="185" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
-        <path d="M 18,80 A 70,70 0 0,1 88,150" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <line x1="88" y1="150" x2="88" y2="270" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <path d="M 88,270 A 70,70 0 0,1 18,340" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <path d="M 782,80 A 70,70 0 0,0 712,150" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <line x1="712" y1="150" x2="712" y2="270" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <path d="M 712,270 A 70,70 0 0,0 782,340" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"/>
-        <rect x="3" y="185" width="15" height="50" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.7)" strokeWidth="2"/>
-        <rect x="782" y="185" width="15" height="50" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.7)" strokeWidth="2"/>
+      <Pitch format={ADMIN_FORMAT} svgRef={svgRef} onClick={handleClick}
+        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{maxHeight:220}}>
         {[1,2,3,4,5].map(c=><line key={c} x1={18+c*764/6} y1="18" x2={18+c*764/6} y2="402" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
         {[1,2,3].map(r=><line key={r} x1="18" y1={18+r*384/4} x2="782" y2={18+r*384/4} stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
         {['A','B','C','D'].map((row,ri)=>[1,2,3,4,5,6].map(col=>(
@@ -108,7 +104,7 @@ function PitchClickable({ points, onChange }) {
         {points.shot && <><circle cx={points.shot.x} cy={points.shot.y} r="12" fill="#E5C07B" opacity="0.2"/><circle cx={points.shot.x} cy={points.shot.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="2"/><text x={points.shot.x} y={points.shot.y-12} textAnchor="middle" fontSize="8" fill="#E5C07B">T</text></>}
         <text x="10" y="213" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.25)" transform="rotate(-90,10,213)">nostra</text>
         <text x="793" y="213" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.25)" transform="rotate(90,793,213)">rival →</text>
-      </svg>
+      </Pitch>
       <div className="flex gap-1.5 flex-wrap">
         {[{key:'assist',label:'A',color:'text-blue-400'},{key:'conduct',label:'C',color:'text-yellow-400'},{key:'shot',label:'T',color:'text-[#E5C07B]'}].map(({key,label,color}) => points[key] && (
           <div key={key} className="flex items-center gap-1 bg-[#111] border border-white/8 rounded-lg px-2 py-0.5 text-[10px]">
@@ -124,31 +120,29 @@ function PitchClickable({ points, onChange }) {
 // ── Porteria clickable ─────────────────────────────────────────────
 function GoalClickable({ value, onChange, label }) {
   const svgRef = useRef(null);
+  const format = ADMIN_FORMAT;
+  const { w, h } = format.goal;
   const handleClick = useCallback((e) => {
     const p = svgPoint(svgRef.current, e.clientX, e.clientY);
     if (!p) return;
-    const x = Math.max(0, Math.min(300, Math.round(p.x)));
-    const y = Math.max(0, Math.min(200, Math.round(p.y)));
+    const x = Math.max(0, Math.min(w, Math.round(p.x)));
+    const y = Math.max(0, Math.min(h, Math.round(p.y)));
     onChange({ x, y, zone: ['A','B','C','D'][Math.min(3,Math.max(0,Math.ceil(y/50)-1))] + Math.min(6,Math.max(1,Math.ceil(x/50))) });
-  }, [onChange]);
+  }, [onChange, w, h]);
 
   return (
     <div>
       <p className="text-[10px] text-gray-500 mb-1">{label}{value && <span className="text-[#E5C07B] ml-1">→ {value.zone}</span>}</p>
-      <svg ref={svgRef} viewBox="-18 -18 336 230" onClick={handleClick}
-        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{display:'block', maxHeight:130}}>
+      <GoalFrame format={format} svgRef={svgRef} onClick={handleClick}
+        className="w-full rounded-xl cursor-crosshair border border-white/10" style={{maxHeight:130}}>
         <rect x="0" y="0" width="300" height="200" fill="#0d0d0d"/>
         {[1,2,3,4,5].map(c=><line key={c} x1={c*50} y1="0" x2={c*50} y2="200" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>)}
         {[1,2,3].map(r=><line key={r} x1="0" y1={r*50} x2="300" y2={r*50} stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>)}
         {['A','B','C','D'].map((row,ri)=>[1,2,3,4,5,6].map(col=>(
           <text key={`${row}${col}`} x={(col-0.5)*50} y={(ri+0.5)*50} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="rgba(255,255,255,0.35)" fontWeight="bold">{row}{col}</text>
         )))}
-        <rect x="-9" y="-9" width="11" height="212" rx="2" fill="#e8e8e8"/>
-        <rect x="298" y="-9" width="11" height="212" rx="2" fill="#e8e8e8"/>
-        <rect x="-9" y="-9" width="318" height="11" rx="2" fill="#e8e8e8"/>
-        <rect x="-18" y="200" width="336" height="12" fill="#1c3d1c"/>
         {value && <><circle cx={value.x} cy={value.y} r="12" fill="#E5C07B" opacity="0.25"/><circle cx={value.x} cy={value.y} r="6" fill="#E5C07B" stroke="white" strokeWidth="1.5"/></>}
-      </svg>
+      </GoalFrame>
     </div>
   );
 }

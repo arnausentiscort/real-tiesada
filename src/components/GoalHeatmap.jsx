@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { DATABASE } from '../data.js';
+import { FORMATS } from '../formats.js';
+import GoalFrame from './pitch/GoalFrame.jsx';
+import Pitch from './pitch/Pitch.jsx';
 
 const ACCENT = '#E5C07B';
 const BASE = import.meta.env.BASE_URL;
@@ -179,7 +182,7 @@ const SVG_ANIMATIONS = `
 `;
 
 // ── Hook: pilota al GoalSVG — paràbola des del centre → goalPos ───
-function useGoalBallAnimation(goal) {
+function useGoalBallAnimation(goal, format) {
   const [frame,  setFrame]  = useState(null);
   const [ripple, setRipple] = useState(false);
   const rafRef   = useRef(null);
@@ -191,13 +194,17 @@ function useGoalBallAnimation(goal) {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     if (!goal?.goalPos) return;
 
+    // Escala respecte al camp de fs5 (referència original) — un camp
+    // més alt (f7) allarga l'arc de la paràbola i la pilota d'aproximació.
+    const scale = format.pitch.h / FORMATS.fs5.pitch.h;
+
     const GP = goal.goalPos;
-    const p0 = { x: 150, y: 100 }; // centre del camp (GoalSVG coords)
+    const p0 = { x: format.goal.w / 2, y: format.goal.h / 2 }; // centre del camp (GoalSVG coords)
     const p1 = { x: GP.x, y: GP.y };
     // Paràbola: punt de control ben per sobre del punt mig (trajectòria d'arc alt)
     const cp = {
       x: (p0.x + p1.x) / 2,
-      y: Math.min(p0.y, p1.y) - 90,
+      y: Math.min(p0.y, p1.y) - 90 * scale,
     };
 
     const FLY_DUR  = 680;
@@ -214,7 +221,7 @@ function useGoalBallAnimation(goal) {
         const ease = rawT < 0.5 ? 4*rawT*rawT*rawT : 1 - Math.pow(-2*rawT+2, 3)/2;
         const pos  = bezierAt(ease, p0, cp, p1);
         // Mida decreix en apropar-se (perspectiva)
-        const r = 9 - rawT * 2;
+        const r = (9 - rawT * 2) * scale;
         trailRef.current = [...trailRef.current.slice(-8), { x: pos.x, y: pos.y }];
         setFrame({ x: pos.x, y: pos.y, r, alpha: 1, trail: [...trailRef.current] });
 
@@ -240,13 +247,13 @@ function useGoalBallAnimation(goal) {
 
     setTimeout(() => { rafRef.current = requestAnimationFrame(tick); }, 200);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [goal]);
+  }, [goal, format]);
 
   return { frame, ripple };
 }
 
 // ── Camp SVG ──────────────────────────────────────────────────────
-function PitchSVG({ goals, activeGoal, setActiveGoal }) {
+function PitchSVG({ goals, activeGoal, setActiveGoal, format }) {
   const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
   const { ballPos, trail, spin, impact, goalRipple } = useBallAnimation(activeGoalData);
 
@@ -266,7 +273,7 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
   const gradFrom = A || C || S;
 
   return (
-    <svg viewBox="0 0 800 420" style={{width:'100%',display:'block'}}>
+    <Pitch format={format}>
       <defs>
         <style>{SVG_ANIMATIONS}</style>
 
@@ -289,25 +296,6 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
           <feComposite in="SourceGraphic" in2="blur" operator="over"/>
         </filter>
       </defs>
-
-      {/* Gespa — franges alternades */}
-      {Array.from({length:8},(_,i)=>(
-        <rect key={i} x={18+i*95.5} y="18" width="95.5" height="384"
-          fill={i%2===0?'#1c3d1c':'#193619'}/>
-      ))}
-      <rect x="0" y="0" width="800" height="420" fill="none"/>
-
-      {/* Línies del camp */}
-      <rect x="18" y="18" width="764" height="384" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2"/>
-      <line x1="400" y1="18" x2="400" y2="402" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5"/>
-      <circle cx="400" cy="210" r="185" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.5"/>
-      <circle cx="400" cy="210" r="4"   fill="rgba(255,255,255,0.8)"/>
-      <path d="M18,80 A70,70 0 0,1 88,150 L88,270 A70,70 0 0,1 18,340" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5"/>
-      <line x1="88" y1="150" x2="88" y2="270" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5"/>
-      <rect x="3"   y="185" width="15" height="50" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.9)" strokeWidth="2" rx="1"/>
-      <path d="M782,80 A70,70 0 0,0 712,150 L712,270 A70,70 0 0,0 782,340" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5"/>
-      <line x1="712" y1="150" x2="712" y2="270" stroke="rgba(255,255,255,0.75)" strokeWidth="1.5"/>
-      <rect x="782" y="185" width="15" height="50" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.9)" strokeWidth="2" rx="1"/>
 
       {/* Calor de fons — blobs acumulats */}
       {goals.map((g,i) => g._sx && (
@@ -482,18 +470,20 @@ function PitchSVG({ goals, activeGoal, setActiveGoal }) {
           </g>
         );
       })()}
-    </svg>
+    </Pitch>
   );
 }
 
 // ── Porteria SVG ──────────────────────────────────────────────────
 const GROUND_Y = 185;
-function GoalSVG({ goals, activeGoal, setActiveGoal }) {
+function GoalSVG({ goals, activeGoal, setActiveGoal, format }) {
   const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
-  const { frame, ripple } = useGoalBallAnimation(activeGoalData);
+  const { frame, ripple } = useGoalBallAnimation(activeGoalData, format);
+  const w = format.goal.w;
+  const netX = Array.from({ length: 9 }, (_, i) => (w / 10) * (i + 1));
 
   return (
-    <svg viewBox="-18 -18 336 230" style={{width:'100%',display:'block'}}>
+    <GoalFrame format={format}>
       <defs>
         <style>{SVG_ANIMATIONS}</style>
         <radialGradient id="netbg" cx="50%" cy="0%">
@@ -507,36 +497,34 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
         </radialGradient>
       </defs>
 
-      {/* Terra */}
-      <rect x="-18" y="200" width="336" height="12" fill="#1c3d1c"/>
       {/* Interior porteria */}
-      <rect x="0" y="0" width="300" height="200" fill="#070707"/>
-      <rect x="0" y="0" width="300" height="200" fill="url(#netbg)"/>
+      <rect x="0" y="0" width={w} height="200" fill="#070707"/>
+      <rect x="0" y="0" width={w} height="200" fill="url(#netbg)"/>
       {/* Degradat profunditat */}
-      <rect x="0" y="150" width="300" height="50" fill="rgba(0,0,0,0.25)"/>
+      <rect x="0" y="150" width={w} height="50" fill="rgba(0,0,0,0.25)"/>
 
       {/* 3D perspectiva */}
-      <line x1="0"   y1="0"   x2="-13" y2="-13" stroke="#555" strokeWidth="1.8"/>
-      <line x1="300" y1="0"   x2="313" y2="-13" stroke="#555" strokeWidth="1.8"/>
-      <line x1="0"   y1="200" x2="-13" y2="187" stroke="#444" strokeWidth="1.4"/>
-      <line x1="300" y1="200" x2="313" y2="187" stroke="#444" strokeWidth="1.4"/>
-      <line x1="-13" y1="-13" x2="313" y2="-13" stroke="#555" strokeWidth="1.5"/>
-      <line x1="-13" y1="-13" x2="-13" y2="187" stroke="#444" strokeWidth="1"/>
-      <line x1="313" y1="-13" x2="313" y2="187" stroke="#444" strokeWidth="1"/>
+      <line x1="0" y1="0"   x2="-13"    y2="-13" stroke="#555" strokeWidth="1.8"/>
+      <line x1={w} y1="0"   x2={w+13}  y2="-13" stroke="#555" strokeWidth="1.8"/>
+      <line x1="0" y1="200" x2="-13"    y2="187" stroke="#444" strokeWidth="1.4"/>
+      <line x1={w} y1="200" x2={w+13}  y2="187" stroke="#444" strokeWidth="1.4"/>
+      <line x1="-13"    y1="-13" x2={w+13} y2="-13" stroke="#555" strokeWidth="1.5"/>
+      <line x1="-13"    y1="-13" x2="-13"    y2="187" stroke="#444" strokeWidth="1"/>
+      <line x1={w+13}  y1="-13" x2={w+13}  y2="187" stroke="#444" strokeWidth="1"/>
 
       {/* Xarxa */}
-      {[30,60,90,120,150,180,210,240,270].map(x=>(
+      {netX.map(x=>(
         <line key={`nv-${x}-${ripple}`} x1={x} y1="0" x2={x} y2="200"
           stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"
           style={ripple ? {animation:'netFlash 0.7s ease-out both'} : {}}/>
       ))}
       {[40,80,120,160].map(y=>(
-        <line key={`nh-${y}-${ripple}`} x1="0" y1={y} x2="300" y2={y}
+        <line key={`nh-${y}-${ripple}`} x1="0" y1={y} x2={w} y2={y}
           stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"
           style={ripple ? {animation:`netFlash 0.7s ease-out ${y*0.002}s both`} : {}}/>
       ))}
       {/* Diagonals perspectiva xarxa */}
-      {[30,60,90,120,150,180,210,240,270].map(x=>(
+      {netX.map(x=>(
         <line key={`nd-${x}`} x1={x} y1="0" x2={x-13} y2="-13"
           stroke="rgba(255,255,255,0.03)" strokeWidth="0.4"/>
       ))}
@@ -662,16 +650,7 @@ function GoalSVG({ goals, activeGoal, setActiveGoal }) {
           </g>
         );
       })()}
-
-      {/* Pals */}
-      <rect x="-9" y="-8" width="11" height="210" rx="3" fill="#e8e8e8"/>
-      <rect x="298" y="-8" width="11" height="210" rx="3" fill="#e8e8e8"/>
-      <rect x="-9" y="-8" width="318" height="11" rx="3" fill="#e8e8e8"/>
-      {/* Brillantor pals */}
-      <rect x="-9" y="-8" width="4" height="210" rx="2" fill="rgba(255,255,255,0.3)"/>
-      <rect x="298" y="-8" width="4" height="210" rx="2" fill="rgba(255,255,255,0.3)"/>
-      <rect x="-9" y="-8" width="318" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
-    </svg>
+    </GoalFrame>
   );
 }
 
@@ -852,6 +831,14 @@ export default function GoalHeatmap() {
   const [autoPlay,     setAutoPlay]     = useState(false);
   const autoRef = useRef(null);
 
+  // TODO: resoldre per partit quan GoalHeatmap consumeixi useSeason() —
+  // llavors cada gol s'ha de dibuixar amb getMatchFormat(match, season)
+  // del seu propi partit, no un sol format per a tot el component.
+  // De moment GoalHeatmap encara no sap de temporades (usa l'àlies
+  // estàtic DATABASE = Split 2), així que fixem-ho explícit a fs5
+  // en comptes de simular una resolució que no fem de veritat.
+  const format = FORMATS.fs5;
+
   const allGoals = useMemo(() => {
     const goals = [];
     DATABASE.matches.forEach(match => {
@@ -952,12 +939,12 @@ export default function GoalHeatmap() {
                 </span>
               )}
             </p>
-            <PitchSVG goals={filtered} activeGoal={activeGoal}
+            <PitchSVG goals={filtered} activeGoal={activeGoal} format={format}
               setActiveGoal={(i) => { setAutoPlay(false); setActiveGoal(i); }}/>
           </div>
           <div className="bg-[#080808] rounded-2xl border border-white/5 p-3 overflow-hidden">
             <p className="text-[10px] text-gray-600 mb-2 uppercase tracking-wider font-bold">Porteria rival · on entra</p>
-            <GoalSVG goals={filtered} activeGoal={activeGoal}
+            <GoalSVG goals={filtered} activeGoal={activeGoal} format={format}
               setActiveGoal={(i) => { setAutoPlay(false); setActiveGoal(i); }}/>
           </div>
         </div>
