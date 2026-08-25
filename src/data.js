@@ -41,6 +41,20 @@ export const DATABASE_S2 = {
   // Fi de temporada 25/26 — Split 2 finalitzat
   nextMatch: null,
 
+  leagueLabel: "Dilluns 2a Lliga 25-26",
+  classificationUrl: "https://apuntamelo.com/clasificacion-grupo/9/14/0/642/0/3354/2",
+  classification: [
+    { pos: 1, equipo: 'Ensaimada',    pj:16, pg:13, pe:0, pp:3,  gf:79, gc:32, pts:39, forma: ['V','V','V','V','V'], esNosaltres: false },
+    { pos: 2, equipo: 'Uruks',        pj:16, pg:12, pe:3, pp:1,  gf:62, gc:40, pts:39, forma: ['V','E','V','V','V'], esNosaltres: false },
+    { pos: 3, equipo: 'Touchlas FC',  pj:16, pg:9,  pe:3, pp:4,  gf:61, gc:44, pts:30, forma: ['V','V','V','V','E'], esNosaltres: false },
+    { pos: 4, equipo: 'Vietkong',     pj:16, pg:9,  pe:0, pp:7,  gf:59, gc:41, pts:27, forma: ['V','V','V','D','V'], esNosaltres: false },
+    { pos: 5, equipo: 'Dgeneracion',  pj:16, pg:8,  pe:1, pp:7,  gf:55, gc:51, pts:25, forma: ['V','V','D','V','D'], esNosaltres: false },
+    { pos: 6, equipo: 'Vikings',      pj:16, pg:7,  pe:3, pp:6,  gf:51, gc:51, pts:24, forma: ['V','D','D','V','D'], esNosaltres: false },
+    { pos: 7, equipo: 'Real Tiesada', pj:16, pg:3,  pe:1, pp:12, gf:40, gc:71, pts:10, forma: ['V','V','V','D','D'], esNosaltres: true  },
+    { pos: 8, equipo: 'Great Spirit', pj:16, pg:3,  pe:0, pp:13, gf:25, gc:56, pts:9,  forma: ['V','D','D','D','D'], esNosaltres: false },
+    { pos: 9, equipo: 'Fabbas FC',    pj:16, pg:2,  pe:1, pp:13, gf:37, gc:83, pts:7,  forma: ['D','D','D','D','D'], esNosaltres: false },
+  ],
+
   // Calendari complet de la temporada
   calendar: [
     { date: "2026-03-23T23:15:00", dateLabel: "23 Mar · 23:15h", jornada: "Jornada 5",  opponent: "Dgeneración X", location: "St. Ignasi Sala 2", isHome: true  },
