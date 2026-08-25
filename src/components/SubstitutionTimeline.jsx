@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, ChevronDown, Clock } from 'lucide-react';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 /**
  * COMPONENTE DE TIMELINE DE SUSTITUCIONS
@@ -13,6 +13,7 @@ import { DATABASE } from '../data.js';
  */
 
 export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers = [] }) {
+  const { db: DATABASE } = useSeason();
   const [expandedIdx, setExpandedIdx] = useState(null);
   const baseRoster = DATABASE.roster;
   const allPlayers = [

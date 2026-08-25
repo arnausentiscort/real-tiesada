@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -9,8 +9,8 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg'
 );
 
-function dorsal(name) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function dorsal(roster, name) {
+  const pl = roster.find(r => r.name === name);
   return pl?.shirtName || name.split(' ')[0].toUpperCase();
 }
 
@@ -24,14 +24,9 @@ function calcRanking(rows) {
   return Object.entries(pts).sort((a, b) => b[1] - a[1]);
 }
 
-const playedMatches = DATABASE.matches.filter(m => {
-  const [f, a] = m.result.split('-').map(Number);
-  return !isNaN(f) && !isNaN(a);
-});
-
 // ── Avatar jugador ────────────────────────────────────────────────
-function PlayerAvatar({ name, size = 56, ring, cel = false }) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function PlayerAvatar({ name, size = 56, ring, cel = false, roster }) {
+  const pl = roster.find(r => r.name === name);
   const src = cel && pl?.photoCel ? pl.photoCel : pl?.photo;
   const style = {
     width: size, height: size, flexShrink: 0,
@@ -59,7 +54,7 @@ const PODIUM_CFG = [
   { rank: 3, color: '#CD7F32', glow: 'rgba(205,127,50,0.15)',  medal: '🥉', label: 'BRONZE',h: 40 },
 ];
 
-function Podium({ ranking }) {
+function Podium({ ranking, roster }) {
   // Display order: 2n, 1r, 3r
   const display = [1, 0, 2];
   return (
@@ -68,14 +63,14 @@ function Podium({ ranking }) {
         const cfg = PODIUM_CFG[pi];
         if (!ranking[pi]) return <div key={pi} className="flex-1"/>;
         const [name, pts] = ranking[pi];
-        const pl = DATABASE.roster.find(r => r.name === name);
+        const pl = roster.find(r => r.name === name);
         const avatarSize = pi === 0 ? 76 : 56;
         return (
           <div key={pi} className="flex-1 flex flex-col items-center gap-2 sm:gap-3">
             {/* Avatar + info */}
             <div className="flex flex-col items-center gap-1.5">
               <div className="relative">
-                <PlayerAvatar name={name} size={avatarSize} ring={cfg.color} cel={true}/>
+                <PlayerAvatar name={name} size={avatarSize} ring={cfg.color} cel={true} roster={roster}/>
                 <span className="absolute -bottom-1 -right-1 text-base leading-none">{cfg.medal}</span>
               </div>
               <div className="text-center">
@@ -108,14 +103,14 @@ function Podium({ ranking }) {
 }
 
 // ── Fila de rànquing (del 4t en amunt) ───────────────────────────
-function RankRow({ rank, name, pts, maxPts }) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function RankRow({ rank, name, pts, maxPts, roster }) {
+  const pl = roster.find(r => r.name === name);
   const pct = maxPts > 0 ? (pts / maxPts) * 100 : 0;
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
       style={{background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)'}}>
       <span className="text-xs font-black w-5 text-center" style={{color:'rgba(255,255,255,0.2)'}}>{rank}</span>
-      <PlayerAvatar name={name} size={32}/>
+      <PlayerAvatar name={name} size={32} roster={roster}/>
       <div className="flex-1 min-w-0">
         <div className="text-xs font-bold text-white leading-none">{pl?.shirtName || name.split(' ')[0].toUpperCase()}</div>
         <div className="mt-1 h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
@@ -128,7 +123,7 @@ function RankRow({ rank, name, pts, maxPts }) {
 }
 
 // ── Targeta MVP per partit ────────────────────────────────────────
-function MatchMvpCard({ match, rows }) {
+function MatchMvpCard({ match, rows, roster }) {
   const ranking = calcRanking(rows);
   const [f, a]  = match.result.split('-').map(Number);
   const win = f > a, draw = f === a;
@@ -174,9 +169,9 @@ function MatchMvpCard({ match, rows }) {
               return (
                 <div key={i} className="flex items-center gap-2 flex-1 px-2.5 py-2 rounded-xl min-w-0"
                   style={{background:'rgba(255,255,255,0.04)', border:`1px solid rgba(255,255,255,0.06)`}}>
-                  <PlayerAvatar name={name} size={36} ring={color}/>
+                  <PlayerAvatar name={name} size={36} ring={color} roster={roster}/>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-black text-white truncate">{dorsal(name)}</div>
+                    <div className="text-[10px] font-black text-white truncate">{dorsal(roster, name)}</div>
                     <div className="text-[9px] font-bold mt-0.5" style={{color}}>
                       {medal} {pts}p
                     </div>
@@ -194,7 +189,7 @@ function MatchMvpCard({ match, rows }) {
                 <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded-full"
                   style={{background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.3)',
                     border:'1px solid rgba(255,255,255,0.06)'}}>
-                  {dorsal(row.voter_name)}: {dorsal(row.gold)} · {dorsal(row.silver)} · {dorsal(row.bronze)}
+                  {dorsal(roster, row.voter_name)}: {dorsal(roster, row.gold)} · {dorsal(roster, row.silver)} · {dorsal(roster, row.bronze)}
                 </span>
               ))}
             </div>
@@ -207,6 +202,7 @@ function MatchMvpCard({ match, rows }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function MvpPage() {
+  const { db: DATABASE } = useSeason();
   const [allRows, setAllRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -223,8 +219,21 @@ export default function MvpPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const globalRanking = calcRanking(allRows);
+  const playedMatches = DATABASE.matches.filter(m => {
+    const [f, a] = m.result.split('-').map(Number);
+    return !isNaN(f) && !isNaN(a);
+  });
+
+  // mvp_votes no distingeix temporada, només match_id — sense filtrar,
+  // el rànquing "de temporada" barrejaria vots de qualsevol Split que
+  // hagi fet servir aquesta mateixa taula. Ho acotem als partits de la
+  // temporada activa (buit net al Split 3, que encara no en té cap).
+  const seasonMatchIds = new Set(DATABASE.matches.map(m => m.id));
+  const seasonRows     = allRows.filter(r => seasonMatchIds.has(r.match_id));
+
+  const globalRanking = calcRanking(seasonRows);
   const matchesDesc   = [...playedMatches].reverse();
+  const roster        = DATABASE.roster;
 
   if (loading) return (
     <div className="flex items-center justify-center py-24">
@@ -242,7 +251,7 @@ export default function MvpPage() {
       <div>
         <h2 className="text-3xl font-black text-white leading-none">MVP</h2>
         <p className="text-gray-600 text-sm mt-1">
-          {allRows.length > 0 ? `${allRows.length} vot${allRows.length !== 1 ? 's' : ''} emesos` : 'Sense vots encara'}
+          {seasonRows.length > 0 ? `${seasonRows.length} vot${seasonRows.length !== 1 ? 's' : ''} emesos` : 'Sense vots encara'}
         </p>
       </div>
 
@@ -261,7 +270,7 @@ export default function MvpPage() {
           {/* Pòdium */}
           {globalRanking.length >= 2 && (
             <div className="px-4 pt-5 pb-0">
-              <Podium ranking={globalRanking}/>
+              <Podium ranking={globalRanking} roster={roster}/>
             </div>
           )}
 
@@ -269,10 +278,10 @@ export default function MvpPage() {
           <div className="p-3 space-y-1.5">
             {globalRanking.length < 2
               ? globalRanking.map(([name, pts], i) => (
-                  <RankRow key={name} rank={i+1} name={name} pts={pts} maxPts={globalRanking[0][1]}/>
+                  <RankRow key={name} rank={i+1} name={name} pts={pts} maxPts={globalRanking[0][1]} roster={roster}/>
                 ))
               : globalRanking.slice(3).map(([name, pts], i) => (
-                  <RankRow key={name} rank={i+4} name={name} pts={pts} maxPts={globalRanking[0][1]}/>
+                  <RankRow key={name} rank={i+4} name={name} pts={pts} maxPts={globalRanking[0][1]} roster={roster}/>
                 ))
             }
           </div>
@@ -285,8 +294,8 @@ export default function MvpPage() {
           Per jornada
         </p>
         {matchesDesc.map(match => (
-          <MatchMvpCard key={match.id} match={match}
-            rows={allRows.filter(r => r.match_id === match.id)}/>
+          <MatchMvpCard key={match.id} match={match} roster={roster}
+            rows={seasonRows.filter(r => r.match_id === match.id)}/>
         ))}
       </section>
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Play, Image } from 'lucide-react';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -11,10 +11,10 @@ function parseTime(t) {
 }
 
 // ── Construeix galeria NOMÉS amb fotos manuals ────────────────────
-function buildGallery() {
+function buildGallery(matches) {
   const items = [];
 
-  DATABASE.matches.forEach(match => {
+  matches.forEach(match => {
     (match.events?.retransmissio || []).forEach(r => {
       if (!r.photo) return;
       items.push({
@@ -54,7 +54,7 @@ function buildGallery() {
   });
 
   items.sort((a, b) => {
-    const mi = DATABASE.matches.findIndex(m => m.id === a.matchId) - DATABASE.matches.findIndex(m => m.id === b.matchId);
+    const mi = matches.findIndex(m => m.id === a.matchId) - matches.findIndex(m => m.id === b.matchId);
     return mi !== 0 ? mi : parseTime(a.time) - parseTime(b.time);
   });
 
@@ -118,7 +118,7 @@ function GalleryCard({ item, onClick }) {
 }
 
 // ── Lightbox ──────────────────────────────────────────────────────
-function Lightbox({ items, idx, onClose, onPrev, onNext, onJump }) {
+function Lightbox({ items, idx, onClose, onPrev, onNext, onJump, roster }) {
   const item = items[idx];
   const touchStartX = useRef(null);
   const thumbRef = useRef(null);
@@ -226,7 +226,7 @@ function Lightbox({ items, idx, onClose, onPrev, onNext, onJump }) {
                   {item.players.map(p => (
                     <span key={p} className="text-[9px] px-2 py-0.5 rounded-full text-gray-400"
                       style={{border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)'}}>
-                      {DATABASE.roster.find(r => r.name === p)?.shirtName || p.split(' ')[0]}
+                      {roster.find(r => r.name === p)?.shirtName || p.split(' ')[0]}
                     </span>
                   ))}
                 </div>
@@ -272,10 +272,11 @@ function Lightbox({ items, idx, onClose, onPrev, onNext, onJump }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function Galeria() {
+  const { db: DATABASE } = useSeason();
   const [lightboxIdx, setLightboxIdx] = useState(null);
   const [filter, setFilter] = useState('all');
 
-  const allItems = useMemo(() => buildGallery(), []);
+  const allItems = useMemo(() => buildGallery(DATABASE.matches), [DATABASE]);
 
   const filtered = useMemo(() => {
     if (filter === 'all') return allItems;
@@ -352,6 +353,7 @@ export default function Galeria() {
           onPrev={prevItem}
           onNext={nextItem}
           onJump={jumpItem}
+          roster={DATABASE.roster}
         />
       )}
     </div>

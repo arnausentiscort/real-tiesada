@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Star, RotateCcw } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { DATABASE } from '../data.js';
+import { useSeason } from '../SeasonContext.jsx';
 
 const supabase = createClient(
   'https://pibacoitanqebynhvpnc.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYmFjb2l0YW5xZWJ5bmh2cG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODkzODEsImV4cCI6MjA5MDI2NTM4MX0.SzhGturICQHYCNOyivySgPo3fG-5Pfk6n6MQYEYAqLg'
 );
 
-function getMatchPlayers(match) {
+function getMatchPlayers(roster, match) {
   const names = new Set();
   (match.events?.substitutions || []).forEach(sub => (sub.onPitch || []).forEach(n => names.add(n)));
   (match.events?.goals || []).forEach(g => {
@@ -18,17 +18,19 @@ function getMatchPlayers(match) {
   });
   (match.events?.retransmissio || []).forEach(r => (r.players || []).forEach(n => names.add(n)));
   if (match.savesManual) Object.keys(match.savesManual).forEach(n => names.add(n));
-  if (names.size === 0) DATABASE.roster.forEach(p => names.add(p.name));
-  return [...names].filter(n => DATABASE.roster.find(r => r.name === n));
+  if (names.size === 0) roster.forEach(p => names.add(p.name));
+  return [...names].filter(n => roster.find(r => r.name === n));
 }
 
-function dorsal(name) {
-  const pl = DATABASE.roster.find(r => r.name === name);
+function dorsal(roster, name) {
+  const pl = roster.find(r => r.name === name);
   return pl?.shirtName || name.split(' ')[0].toUpperCase();
 }
 
 
 export default function MvpVoting({ match }) {
+  const { db: DATABASE } = useSeason();
+  const roster = DATABASE.roster;
   const voterKey = `mvp_voter_${match.id}`;
 
   const [voterName, setVoterName] = useState(() => localStorage.getItem(voterKey));
@@ -44,7 +46,7 @@ export default function MvpVoting({ match }) {
   const clickTimerRef = useRef(null);
   const [showReset, setShowReset] = useState(false);
 
-  const players = DATABASE.roster.map(p => p.name);
+  const players = roster.map(p => p.name);
 
   async function fetchRows() {
     const { data, error } = await supabase
@@ -169,7 +171,7 @@ export default function MvpVoting({ match }) {
                   onClick={() => handleSelectVoter(name)}
                   className="shrink-0 px-2 py-1 rounded-full bg-white/5 hover:bg-[#E5C07B]/15 border border-white/10 hover:border-[#E5C07B]/30 text-[11px] font-bold text-gray-400 hover:text-[#E5C07B] transition-all whitespace-nowrap"
                 >
-                  {dorsal(name)}
+                  {dorsal(roster, name)}
                 </button>
               ))}
             </div>
@@ -183,7 +185,7 @@ export default function MvpVoting({ match }) {
               onClick={() => { setVoterName(null); localStorage.removeItem(voterKey); setStep(0); }}
               className="shrink-0 px-2 py-1 rounded-full bg-[#E5C07B]/10 border border-[#E5C07B]/25 text-[11px] font-bold text-[#E5C07B] hover:bg-[#E5C07B]/20 transition-all whitespace-nowrap"
             >
-              {dorsal(voterName)} ✕
+              {dorsal(roster, voterName)} ✕
             </button>
             <span className="text-xs text-gray-500 shrink-0">🥇 Or</span>
             <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">
@@ -193,7 +195,7 @@ export default function MvpVoting({ match }) {
                   onClick={() => { setGold(name); setStep(2); }}
                   className="shrink-0 px-2 py-1 rounded-full bg-white/5 hover:bg-yellow-500/15 border border-white/10 hover:border-yellow-500/30 text-[11px] font-bold text-gray-400 hover:text-yellow-400 transition-all whitespace-nowrap"
                 >
-                  {dorsal(name)}
+                  {dorsal(roster, name)}
                 </button>
               ))}
             </div>
@@ -207,7 +209,7 @@ export default function MvpVoting({ match }) {
               onClick={() => setStep(1)}
               className="shrink-0 px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/25 text-[10px] font-bold text-yellow-400 whitespace-nowrap"
             >
-              🥇 {dorsal(gold)}
+              🥇 {dorsal(roster, gold)}
             </button>
             <span className="text-xs text-gray-500 shrink-0">🥈 Plata</span>
             <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">
@@ -217,7 +219,7 @@ export default function MvpVoting({ match }) {
                   onClick={() => { setSilver(name); setStep(3); }}
                   className="shrink-0 px-2 py-1 rounded-full bg-white/5 hover:bg-gray-400/15 border border-white/10 hover:border-gray-400/30 text-[11px] font-bold text-gray-400 hover:text-gray-300 transition-all whitespace-nowrap"
                 >
-                  {dorsal(name)}
+                  {dorsal(roster, name)}
                 </button>
               ))}
             </div>
@@ -228,8 +230,8 @@ export default function MvpVoting({ match }) {
         {step === 3 && (
           <>
             <div className="flex gap-1 shrink-0">
-              <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/25 text-[10px] font-bold text-yellow-400">🥇 {dorsal(gold)}</button>
-              <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/25 text-[10px] font-bold text-gray-400">🥈 {dorsal(silver)}</button>
+              <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/25 text-[10px] font-bold text-yellow-400">🥇 {dorsal(roster, gold)}</button>
+              <button onClick={() => setStep(2)} className="px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/25 text-[10px] font-bold text-gray-400">🥈 {dorsal(roster, silver)}</button>
             </div>
             <span className="text-xs text-gray-500 shrink-0">🥉 i vota</span>
             <div className="flex-1 flex gap-1 overflow-x-auto no-scrollbar">
@@ -239,7 +241,7 @@ export default function MvpVoting({ match }) {
                   onClick={() => handleVote(name)}
                   className="shrink-0 px-2 py-1 rounded-full bg-white/5 hover:bg-amber-700/15 border border-white/10 hover:border-amber-700/30 text-[11px] font-bold text-gray-400 hover:text-amber-500 transition-all whitespace-nowrap"
                 >
-                  {dorsal(name)}
+                  {dorsal(roster, name)}
                 </button>
               ))}
             </div>
@@ -250,11 +252,11 @@ export default function MvpVoting({ match }) {
         {step === 4 && alreadyVoted && (
           <>
             <span className="text-[11px] font-bold text-emerald-400 shrink-0">✓</span>
-            <span className="text-[11px] text-gray-600 shrink-0">{dorsal(voterName)}</span>
+            <span className="text-[11px] text-gray-600 shrink-0">{dorsal(roster, voterName)}</span>
             <div className="flex gap-1 shrink-0">
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">🥇 {dorsal(alreadyVoted.gold)}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/20 text-gray-300">🥈 {dorsal(alreadyVoted.silver)}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-700/10 border border-amber-700/20 text-amber-500">🥉 {dorsal(alreadyVoted.bronze)}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">🥇 {dorsal(roster, alreadyVoted.gold)}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-400/10 border border-gray-400/20 text-gray-300">🥈 {dorsal(roster, alreadyVoted.silver)}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-700/10 border border-amber-700/20 text-amber-500">🥉 {dorsal(roster, alreadyVoted.bronze)}</span>
             </div>
             <div className="flex-1" />
             <span className="text-[10px] text-gray-700 shrink-0">{totalVoters}v</span>

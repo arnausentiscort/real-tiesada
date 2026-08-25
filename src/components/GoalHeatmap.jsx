@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { DATABASE } from '../data.js';
-import { FORMATS } from '../formats.js';
+import { useSeason } from '../SeasonContext.jsx';
+import { FORMATS, getMatchFormat } from '../formats.js';
 import GoalFrame from './pitch/GoalFrame.jsx';
 import Pitch from './pitch/Pitch.jsx';
 
@@ -62,8 +62,8 @@ function jitter(goals) {
   return result;
 }
 
-function getVideoUrl(goal) {
-  const match = DATABASE.matches.find(m => m.id === goal.matchId);
+function getVideoUrl(matches, goal) {
+  const match = matches.find(m => m.id === goal.matchId);
   if (!match) return null;
   const [min, sec] = (goal.time||'0:0').split(':').map(Number);
   const secs = Math.max(0, min*60+(sec||0)-5);
@@ -71,8 +71,8 @@ function getVideoUrl(goal) {
   if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${secs}s`;
   return null;
 }
-const getDorsal = (name) => DATABASE.roster.find(r=>r.name===name)?.number ?? null;
-const getShirt  = (name) => DATABASE.roster.find(r=>r.name===name)?.shirtName || name?.split(' ')[0] || '?';
+const getDorsal = (roster, name) => roster.find(r=>r.name===name)?.number ?? null;
+const getShirt  = (roster, name) => roster.find(r=>r.name===name)?.shirtName || name?.split(' ')[0] || '?';
 
 // ── Hook: pilota amb bezier, trail, spin i fase 2 cap a porteria ──
 function useBallAnimation(goal) {
@@ -253,7 +253,7 @@ function useGoalBallAnimation(goal, format) {
 }
 
 // ── Camp SVG ──────────────────────────────────────────────────────
-function PitchSVG({ goals, activeGoal, setActiveGoal, format }) {
+function PitchSVG({ goals, activeGoal, setActiveGoal, format, roster }) {
   const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
   const { ballPos, trail, spin, impact, goalRipple } = useBallAnimation(activeGoalData);
 
@@ -307,7 +307,7 @@ function PitchSVG({ goals, activeGoal, setActiveGoal, format }) {
       {goals.map((g, idx) => {
         if (!g._sx || idx === activeGoal) return null;
         const color  = PLAYER_COLORS[g.scorer] || ACCENT;
-        const dorsal = getDorsal(g.scorer);
+        const dorsal = getDorsal(roster, g.scorer);
         const num    = idx + 1;
         return (
           <g key={idx} onClick={() => setActiveGoal(idx === activeGoal ? null : idx)}
@@ -390,9 +390,9 @@ function PitchSVG({ goals, activeGoal, setActiveGoal, format }) {
               stroke="white" strokeWidth="1.5" opacity="0.95"
               style={{filter:`drop-shadow(0 0 8px ${activeColor}70)`, transformOrigin:`${S.x}px ${S.y}px`, animation:'goalPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both'}}/>
             <text x={S.x} y={S.y} textAnchor="middle" dominantBaseline="middle"
-              fontSize={getDorsal(g.scorer)!==null&&getDorsal(g.scorer)>=10?'7.5':'8.5'}
+              fontSize={getDorsal(roster, g.scorer)!==null&&getDorsal(roster, g.scorer)>=10?'7.5':'8.5'}
               fontWeight="900" fill="rgba(0,0,0,0.9)" style={{pointerEvents:'none'}}>
-              {getDorsal(g.scorer)??'?'}
+              {getDorsal(roster, g.scorer)??'?'}
             </text>
 
             {/* Anells expansius d'impacte */}
@@ -476,7 +476,7 @@ function PitchSVG({ goals, activeGoal, setActiveGoal, format }) {
 
 // ── Porteria SVG ──────────────────────────────────────────────────
 const GROUND_Y = 185;
-function GoalSVG({ goals, activeGoal, setActiveGoal, format }) {
+function GoalSVG({ goals, activeGoal, setActiveGoal, format, roster }) {
   const activeGoalData = activeGoal !== null ? goals[activeGoal] : null;
   const { frame, ripple } = useGoalBallAnimation(activeGoalData, format);
   const w = format.goal.w;
@@ -534,7 +534,7 @@ function GoalSVG({ goals, activeGoal, setActiveGoal, format }) {
         if (!g._gx) return null;
         const isActive = activeGoal === idx;
         const isGround = g._gy >= GROUND_Y;
-        const dorsal   = getDorsal(g.scorer);
+        const dorsal   = getDorsal(roster, g.scorer);
         const color    = PLAYER_COLORS[g.scorer] || ACCENT;
         const num      = idx + 1;
 
@@ -714,7 +714,7 @@ function MiniTrajectory({ goal }) {
 }
 
 // ── Targeta info gol ──────────────────────────────────────────────
-function GoalCard({ goal, idx, onClose }) {
+function GoalCard({ goal, idx, onClose, matches, roster }) {
   if (!goal) return (
     <div className="h-full flex flex-col items-center justify-center text-center p-8 min-h-48">
       <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center mb-3 opacity-30">
@@ -724,8 +724,8 @@ function GoalCard({ goal, idx, onClose }) {
     </div>
   );
 
-  const videoUrl = getVideoUrl(goal);
-  const dorsal   = getDorsal(goal.scorer);
+  const videoUrl = getVideoUrl(matches, goal);
+  const dorsal   = getDorsal(roster, goal.scorer);
   const color    = PLAYER_COLORS[goal.scorer] || ACCENT;
   const num      = idx + 1;
 
@@ -764,13 +764,13 @@ function GoalCard({ goal, idx, onClose }) {
         <div className="flex items-center gap-2.5">
           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{background:color}}/>
           <span className="text-[10px] text-gray-500 uppercase tracking-wider w-10">Gol</span>
-          <span className="text-white font-bold text-sm">{getShirt(goal.scorer)}</span>
+          <span className="text-white font-bold text-sm">{getShirt(roster, goal.scorer)}</span>
         </div>
         {goal.assist && (
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full flex-shrink-0 bg-[#61AFEF]"/>
             <span className="text-[10px] text-gray-500 uppercase tracking-wider w-10">Assist</span>
-            <span className="text-gray-300 font-medium text-sm">{getShirt(goal.assist)}</span>
+            <span className="text-gray-300 font-medium text-sm">{getShirt(roster, goal.assist)}</span>
           </div>
         )}
         {goal.notes && (
@@ -825,29 +825,27 @@ function GoalCard({ goal, idx, onClose }) {
 
 // ── Component principal ───────────────────────────────────────────
 export default function GoalHeatmap() {
+  const { db: DATABASE, season } = useSeason();
   const [matchFilter,  setMatchFilter]  = useState('all');
   const [playerFilter, setPlayerFilter] = useState('all');
   const [activeGoal,   setActiveGoal]   = useState(null);
   const [autoPlay,     setAutoPlay]     = useState(false);
   const autoRef = useRef(null);
 
-  // TODO: resoldre per partit quan GoalHeatmap consumeixi useSeason() —
-  // llavors cada gol s'ha de dibuixar amb getMatchFormat(match, season)
-  // del seu propi partit, no un sol format per a tot el component.
-  // De moment GoalHeatmap encara no sap de temporades (usa l'àlies
-  // estàtic DATABASE = Split 2), així que fixem-ho explícit a fs5
-  // en comptes de simular una resolució que no fem de veritat.
-  const format = FORMATS.fs5;
-
+  // Cada gol es dibuixa amb el format del seu propi partit — un amistós
+  // de format diferent dins la mateixa temporada no quedaria desplaçat.
+  // Els shotPos/goalPos històrics no canvien, només el viewBox amb què
+  // es renderitza cada gol.
   const allGoals = useMemo(() => {
     const goals = [];
     DATABASE.matches.forEach(match => {
+      const matchFormat = getMatchFormat(match, season);
       (match.events?.goals||[]).forEach(g => {
-        if (g.type==='favor') goals.push({...g, matchId:match.id, jornada:match.jornada, opponent:match.opponent});
+        if (g.type==='favor') goals.push({...g, matchId:match.id, jornada:match.jornada, opponent:match.opponent, format:matchFormat});
       });
     });
     return goals;
-  }, []);
+  }, [DATABASE, season]);
 
   const scorers = [...new Set(allGoals.map(g=>g.scorer).filter(Boolean))];
 
@@ -856,6 +854,12 @@ export default function GoalHeatmap() {
     if (playerFilter!=='all' && g.scorer!==playerFilter) return false;
     return true;
   })), [allGoals, matchFilter, playerFilter]);
+
+  // El mapa dibuixa tots els gols filtrats en un únic diagrama compartit,
+  // així que necessita un sol viewBox — el del primer gol visible (en la
+  // pràctica homogeni dins d'una temporada). Sense gols, el de la
+  // temporada activa (buit net al Split 3, que encara no en té cap).
+  const diagramFormat = filtered[0]?.format ?? getMatchFormat(undefined, season);
 
   // AutoPlay
   useEffect(() => {
@@ -939,12 +943,12 @@ export default function GoalHeatmap() {
                 </span>
               )}
             </p>
-            <PitchSVG goals={filtered} activeGoal={activeGoal} format={format}
+            <PitchSVG goals={filtered} activeGoal={activeGoal} format={diagramFormat} roster={DATABASE.roster}
               setActiveGoal={(i) => { setAutoPlay(false); setActiveGoal(i); }}/>
           </div>
           <div className="bg-[#080808] rounded-2xl border border-white/5 p-3 overflow-hidden">
             <p className="text-[10px] text-gray-600 mb-2 uppercase tracking-wider font-bold">Porteria rival · on entra</p>
-            <GoalSVG goals={filtered} activeGoal={activeGoal} format={format}
+            <GoalSVG goals={filtered} activeGoal={activeGoal} format={diagramFormat} roster={DATABASE.roster}
               setActiveGoal={(i) => { setAutoPlay(false); setActiveGoal(i); }}/>
           </div>
         </div>
@@ -952,7 +956,7 @@ export default function GoalHeatmap() {
         {/* Card info */}
         <div className={`bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden lg:sticky lg:top-4 ${activeGoalData?'block':'hidden lg:block'}`}
           style={{minHeight: 240}}>
-          <GoalCard goal={activeGoalData} idx={activeGoal}
+          <GoalCard goal={activeGoalData} idx={activeGoal} matches={DATABASE.matches} roster={DATABASE.roster}
             onClose={() => { setActiveGoal(null); setAutoPlay(false); }}/>
         </div>
       </div>
