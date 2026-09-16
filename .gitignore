@@ -4,3 +4,6 @@ dist
 *.local
 .env
 tmp/
+
+# Grafo de coneixement local (graphify) — artefacte, es regenera
+graphify-out/

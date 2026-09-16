@@ -332,6 +332,21 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 
 ---
 
+## Regles de decisió
+
+Quan hi hagi dubte sobre què fer:
+1. **Canvis de dades** → llegir primer el fitxer de la temporada que toca
+   (`src/seasons/s3/index.js` i `src/seasons/s3/matches/` per a l'actual,
+   `data.js` per al Split 2) abans de tocar res
+2. **Component nou** → seguir els patrons dels existents (GoalHeatmap com a
+   referència de layout + animacions)
+3. **Estils** → classes de Tailwind, mai CSS cru fora de les animacions d'`index.css`
+4. **Noms de jugadors** → sempre el nom complet exacte del roster
+5. **Idioma** → català, excepte claus d'API i literals de codi
+6. **Operacions de Git** → sempre `git -c credential.helper=`
+
+---
+
 ## Convencions de codi
 
 - Noms de jugadors sempre en format complet: `"Arnau Sentis"` (mai "Arnau" sol)
