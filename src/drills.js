@@ -134,7 +134,7 @@ export const DRILLS = [
       'El central que no té la pilota s\'apropa: és l\'ajuda i és el canvi de costat. No es queda mirant des de la seva banda',
       'El davanter de la banda contrària baixa uns metres per no deixar l\'equip partit',
       'No hi ha pressa. Canvi de central les vegades que calgui: cada canvi els obliga a córrer tot l\'ample i algú acaba arribant tard',
-      'Si no surt ningú, el central puja en conducció fins que el vagin a buscar. I la tornada al porter hi és sempre: recomençar no és perdre',
+      'La tornada al porter hi és sempre. Recomençar no és perdre: perdre-la a la nostra àrea sí',
     ],
     steps: [
       {
@@ -200,18 +200,6 @@ export const DRILLS = [
           { from: [86,74], to: [55,60], type: 'pass', label: 'diagonal' },
           { from: [30,74], to: [38,72], type: 'run', label: 'ajuda' },
           { from: [24,42], to: [26,48], type: 'run' },
-        ],
-      },
-      {
-        note: 'I si no surt ningú a buscar-lo, no cal inventar res: el central puja en conducció fins que el vagin a tapar. La tornada al porter hi és sempre, per si ens la lien.',
-        dur: 1400, hold: 3000,
-        own:    [[50,86],[36,70],[84,60],[26,40],[52,46],[70,48],[80,26]],
-        rivals: [[50,6],[36,26],[66,26],[34,38],[54,40],[80,42],[58,54]],
-        ball:   [84,60],
-        highlight: [2],
-        arrows: [
-          { from: [86,72], to: [84,60], type: 'carry', label: 'puja en conducció' },
-          { from: [84,60], to: [54,84], type: 'pass', label: 'sempre tens el porter' },
         ],
       },
     ],
