@@ -281,8 +281,10 @@ Dades a `src/seasons/s3/index.js`; cada partit al seu fitxer a `src/seasons/s3/m
 
 Propers: J2 Star Warros (22 Set), J3 FC Manguito (29 Set), J5 Inafumaybeben (13 Oct)...
 
-Altes al roster respecte al Split 2: Joan Ribes (porter), Serginho, Lopa, i el retorn de
+Altes al roster respecte al Split 2: Joan Ribes (porter), Serginho, i el retorn de
 Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
+
+**Àlies**: "Lopa" al WhatsApp de l'equip és en **Pau Ibañez**.
 
 ---
 

@@ -54,7 +54,6 @@ export const DATABASE_S3 = {
     { id: 'paco-montero',  name: 'Paco Montero',  number: 22,   position: 'Defensa',     status: 'actiu' },
     { id: 'roger-miro',    name: 'Roger Miro',    number: 9,    position: 'Defensa',     status: 'actiu' },
     { id: 'serginho',      name: 'Serginho',      number: null, position: 'Migcampista', status: 'actiu', note: 'Fitxatge' },
-    { id: 'lopa',          name: 'Lopa',          number: null, position: 'Migcampista', status: 'actiu', note: 'Fitxatge' },
     { id: 'chengzhi-li',   name: 'Chengzhi Li',   number: 12,   position: 'Migcampista', status: 'actiu' },
     { id: 'roi-seoane',    name: 'Roi Seoane',    number: 24,   position: 'Davanter',    status: 'actiu' },
     { id: 'arnau-sentis',  name: 'Arnau Sentis',  number: 8,    position: 'Davanter',    status: 'actiu' },

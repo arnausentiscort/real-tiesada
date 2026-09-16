@@ -553,7 +553,7 @@ function TimelineChart({ match, matchStats, db }) {
           <div className="flex gap-4 mt-3 pt-3 border-t border-white/5 text-[9px] text-gray-600">
             <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block" style={{background:'linear-gradient(90deg,#1a4a1a,#27AE60)'}}/>Porter</span>
             <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block" style={{background:'linear-gradient(90deg,#7b1c12,#C0392B)'}}/>Camp</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-[#E5C07B]/50"/>Ideal ({match.idealMinutesPerPlayer} min)</span>
+            {match.idealMinutesPerPlayer && <span className="flex items-center gap-1"><span className="inline-block w-4 border-t border-dashed border-[#E5C07B]/50"/>Ideal ({match.idealMinutesPerPlayer} min)</span>}
           </div>
         </div>
       </div>
@@ -564,9 +564,11 @@ function TimelineChart({ match, matchStats, db }) {
           <h3 className="text-sm font-bold text-[#E5C07B] flex items-center gap-2">
             <Clock className="w-4 h-4"/> Minuts per Jugador
           </h3>
-          <span className="text-xs bg-[#121212] px-2 py-1 rounded text-gray-500 border border-white/5">
-            Ideal: {match.idealMinutesPerPlayer} min
-          </span>
+          {match.idealMinutesPerPlayer && (
+            <span className="text-xs bg-[#121212] px-2 py-1 rounded text-gray-500 border border-white/5">
+              Ideal: {match.idealMinutesPerPlayer} min
+            </span>
+          )}
         </div>
         <div className="flex gap-3 mb-3 text-[10px] text-gray-500">
           <span className="flex items-center gap-1"><span className="w-3 h-2 rounded inline-block bg-[#C0392B]"/>Camp</span>
