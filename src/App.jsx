@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import GlobalDashboard  from './components/GlobalDashboard.jsx';
 import MatchDetail      from './components/MatchDetail.jsx';
 import Squad            from './components/Squad.jsx';
@@ -11,10 +11,12 @@ import MvpPage          from './components/MvpPage.jsx';
 import Pissarra         from './components/Pissarra.jsx';
 import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
-import AdminPanel       from './components/AdminPanel.jsx';
+// Carrega diferida: nomes hi arriba qui fa triple clic al logo
+const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'));
 import { DATABASE }     from './data.js';
-import { SEASONS, CURRENT_SEASON_ID, getSeason } from './seasons/index.js';
+import { SEASONS, CURRENT_SEASON_ID, getSeason, findMatchById } from './seasons/index.js';
 import { SeasonProvider } from './SeasonContext.jsx';
+import { HASH_FOR, parseHash, goTo } from './router.js';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -39,7 +41,7 @@ function SeasonToggle({ season, onChange }) {
 
 export default function App() {
   const [loading, setLoading]   = useState(true);
-  const [view, setView]         = useState('dashboard');
+  const [route, setRoute]       = useState(parseHash);
   const [season, setSeason]     = useState(CURRENT_SEASON_ID);
   const [confetti, setConfetti] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,7 +59,26 @@ export default function App() {
     navTo('dashboard');
   };
 
+  // El hash és l'única font de veritat de la navegació: el botó enrere
+  // del navegador dispara hashchange i la vista es recalcula sola.
+  useEffect(() => {
+    const onHash = () => {
+      setRoute(parseHash());
+      setMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const found = route.view === 'match' ? findMatchById(route.matchId) : null;
+  const view  = found ? found.match : (route.view === 'match' ? 'dashboard' : route.view);
   const isMatch = view && typeof view === 'object';
+
+  // Un enllaç a un partit d'una altra temporada la selecciona sola
+  useEffect(() => {
+    if (found && found.seasonId !== season) setSeason(found.seasonId);
+  }, [found?.seasonId]);
 
   useEffect(() => {
     if (!isMatch) return;
@@ -69,9 +90,18 @@ export default function App() {
     }
   }, [view]);
 
-  const handleSelectMatch = (match) => { setView(match); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const handleSeasonChange = (s)    => { setSeason(s); setView('dashboard'); setMenuOpen(false); window.scrollTo({ top: 0 }); };
-  const navTo = (v)                 => { setView(v); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const navTo = (v) => {
+    const next = HASH_FOR[v] || '/';
+    if (('#' + next) === window.location.hash || (next === '/' && !window.location.hash)) {
+      // Mateix hash: hashchange no dispara, tanquem el menú a mà
+      setMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    goTo(next);
+  };
+  const handleSelectMatch = (match) => goTo('/partit/' + encodeURIComponent(match.id));
+  const handleSeasonChange = (s)    => { setSeason(s); navTo('dashboard'); };
 
   const navCurrent = [
     { id: 'dashboard',     icon: '📊', label: 'Stats'         },
@@ -93,7 +123,11 @@ export default function App() {
       <Confetti active={confetti} />
 
       {/* Admin Panel */}
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)}/>}
+      {showAdmin && (
+        <Suspense fallback={null}>
+          <AdminPanel onClose={() => setShowAdmin(false)}/>
+        </Suspense>
+      )}
 
       {/* ── NAVBAR desktop (top) ── */}
       <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
@@ -136,7 +170,7 @@ export default function App() {
         {/* Breadcrumb match */}
         {isMatch && !getSeason(season)?.legacy && (
           <div className="max-w-6xl mx-auto pb-2 flex items-center gap-2 text-xs text-gray-500 px-1">
-            <button onClick={() => setView('dashboard')} className="hover:text-[#E5C07B] transition-colors">
+            <button onClick={() => navTo('dashboard')} className="hover:text-[#E5C07B] transition-colors">
               Estadístiques
             </button>
             <span>/</span>
@@ -157,8 +191,8 @@ export default function App() {
               {view === 'mvp'           && <MvpPage />}
               {view === 'heatmap'       && <GoalHeatmap />}
               {view === 'galeria'       && <Galeria />}
-              {view === 'pissarra'      && <Pissarra />}
-              {isMatch                  && <MatchDetail match={view} onBack={() => setView('dashboard')} onNavigate={(m) => setView(m)} />}
+              {view === 'pissarra'      && <Pissarra tab={route.tacticTab} drillId={route.drillId} />}
+              {isMatch                  && <MatchDetail match={view} onBack={() => navTo('dashboard')} onNavigate={handleSelectMatch} />}
             </>
           )}
           {getSeason(season)?.legacy && <Split1Dashboard />}
@@ -204,7 +238,7 @@ export default function App() {
       {/* Bottom nav quan hi ha match obert — botó enrere */}
       {!getSeason(season)?.legacy && isMatch && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1a1a1a]/95 backdrop-blur-sm border-t border-white/10">
-          <button onClick={() => setView('dashboard')}
+          <button onClick={() => navTo('dashboard')}
             className="w-full h-14 flex items-center justify-center gap-2 text-[#E5C07B] text-sm font-bold">
             ← Tornar a Estadístiques
           </button>

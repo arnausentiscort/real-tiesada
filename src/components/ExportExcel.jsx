@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+// xlsx pesa ~300 kB: es carrega en prémer el botó, no en obrir el dashboard
+let XLSX = null;
+const loadXLSX = async () => (XLSX ??= await import('xlsx'));
 import { calcMatchStats, calcGoalkeeperStints, calcGlobalStats, formatTime } from '../utils.js';
 import { useSeason } from '../SeasonContext.jsx';
 
@@ -524,6 +526,7 @@ function sheetJornada(m, roster, format) {
 // GENERACIÓ EXCEL
 // ════════════════════════════════════════════════════════════════════════════
 async function generateExcel(db, format) {
+  await loadXLSX();
   const { matches, roster } = db;
   const wb = XLSX.utils.book_new();
 

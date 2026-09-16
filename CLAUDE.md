@@ -34,7 +34,7 @@ App d'estadístiques internes per a l'equip amateur **Real Tiesada FC**.
 ## Stack tècnic
 - **React 18** + **Vite** + **Tailwind CSS 3**
 - **GitHub Pages** (base path: `/real-tiesada/`) — `BASE = import.meta.env.BASE_URL`
-- Sense router — navegació per `useState` a `App.jsx` (variable `view`)
+- Routing per hash sense llibreria (`src/router.js`) — el hash és l'única font de veritat
 - Dades estàtiques a `src/data.js`
 - Votació MVP via **Supabase**
 - Dependències: `@supabase/supabase-js`, `lucide-react`, `gh-pages`
@@ -136,20 +136,38 @@ real-tiesada/
 
 ---
 
-## Navegació (App.jsx)
+## Navegació (router.js + App.jsx)
 
-La variable `view` pot ser:
-- `'dashboard'` → GlobalDashboard
-- `'squad'` → Squad
-- `'clasificacion'` → Clasificacion
-- `'mvp'` → MvpPage
-- `'heatmap'` → GoalHeatmap
-- `'galeria'` → Galeria
-- `'pissarra'` → Pissarra (pestanyes: Jugades · Pissarra)
-- `{...matchObject}` → MatchDetail (objecte sencer del partit)
+El hash de la URL és l'única font de veritat. `parseHash()` el converteix en
+una ruta i `App` escolta `hashchange`, així el botó enrere del navegador
+funciona i qualsevol pantalla és enllaçable.
+
+| Hash | Vista |
+|------|-------|
+| `#/` (o cap) | GlobalDashboard |
+| `#/plantilla` | Squad |
+| `#/classificacio` | Clasificacion |
+| `#/calendari` | Calendari |
+| `#/mvp` | MvpPage |
+| `#/mapa` | GoalHeatmap |
+| `#/galeria` | Galeria |
+| `#/tactica` | Pissarra · pestanya Jugades |
+| `#/tactica/pissarra` | Pissarra · pestanya Pissarra |
+| `#/tactica/<drillId>` | Jugada concreta, enllaçable |
+| `#/partit/<matchId>` | MatchDetail |
+
+Per navegar des d'un component: `goTo('/tactica')` de `src/router.js`
+(mai `setState` — trencaria l'enrere del navegador).
+
+`#/partit/<id>` busca el partit a **totes** les temporades amb
+`findMatchById()` i canvia la temporada activa sola si cal.
 
 Nav items (ordre): Stats · Plantilla · Classificació · Calendari · Tàctica
 Amagats al nav però la vista segueix funcionant: `mvp`, `heatmap` (Mapa de Gols), `galeria`
+
+**Càrrega diferida**: `AdminPanel` i `xlsx` (dins `ExportExcel`) no entren al
+bundle inicial — es descarreguen en obrir l'admin o en prémer Exportar Excel.
+No els tornis a importar de forma estàtica.
 
 **Admin**: triple clic al logo → `showAdmin = true` → `<AdminPanel />`
 

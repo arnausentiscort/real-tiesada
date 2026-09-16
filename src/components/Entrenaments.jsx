@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import DrillPlayer from './DrillPlayer.jsx';
 import { DRILLS, DRILL_CATEGORIES } from '../drills.js';
 import { loadCustomDrills, deleteCustomDrill } from '../drillStore.js';
+import { goTo } from '../router.js';
 
 const MODE_LABEL = { fs5: 'Sala 5v5', f7: 'Futbol 7', f11: 'Futbol 11' };
 
@@ -38,10 +39,10 @@ function DrillCard({ drill, onOpen, onDelete }) {
   );
 }
 
-export default function Entrenaments() {
-  const [open, setOpen]   = useState(null);
+export default function Entrenaments({ drillId = null }) {
   const [cat, setCat]     = useState('all');
   const [custom, setCustom] = useState(() => loadCustomDrills());
+  const [copied, setCopied] = useState(false);
 
   const all = useMemo(
     () => [...custom.map(d => ({ ...d, custom: true })), ...DRILLS],
@@ -49,22 +50,53 @@ export default function Entrenaments() {
   );
   const list = cat === 'all' ? all : all.filter(d => d.category === cat);
 
+  // La jugada oberta viu a la URL (#/tactica/<id>), així es pot enviar pel grup
+  const open = drillId ? all.find(d => d.id === drillId) : null;
+  const openDrill  = (drill) => goTo('/tactica/' + encodeURIComponent(drill.id));
+  const closeDrill = ()      => goTo('/tactica');
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { window.prompt('Copia l’enllaç:', window.location.href); }
+  };
+
   const handleDelete = (drill) => {
     if (!window.confirm(`Esborrar la jugada "${drill.title}"?`)) return;
     deleteCustomDrill(drill.id);
     setCustom(loadCustomDrills());
-    if (open?.id === drill.id) setOpen(null);
+    if (drillId === drill.id) closeDrill();
   };
+
+  // Enllaç a una jugada que ja no existeix: tornem al catàleg
+  if (drillId && !open) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-gray-500">Aquesta jugada ja no existeix.</p>
+        <button onClick={closeDrill}
+          className="text-xs text-[#E5C07B] font-bold hover:underline">← Totes les jugades</button>
+      </div>
+    );
+  }
 
   // ── Detall d'una jugada ────────────────────────────────────────
   if (open) {
     const c = DRILL_CATEGORIES[open.category] || DRILL_CATEGORIES.pressio;
     return (
       <div className="space-y-3">
-        <button onClick={() => setOpen(null)}
-          className="text-xs text-gray-500 hover:text-[#E5C07B] transition-colors font-bold">
-          ← Totes les jugades
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={closeDrill}
+            className="text-xs text-gray-500 hover:text-[#E5C07B] transition-colors font-bold">
+            ← Totes les jugades
+          </button>
+          <span className="flex-1"/>
+          <button onClick={copyLink}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all">
+            {copied ? '✓ Enllaç copiat' : '🔗 Enviar al grup'}
+          </button>
+        </div>
 
         <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 md:p-4">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -150,7 +182,7 @@ export default function Entrenaments() {
       </p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {list.map(d => <DrillCard key={d.id} drill={d} onOpen={setOpen} onDelete={handleDelete}/>)}
+        {list.map(d => <DrillCard key={d.id} drill={d} onOpen={openDrill} onDelete={handleDelete}/>)}
       </div>
 
       {list.length === 0 && (
