@@ -28,6 +28,7 @@ export const PLAYERS = {
   // ── Fitxatges Split 3 (26/27) ───────────────────────────────────
   'joan-ribes':    { shirtName: 'RIBES',       photo: null, photoCel: null },
   'serginho':      { shirtName: 'SERGINHO',    photo: null, photoCel: null },
+  'lopa':          { shirtName: 'LOPA',        photo: null, photoCel: null },
 };
 
 // Fusiona un roster de temporada amb el registre global.

@@ -1,9 +1,11 @@
 # Real Tiesada FC — Claude Code Context
 
 ## Qui som
-App d'estadístiques internes per a l'equip de futbol sala amateur **Real Tiesada FC**.
-- Lliga: 2a Lliga Sant Ignasi FSala masculí — Dilluns 2a Divisió
-- Temporada activa: **25/26** (des de febrer 2026)
+App d'estadístiques internes per a l'equip amateur **Real Tiesada FC**.
+- Temporada activa: **Split 3 · 26/27** — *Dimarts 1a Lliga* al Velòdrom, format **futbol 7**
+- Lliga de 18 jornades, en juguem 16 (descansem la J4 i la J13)
+- Font de dades oficials: https://apuntamelo.com/grupo/9/26/0/910/0/4414/0
+- Splits anteriors (futbol sala, 2a Lliga Sant Ignasi): Split 1 24/25, Split 2 25/26
 - Usuari: **Arnau Sentis** (jugador dorsal 8 i desenvolupador de l'app)
 
 ---
@@ -12,7 +14,7 @@ App d'estadístiques internes per a l'equip de futbol sala amateur **Real Tiesad
 - La UI és **sempre en català**
 - No tocar `data.js` sense llegir-lo primer — conté les dades reals de l'equip
 - L'equip es diu **Real Tiesada** (mai "Tiesada" sol)
-- El rival habitual és **Touchlas FC** (amb s final)
+- Al Split 2 el rival habitual era **Touchlas FC** (amb s final)
 - No afegir comentaris innecessaris al codi
 - No crear fitxers README ni documentació extra
 
@@ -117,7 +119,11 @@ real-tiesada/
 │       ├── Clasificacion.jsx      ← Taula classificació de la lliga
 │       ├── MvpPage.jsx            ← Pàgina MVP: rànquing de votacions via Supabase
 │       ├── MvpVoting.jsx          ← Component de vot MVP per partit (Supabase)
-│       ├── TacticalBoard.jsx      ← Pissarra tàctica: SVG portrait, 3 modes, drag&drop, banquillo
+│       ├── Pissarra.jsx           ← Pestanyes Jugades / Pissarra (view 'pissarra')
+│       ├── Entrenaments.jsx       ← Catàleg de jugades animades + fitxa de cada jugada
+│       ├── DrillPlayer.jsx        ← Reproductor d'animacions tàctiques (play/fases/velocitat)
+│       ├── TacticalBoard.jsx      ← Pissarra tàctica: SVG portrait, 3 modes, drag&drop, banquillo, gravadora
+│       ├── pitch/FieldLines.jsx   ← Línies de camp compartides (fs5/f7/f11) + VB_W/VB_H/F/pct2svg
 │       ├── Split1Dashboard.jsx    ← Dashboard temporada Split 1
 │       ├── AdminPanel.jsx         ← Panel admin (accés: triple clic al logo)
 │       ├── ChanceCreationChart.jsx← Gràfic Fantasies (KP+Regats) vs Gols assistits
@@ -139,10 +145,11 @@ La variable `view` pot ser:
 - `'mvp'` → MvpPage
 - `'heatmap'` → GoalHeatmap
 - `'galeria'` → Galeria
-- `'pissarra'` → TacticalBoard
+- `'pissarra'` → Pissarra (pestanyes: Jugades · Pissarra)
 - `{...matchObject}` → MatchDetail (objecte sencer del partit)
 
-Nav items (ordre): Stats · Plantilla · Classificació · MVP · Mapa de Gols · Galeria · Pissarra
+Nav items (ordre): Stats · Plantilla · Classificació · Calendari · Tàctica
+Amagats al nav però la vista segueix funcionant: `mvp`, `heatmap` (Mapa de Gols), `galeria`
 
 **Admin**: triple clic al logo → `showAdmin = true` → `<AdminPanel />`
 
@@ -230,7 +237,7 @@ DATABASE = {
 
 ---
 
-## Plantilla actual (temporada 25/26)
+## Plantilla Split 2 (25/26)
 
 | # | Nom | Dorsal | Posició | Foto |
 |---|-----|--------|---------|------|
@@ -248,7 +255,7 @@ DATABASE = {
 
 ---
 
-## Partits jugats (temporada 25/26)
+## Partits jugats (Split 2 · 25/26)
 
 | Jornada | Rival | Resultat | Vídeo |
 |---------|-------|----------|-------|
@@ -264,16 +271,44 @@ Propers: J8 Vietkong (27 Abr), J9 Vikings (04 Mai), J10 Ensaimada (11 Mai)...
 
 ---
 
+## Split 3 (26/27) — temporada en curs
+
+Dades a `src/seasons/s3/index.js`; cada partit al seu fitxer a `src/seasons/s3/matches/`.
+
+| Jornada | Rival | Resultat |
+|---------|-------|----------|
+| J1 · 15 Set | Polanco FC | 5-7 (D) |
+
+Propers: J2 Star Warros (22 Set), J3 FC Manguito (29 Set), J5 Inafumaybeben (13 Oct)...
+
+Altes al roster respecte al Split 2: Joan Ribes (porter), Serginho, Lopa, i el retorn de
+Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
+
+---
+
 ## TacticalBoard.jsx — Notes tècniques
 
-- SVG portrait: `VB_W=400, VB_H=660`, camp `F={x:20, y:30, w:360, h:600}`
-- Radi token SVG: `R=22`, radi token banquillo: `BR=24px`
+- SVG portrait: `VB_W=400, VB_H=660`, camp `F={x:20, y:30, w:360, h:600}` (a `pitch/FieldLines.jsx`)
+- Radi token SVG: `R=15` (mòbil ×1.2), radi token banquillo: `BR=20px` — fitxes petites perquè no xoquin amb els rivals
 - 3 modes: `fs5` (Sala 5v5), `f7` (Futbol 7), `f11` (Futbol 11)
 - `fieldPlayers`: `[{name, x, y}]` — x,y en coordenades SVG
 - `rivalPos`: `[{x,y}]` — tokens rivals (cercles vermells)
 - Drag banquillo: pointer capture → ghost `position:fixed` → detecta drop sobre SVG via `getBoundingClientRect()`
 - Conversió coords: `((clientX - rect.left) / rect.width) * VB_W`
 - Bottom = nosaltres (y≈630), Top = rival (y≈30)
+
+---
+
+## Jugades animades — Notes tècniques
+
+- Dades a `src/drills.js`: cada jugada té `steps[]` amb posicions en **% del camp**
+  (x 0=esquerra 100=dreta, y 0=porteria rival 100=porteria pròpia)
+- `buildTimeline()` converteix els steps en segments (`dur` de transició + `hold` de pausa)
+- `DrillPlayer` interpola posicions amb easing i mostra les fletxes del step d'origen
+- Fletxes: `run` daurat · `pass` blanc discontinu · `press` grana · `carry` verd
+- Gravadora (botó 🎥 a la pissarra): captura fases → `withAutoArrows()` genera les fletxes soles
+- Jugades gravades → `localStorage` (`rt:drills:v1`, a `src/drillStore.js`).
+  Per publicar-les a tot l'equip: exportar JSON i enganxar-lo a `DRILLS` de `src/drills.js`
 
 ---
 

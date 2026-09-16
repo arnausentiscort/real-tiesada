@@ -13,6 +13,7 @@ const GARNET = '#C0392B';
 
 // ── Nom de dorsal ─────────────────────────────────────────────────
 function sName(db, fullName) {
+  if (!fullName) return '—';
   const p = db.roster.find(r => r.name === fullName);
   return p?.shirtName || fullName.split(' ')[0].toUpperCase();
 }

@@ -1,13 +1,15 @@
 import React, { useState, useRef, useCallback, memo, useEffect } from 'react';
 import { useSeason } from '../SeasonContext.jsx';
+import { VB_W, VB_H, F, pct2svg, svg2pct, FieldLines } from './pitch/FieldLines.jsx';
+import { saveCustomDrill, slugify, drillToJson, withAutoArrows } from '../drillStore.js';
+import { DRILL_CATEGORIES } from '../drills.js';
+import DrillPlayer from './DrillPlayer.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 
 // ── Constants SVG ────────────────────────────────────────────────
-const VB_W = 400, VB_H = 660;
-const F = { x: 20, y: 30, w: 360, h: 600 }; // camp
-const R = 22;   // radi token camp (SVG)
-const BR = 24;  // radi token banquillo (px)
+const R = 15;   // radi token camp (SVG)
+const BR = 20;  // radi token banquillo (px)
 const BALL_R = 8;  // radi pilota (SVG)
 
 // ── Detecció device ──────────────────────────────────────────────
@@ -41,9 +43,17 @@ const MODES = {
 // ── Posicions per defecte (% camp) ───────────────────────────────
 // Sempre a la meitat inferior (>=~52%) perquè quedi un marge net amb
 // els rivals (RIVAL_PCT, meitat superior) i eviti la col·lisió inicial.
+// Formacions seleccionables per al mode f7 (porter + 6 jugadors de camp).
+// Cada entrada és [GK, ...6 posicions de camp] en % del camp.
+const FORMATIONS_F7 = {
+  '2-3-1': [[50,92],[25,80],[75,80],[20,62],[50,62],[80,62],[50,52]],
+  '3-1-2': [[50,92],[20,78],[50,78],[80,78],[50,62],[30,50],[70,50]],
+  '3-2-1': [[50,92],[20,78],[50,78],[80,78],[30,62],[70,62],[50,50]],
+};
+
 const DEF_PCT = {
   fs5: [[50,92],[25,75],[75,75],[25,55],[75,55]],
-  f7:  [[50,92],[25,80],[75,80],[20,62],[50,62],[80,62],[50,52]],
+  f7:  FORMATIONS_F7['2-3-1'],
   f11: [[50,92],[15,80],[38,80],[62,80],[85,80],[25,65],[50,65],[75,65],[20,52],[50,52],[80,52]],
 };
 
@@ -59,30 +69,26 @@ const RIVAL_PCT = {
 // ── Alineacions per defecte ───────────────────────────────────────
 const DEF_LINEUP = {
   fs5: ['Ivan Mico','Marc Farreras','Pau Ibañez','Joan Medina','Arnau Sentis'],
-  f7:  ['Ivan Mico','Pau Ibañez','Roger Miro','Arnau Sentis','Paco Montero','Joan Medina','Marc Farreras'],
+  f7:  ['Joan Ribes','Pau Ibañez','Roger Miro','Arnau Sentis','Paco Montero','Joan Medina','Marc Farreras'],
   f11: ['Oriol Tomas','Roi Seoane','Ivan Mico','Marc Farreras','Joan Medina',
         'Pau Ibañez','Paco Montero','Chengzhi Li','Arnau Sentis','Andreu Cases','Roger Miro'],
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
-const pct2svg = ([px, py]) => ({ x: F.x + (px/100)*F.w, y: F.y + (py/100)*F.h });
-const mkField  = m => DEF_LINEUP[m].map((name, i) => ({ name, ...pct2svg(DEF_PCT[m][i]) }));
+const mkField  = (m, pct) => DEF_LINEUP[m].map((name, i) => ({ name, ...pct2svg((pct || DEF_PCT[m])[i]) }));
 const mkRivals = m => RIVAL_PCT[m].map(pct2svg);
 const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// Distància mínima entre centres de dos tokens perquè no quedin superposats
-const MIN_DIST = 2 * R; // 44px
-
 // Empeny `pos` lluny de qualsevol token de `others` que quedi a menys de
-// MIN_DIST, fins a la distància mínima — no el deixa mai a sobre.
-function resolveCollisions(pos, others) {
+// minDist (dos radis + marge), fins a la distància mínima — no el deixa mai a sobre.
+function resolveCollisions(pos, others, minDist) {
   let { x, y } = pos;
   others.forEach(o => {
     const dx = x - o.x, dy = y - o.y;
     const dist = Math.hypot(dx, dy);
-    if (dist === 0) { x += MIN_DIST; return; }
-    if (dist < MIN_DIST) {
-      const push = MIN_DIST - dist;
+    if (dist === 0) { x += minDist; return; }
+    if (dist < minDist) {
+      const push = minDist - dist;
       x += (dx / dist) * push;
       y += (dy / dist) * push;
     }
@@ -104,116 +110,6 @@ const Ball = memo(({ ball, onDown, onMove, onUp }) => {
   );
 });
 
-// ── Línies del camp: Futbol Sala (portrait) ───────────────────────
-const FutsalLines = memo(function FutsalLines() {
-  const { x: FX, y: FY, w: FW, h: FH } = F;
-  const cx = FX + FW / 2, cy = FY + FH / 2;
-  const arcR = 88, gW = 55, gH = 22;
-  const gx = cx - gW / 2;
-  const S = 'rgba(255,255,255,';
-  return (
-    <>
-      {[0,1,2,3,4,5].map(i => (
-        <rect key={i} x={FX} y={FY+i*100} width={FW} height={100}
-          fill={i%2===0?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.02)'}/>
-      ))}
-      <rect x={FX} y={FY} width={FW} height={FH} fill="none" stroke={S+'0.8)'} strokeWidth={2.5}/>
-      <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={52} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      <path d={`M${cx-arcR} ${FY+FH} A${arcR} ${arcR} 0 0 1 ${cx+arcR} ${FY+FH}`}
-        fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <path d={`M${cx-arcR} ${FY} A${arcR} ${arcR} 0 0 0 ${cx+arcR} ${FY}`}
-        fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={FY+FH-arcR} r={3} fill={S+'0.7)'}/>
-      <circle cx={cx} cy={FY+arcR}    r={3} fill={S+'0.7)'}/>
-      <path d={`M${FX} ${FY+18} A18 18 0 0 1 ${FX+18} ${FY}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
-      <path d={`M${FX+FW-18} ${FY} A18 18 0 0 1 ${FX+FW} ${FY+18}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
-      <path d={`M${FX} ${FY+FH-18} A18 18 0 0 0 ${FX+18} ${FY+FH}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
-      <path d={`M${FX+FW-18} ${FY+FH} A18 18 0 0 0 ${FX+FW} ${FY+FH-18}`} fill="none" stroke={S+'0.55)'} strokeWidth={1.2}/>
-      <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-      <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-    </>
-  );
-});
-
-// ── Línies Futbol 7 ───────────────────────────────────────────────
-const F7Lines = memo(function F7Lines() {
-  const { x: FX, y: FY, w: FW, h: FH } = F;
-  const cx = FX + FW / 2, cy = FY + FH / 2;
-  const areaW = 162, areaH = 100;
-  const ax = cx - areaW / 2;
-  const gW = 50, gH = 22;
-  const gx = cx - gW / 2;
-  const spotOff = 78;
-  const S = 'rgba(255,255,255,';
-  return (
-    <>
-      {[0,1,2,3,4,5].map(i => (
-        <rect key={i} x={FX} y={FY+i*100} width={FW} height={100}
-          fill={i%2===0?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.02)'}/>
-      ))}
-      <rect x={FX} y={FY} width={FW} height={FH} fill="none" stroke={S+'0.8)'} strokeWidth={2.5}/>
-      <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={60} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      <rect x={ax} y={FY} width={areaW} height={areaH} fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <rect x={ax} y={FY+FH-areaH} width={areaW} height={areaH} fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={FY+spotOff}    r={3} fill={S+'0.7)'}/>
-      <circle cx={cx} cy={FY+FH-spotOff} r={3} fill={S+'0.7)'}/>
-      <path d={`M${FX} ${FY+16} A16 16 0 0 1 ${FX+16} ${FY}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
-      <path d={`M${FX+FW-16} ${FY} A16 16 0 0 1 ${FX+FW} ${FY+16}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
-      <path d={`M${FX} ${FY+FH-16} A16 16 0 0 0 ${FX+16} ${FY+FH}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
-      <path d={`M${FX+FW-16} ${FY+FH} A16 16 0 0 0 ${FX+FW} ${FY+FH-16}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>
-      <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-      <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-    </>
-  );
-});
-
-// ── Línies Futbol 11 ──────────────────────────────────────────────
-const F11Lines = memo(function F11Lines() {
-  const { x: FX, y: FY, w: FW, h: FH } = F;
-  const cx = FX + FW / 2, cy = FY + FH / 2;
-  const areaW = 213, areaH = 94;
-  const goalAreaW = 97, goalAreaH = 31;
-  const ax = cx - areaW / 2, gax = cx - goalAreaW / 2;
-  const penOff = 63;
-  const arcR = 52;
-  const gW = 40, gH = 22;
-  const gx = cx - gW / 2;
-  const dDx = Math.round(Math.sqrt(arcR*arcR - (areaH - penOff)*(areaH - penOff)));
-  const S = 'rgba(255,255,255,';
-  return (
-    <>
-      {[0,1,2,3,4,5].map(i => (
-        <rect key={i} x={FX} y={FY+i*100} width={FW} height={100}
-          fill={i%2===0?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.02)'}/>
-      ))}
-      <rect x={FX} y={FY} width={FW} height={FH} fill="none" stroke={S+'0.8)'} strokeWidth={2.5}/>
-      <line x1={FX} y1={cy} x2={FX+FW} y2={cy} stroke={S+'0.7)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={52} fill="none" stroke={S+'0.65)'} strokeWidth={1.5}/>
-      <circle cx={cx} cy={cy} r={3.5} fill={S+'0.75)'}/>
-      <rect x={ax} y={FY}         width={areaW} height={areaH}     fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <rect x={ax} y={FY+FH-areaH} width={areaW} height={areaH}   fill={S+'0.04)'} stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <rect x={gax} y={FY}             width={goalAreaW} height={goalAreaH} fill="none" stroke={S+'0.5)'} strokeWidth={1}/>
-      <rect x={gax} y={FY+FH-goalAreaH} width={goalAreaW} height={goalAreaH} fill="none" stroke={S+'0.5)'} strokeWidth={1}/>
-      <circle cx={cx} cy={FY+penOff}    r={3} fill={S+'0.7)'}/>
-      <circle cx={cx} cy={FY+FH-penOff} r={3} fill={S+'0.7)'}/>
-      <path d={`M${cx-dDx} ${FY+areaH} A${arcR} ${arcR} 0 0 1 ${cx+dDx} ${FY+areaH}`}
-        fill="none" stroke={S+'0.6)'} strokeWidth={1.5}/>
-      <path d={`M${cx-dDx} ${FY+FH-areaH} A${arcR} ${arcR} 0 0 0 ${cx+dDx} ${FY+FH-areaH}`}
-        fill="none" stroke={S+'0.6)'} strokeWidth={1.5}/>
-      {[[FX,FY,'0 0 1'],[FX+FW,FY,'0 0 0'],[FX,FY+FH,'0 0 0'],[FX+FW,FY+FH,'0 0 1']].map(([bx,by,sw],k)=>{
-        const dx = bx===FX?16:-16, dy = by===FY?16:-16;
-        return <path key={k} d={`M${bx} ${by+dy} A16 16 ${sw} ${bx+dx} ${by}`} fill="none" stroke={S+'0.5)'} strokeWidth={1.2}/>;
-      })}
-      <rect x={gx} y={FY+FH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-      <rect x={gx} y={FY-gH}  width={gW} height={gH} fill={S+'0.1)'} stroke={S+'0.8)'} strokeWidth={2}/>
-    </>
-  );
-});
-
 const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
   const clipId = `cp-${idx}-${p.name.replace(/\s+/g, '')}`;
   return (
@@ -223,7 +119,7 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
       onPointerUp={onUp}
       onPointerCancel={onUp}>
       <circle cx={p.x} cy={p.y+3} r={adaptiveR+3} fill="rgba(0,0,0,0.35)"/>
-      <circle cx={p.x} cy={p.y} r={adaptiveR+2} fill="none" stroke="#E5C07B" strokeWidth={2.5} strokeOpacity={0.9}/>
+      <circle cx={p.x} cy={p.y} r={adaptiveR+1.5} fill="none" stroke="#E5C07B" strokeWidth={2} strokeOpacity={0.9}/>
       <circle cx={p.x} cy={p.y} r={adaptiveR} fill={info?.photo ? '#0a0a0a' : 'rgba(229,192,123,0.15)'}/>
       {info?.photo ? (
         <>
@@ -237,17 +133,17 @@ const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
         </>
       ) : (
         <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
-          fontSize={16} fontWeight="900" fill="#E5C07B" style={{pointerEvents:'none'}}>
+          fontSize={13} fontWeight="900" fill="#E5C07B" style={{pointerEvents:'none'}}>
           {p.name[0]}
         </text>
       )}
-      <text x={p.x} y={p.y+adaptiveR+11} textAnchor="middle" fontSize={9.5} fontWeight="bold"
+      <text x={p.x} y={p.y+adaptiveR+9} textAnchor="middle" fontSize={8.5} fontWeight="bold"
         fill="rgba(255,255,255,0.92)" stroke="#121212" strokeWidth={3} paintOrder="stroke"
         style={{pointerEvents:'none'}}>
         {(info?.shirtName || p.name.split(' ')[0]).slice(0,12)}
       </text>
       {info?.status === 'lesionat' && (
-        <text x={p.x+adaptiveR*0.7} y={p.y-adaptiveR*0.7} textAnchor="middle" fontSize={12}
+        <text x={p.x+adaptiveR*0.75} y={p.y-adaptiveR*0.75} textAnchor="middle" fontSize={10}
           style={{pointerEvents:'none'}}>🩹</text>
       )}
     </g>
@@ -260,11 +156,11 @@ const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
     onPointerMove={e => onMove(idx,e)}
     onPointerUp={onUp}
     onPointerCancel={onUp}>
-    <circle cx={pos.x} cy={pos.y+3} r={adaptiveR+3} fill="rgba(0,0,0,0.35)"/>
-    <circle cx={pos.x} cy={pos.y} r={adaptiveR+2} fill="none" stroke="#ff6b6b" strokeWidth={2} strokeOpacity={0.7}/>
+    <circle cx={pos.x} cy={pos.y+2} r={adaptiveR+2} fill="rgba(0,0,0,0.35)"/>
+    <circle cx={pos.x} cy={pos.y} r={adaptiveR+1.5} fill="none" stroke="#ff6b6b" strokeWidth={1.6} strokeOpacity={0.7}/>
     <circle cx={pos.x} cy={pos.y} r={adaptiveR} fill="#C0392B" fillOpacity={0.9}/>
     <text x={pos.x} y={pos.y} textAnchor="middle" dominantBaseline="middle"
-      fontSize={12} fontWeight="bold" fill="white" style={{pointerEvents:'none'}}>
+      fontSize={10} fontWeight="bold" fill="white" style={{pointerEvents:'none'}}>
       R{idx+1}
     </text>
   </g>
@@ -287,18 +183,94 @@ export default function TacticalBoard() {
   // Mode per defecte derivat de la temporada activa (fs5 a S1/S2, f7 a
   // S3) — ara que consumim useSeason() ja no cal el TODO de la Fase 1c.
   const [mode, setMode] = useState(format.id);
+  const [formation, setFormation] = useState('2-3-1');
   const [unavailable, setUnavailable] = useState([]);
   const [showConv, setShowConv] = useState(false);
   const [showRivals, setShowRivals] = useState(false);
 
-  const [fieldPlayers, setFieldPlayers] = useState(() => mkField(format.id).filter(p => !baixaNames.has(p.name)));
+  const fieldPct = m => (m === 'f7' ? FORMATIONS_F7[formation] : DEF_PCT[m]);
+
+  const [fieldPlayers, setFieldPlayers] = useState(() => mkField(format.id, fieldPct(format.id)).filter(p => !baixaNames.has(p.name)));
   const [rivalPos, setRivalPos] = useState(() => mkRivals(format.id));
   const [ghost, setGhost] = useState(null);
   const [ball, setBall] = useState({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
 
+  // ── Gravadora de jugades ─────────────────────────────────────────
+  const [recording, setRecording] = useState(false);
+  const [frames, setFrames]       = useState([]);
+  const [showSave, setShowSave]   = useState(false);
+  const [preview, setPreview]     = useState(null);
+  const [meta, setMeta]           = useState({ title: '', category: 'pressio' });
+
+  const captureFrame = () => {
+    setFrames(prev => [...prev, {
+      note: '',
+      own:    fieldPlayers.map(p => svg2pct(p)),
+      rivals: showRivals ? rivalPos.map(p => svg2pct(p)) : [],
+      ball:   svg2pct(ball),
+      names:  fieldPlayers.map(p => p.name),
+    }]);
+  };
+
+  const restoreFrame = (i) => {
+    const f = frames[i];
+    if (!f) return;
+    setFieldPlayers(f.names.map((name, k) => ({ name, ...pct2svg(f.own[k]) })));
+    if (f.rivals.length) { setShowRivals(true); setRivalPos(f.rivals.map(pct2svg)); }
+    setBall(pct2svg(f.ball));
+  };
+
+  const setFrameNote = (i, note) =>
+    setFrames(prev => prev.map((f, k) => k === i ? { ...f, note } : f));
+
+  const removeFrame = (i) => setFrames(prev => prev.filter((_, k) => k !== i));
+
+  const buildDrill = () => {
+    const first = frames[0];
+    const roles = (first?.names || []).map(n => {
+      const info = getInfo(n);
+      return (info?.shirtName || n.split(' ')[0]).slice(0, 5);
+    });
+    return {
+      id: `${slugify(meta.title)}-${Date.now().toString(36).slice(-4)}`,
+      title: meta.title.trim() || 'Jugada sense nom',
+      category: meta.category,
+      mode,
+      roles,
+      summary: '',
+      keys: [],
+      steps: withAutoArrows(frames.map(f => ({
+        note: f.note || '',
+        own: f.own, rivals: f.rivals, ball: f.ball,
+      }))),
+    };
+  };
+
+  const saveDrill = () => {
+    const drill = buildDrill();
+    saveCustomDrill(drill);
+    setShowSave(false);
+    setRecording(false);
+    setFrames([]);
+    setMeta({ title: '', category: 'pressio' });
+    window.alert('Jugada desada. La trobaràs a la pestanya Jugades.');
+  };
+
+  const exportDrill = () => {
+    const json = drillToJson(buildDrill());
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${slugify(meta.title || 'jugada')}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    navigator.clipboard?.writeText(json).catch(() => {});
+  };
+
   // Radi adaptatiu per mòbil
-  const adaptiveR = isMobile ? R * 1.3 : R;
-  const adaptiveBR = isMobile ? BR * 1.2 : BR;
+  const adaptiveR = isMobile ? R * 1.2 : R;
+  const adaptiveBR = isMobile ? BR * 1.15 : BR;
+  const minDist = adaptiveR * 2 + 3;
 
   const getInfo = useCallback(name => roster.find(p => p.name === name), [roster]);
   const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name) && !unavailable.includes(p.name));
@@ -310,17 +282,23 @@ export default function TacticalBoard() {
 
   const switchMode = m => {
     setMode(m);
-    setFieldPlayers(mkField(m).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
+    setFieldPlayers(mkField(m, fieldPct(m)).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
     setRivalPos(mkRivals(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
   };
 
   const reset = () => {
-    setFieldPlayers(mkField(mode).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
+    setFieldPlayers(mkField(mode, fieldPct(mode)).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
     setRivalPos(mkRivals(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
+  };
+
+  const switchFormation = f => {
+    setFormation(f);
+    const pct = FORMATIONS_F7[f];
+    setFieldPlayers(prev => prev.map((p, i) => pct[i] ? { ...p, ...pct2svg(pct[i]) } : p));
   };
 
   const toggleAvail = name => {
@@ -358,7 +336,7 @@ export default function TacticalBoard() {
     fieldDrag.current = null;
     setFieldPlayers(prev => {
       const others = [...prev.filter((_,i) => i!==idx), ...rivalPos];
-      const moved = resolveCollisions(prev[idx], others);
+      const moved = resolveCollisions(prev[idx], others, minDist);
       const nx = clamp(moved.x, F.x+adaptiveR, F.x+F.w-adaptiveR);
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
@@ -390,7 +368,7 @@ export default function TacticalBoard() {
     fieldDrag.current = null;
     setRivalPos(prev => {
       const others = [...prev.filter((_,i) => i!==idx), ...fieldPlayers];
-      const moved = resolveCollisions(prev[idx], others);
+      const moved = resolveCollisions(prev[idx], others, minDist);
       const nx = clamp(moved.x, F.x+adaptiveR, F.x+F.w-adaptiveR);
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {x:nx, y:ny} : p);
@@ -446,7 +424,7 @@ export default function TacticalBoard() {
     const { x, y } = toSvg(e.clientX, e.clientY);
     if (x < F.x+adaptiveR || x > F.x+F.w-adaptiveR || y < F.y+adaptiveR || y > F.y+F.h-adaptiveR) return;
 
-    let nearIdx = -1, nearDist = adaptiveR * 2.4;
+    let nearIdx = -1, nearDist = adaptiveR * 3;
     fieldPlayers.forEach((p, i) => {
       const dist = Math.hypot(p.x-x, p.y-y);
       if (dist < nearDist) { nearDist=dist; nearIdx=i; }
@@ -492,6 +470,25 @@ export default function TacticalBoard() {
                 </button>
               ))}
             </div>
+            {mode === 'f7' && (
+              <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
+                {Object.keys(FORMATIONS_F7).map(key => (
+                  <button key={key} onClick={() => switchFormation(key)}
+                    className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
+                      formation===key ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'text-gray-500 hover:text-white'}`}>
+                    {key}
+                  </button>
+                ))}
+              </div>
+            )}
+            <button onClick={() => setRecording(v => !v)}
+              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
+                recording
+                  ? 'bg-[#C0392B]/20 border-[#C0392B]/50 text-[#ff8f85]'
+                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
+              <span>{recording ? '⏺' : '🎥'}</span>
+              <span className="hidden sm:inline">{recording ? 'Gravant' : 'Gravar jugada'}</span>
+            </button>
             <button onClick={reset}
               className="px-2.5 md:px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-[10px] md:text-xs text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
               ↺
@@ -525,9 +522,7 @@ export default function TacticalBoard() {
               <rect width={VB_W} height={VB_H} fill="#0a0a0a" rx={8}/>
               <rect x={F.x} y={F.y} width={F.w} height={F.h} fill="#1c3d1c"/>
 
-              {mode==='fs5' && <FutsalLines/>}
-              {mode==='f7'  && <F7Lines/>}
-              {mode==='f11' && <F11Lines/>}
+              <FieldLines mode={mode}/>
 
               <text x={F.x+F.w/2} y={F.y+F.h-10} textAnchor="middle" fontSize={9}
                 fill="rgba(229,192,123,0.35)" fontWeight="bold" letterSpacing={1}>REAL TIESADA</text>
@@ -630,6 +625,115 @@ export default function TacticalBoard() {
           </div>
         </div>
       </div>
+
+      {/* Gravadora de jugades */}
+      {recording && (
+        <div className="bg-[#1E1E1E] rounded-2xl border border-[#C0392B]/30 p-3 md:p-4 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-black text-[#ff8f85] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#C0392B] animate-pulse"/> Gravant jugada
+            </h3>
+            <span className="text-[10px] text-gray-500">{frames.length} fases</span>
+            <div className="flex-1"/>
+            <button onClick={captureFrame}
+              className="px-3 py-1.5 bg-[#E5C07B] text-black rounded-lg text-[11px] font-black hover:bg-[#d4b06a] transition-colors">
+              📸 Capturar fase
+            </button>
+            <button onClick={() => setPreview(buildDrill())} disabled={frames.length < 2}
+              className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[11px] font-bold text-gray-300 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              ▶ Previsualitzar
+            </button>
+            <button onClick={() => setShowSave(true)} disabled={frames.length < 2}
+              className="px-3 py-1.5 bg-[#C0392B] text-white rounded-lg text-[11px] font-black hover:bg-[#a93226] disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              💾 Desar
+            </button>
+          </div>
+
+          <p className="text-[10.5px] text-gray-500 leading-snug">
+            Col·loca les fitxes com vulguis i prem <strong className="text-gray-300">Capturar fase</strong>.
+            Repeteix-ho per cada moment de la jugada: l'animació i les fletxes es generen soles entre fases.
+          </p>
+
+          {frames.length > 0 && (
+            <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {frames.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 bg-[#121212] border border-white/5 rounded-lg p-2">
+                  <button onClick={() => restoreFrame(i)} title="Carregar aquesta fase al camp"
+                    className="w-6 h-6 shrink-0 rounded-md bg-[#E5C07B]/15 text-[#E5C07B] text-[11px] font-black hover:bg-[#E5C07B]/30 transition-colors">
+                    {i+1}
+                  </button>
+                  <input value={f.note} onChange={e => setFrameNote(i, e.target.value)}
+                    placeholder="Què passa en aquesta fase?"
+                    className="flex-1 min-w-0 bg-transparent text-[11.5px] text-gray-300 placeholder:text-gray-700 outline-none"/>
+                  <button onClick={() => removeFrame(i)}
+                    className="text-gray-700 hover:text-[#C0392B] text-sm px-1 shrink-0">🗑</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Previsualització */}
+      {preview && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm">
+          <div className="bg-[#1E1E1E] rounded-2xl border border-white/10 w-full max-w-md max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div className="p-3 border-b border-white/5 flex justify-between items-center bg-[#121212] sticky top-0">
+              <h3 className="text-sm font-black text-[#E5C07B]">▶ Previsualització</h3>
+              <button onClick={() => setPreview(null)} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-3"><DrillPlayer drill={preview} autoPlay/></div>
+          </div>
+        </div>
+      )}
+
+      {/* Desar jugada */}
+      {showSave && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm">
+          <div className="bg-[#1E1E1E] rounded-2xl border border-white/10 w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="p-3 md:p-4 border-b border-white/5 flex justify-between items-center bg-[#121212]">
+              <h3 className="text-base font-black text-[#E5C07B]">💾 Desar jugada</h3>
+              <button onClick={() => setShowSave(false)} className="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div className="p-3 md:p-4 space-y-3">
+              <div>
+                <label className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">Nom</label>
+                <input value={meta.title} autoFocus
+                  onChange={e => setMeta(m => ({ ...m, title: e.target.value }))}
+                  placeholder="Ex: Pressió alta al seu treta"
+                  className="w-full mt-1 bg-[#121212] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#E5C07B]/40"/>
+              </div>
+              <div>
+                <label className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">Categoria</label>
+                <div className="flex gap-1.5 mt-1 flex-wrap">
+                  {Object.entries(DRILL_CATEGORIES).map(([key, c]) => (
+                    <button key={key} onClick={() => setMeta(m => ({ ...m, category: key }))}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
+                        meta.category === key ? 'border-transparent' : 'bg-white/5 border-white/10 text-gray-500'}`}
+                      style={meta.category === key ? { background: `${c.color}22`, color: c.color } : undefined}>
+                      {c.icon} {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-600 leading-snug">
+                Es desa en aquest navegador i apareix a <strong className="text-gray-400">Jugades</strong>.
+                Per publicar-la a tot l'equip, exporta el JSON i enganxa'l a <code className="text-[#E5C07B]/70">src/drills.js</code>.
+              </p>
+            </div>
+            <div className="p-3 md:p-4 border-t border-white/5 bg-[#121212] flex gap-2">
+              <button onClick={exportDrill}
+                className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/10 transition-all">
+                ⬇ JSON
+              </button>
+              <button onClick={saveDrill}
+                className="flex-1 py-2.5 bg-[#E5C07B] text-black font-black rounded-lg hover:bg-[#d4b06a] transition-colors text-sm">
+                Desar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ghost banquillo */}
       {ghost && (() => {

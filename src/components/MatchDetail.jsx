@@ -42,6 +42,7 @@ function AnimatedScore({ home, away, resultColor }) {
 
 // ── Nom de dorsal ─────────────────────────────────────────────────
 function shirtName(db, fullName) {
+  if (!fullName) return '—';
   const p = db.roster.find(r => r.name === fullName);
   return p?.shirtName || fullName.split(' ')[0].toUpperCase();
 }
