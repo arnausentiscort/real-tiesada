@@ -13,7 +13,8 @@ import { useSeason } from '../SeasonContext.jsx';
  */
 
 export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers = [] }) {
-  const { db: DATABASE } = useSeason();
+  const { db: DATABASE, format } = useSeason();
+  const fieldN = format.fieldPlayers;   // 4 a sala, 6 a futbol 7
   const [expandedIdx, setExpandedIdx] = useState(null);
   const baseRoster = DATABASE.roster;
   const allPlayers = [
@@ -41,10 +42,10 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
     let newPlayers;
     if (isSelected) {
       newPlayers = current.filter(n => n !== playerName);
-    } else if (current.length < 4) {
+    } else if (current.length < fieldN) {
       newPlayers = [...current, playerName];
     } else {
-      return; // màxim 4
+      return; // ja hi ha tots els de camp
     }
     updateSub(idx, 'onPitch', newPlayers);
   };
@@ -85,7 +86,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
         </button>
       </div>
 
-      <p className="text-[10px] text-gray-600 px-2">Ordena cronològicament els canvis de jugadors. El porter i 4 de camp a cada moment.</p>
+      <p className="text-[10px] text-gray-600 px-2">Ordena cronològicament els canvis de jugadors. El porter i {fieldN} de camp a cada moment.</p>
 
       {subs.length === 0 ? (
         <div className="bg-[#111] rounded-xl border border-white/10 p-4 text-center">
@@ -148,7 +149,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                     )}
                     {campSelected > 0 && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#E5C07B]/15 border border-[#E5C07B]/25 text-[#E5C07B] font-bold">
-                        ⚽ {campSelected}/4
+                        ⚽ {campSelected}/{fieldN}
                       </span>
                     )}
                   </div>
@@ -209,7 +210,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                         {/* Selector jugadors de camp (4) — tots els jugadors, inclòs el porter */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-[#E5C07B] block">
-                            ⚽ Jugadors de camp ({(sub.onPitch || []).length}/4):
+                            ⚽ Jugadors de camp ({(sub.onPitch || []).length}/{fieldN}):
                           </label>
                           <div className="grid grid-cols-2 gap-1.5">
                             {allPlayers.map((p) => {

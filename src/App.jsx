@@ -122,13 +122,6 @@ export default function App() {
     <div className="min-h-screen bg-[#121212] text-[#E2E8F0] font-sans pb-24 md:pb-8">
       <Confetti active={confetti} />
 
-      {/* Admin Panel */}
-      {showAdmin && (
-        <Suspense fallback={null}>
-          <AdminPanel onClose={() => setShowAdmin(false)}/>
-        </Suspense>
-      )}
-
       {/* ── NAVBAR desktop (top) ── */}
       <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 gap-3">
@@ -182,6 +175,12 @@ export default function App() {
       {/* ── CONTINGUT ── */}
       <main className="max-w-6xl mx-auto px-3 md:px-6 py-5 md:py-8">
         <SeasonProvider seasonId={season}>
+          {/* El panel admin viu dins del provider: escriu sobre la temporada activa */}
+          {showAdmin && (
+            <Suspense fallback={null}>
+              <AdminPanel onClose={() => setShowAdmin(false)}/>
+            </Suspense>
+          )}
           {!getSeason(season)?.legacy && (
             <>
               {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}

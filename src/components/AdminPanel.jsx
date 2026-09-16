@@ -1,28 +1,38 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, createContext, useContext } from 'react';
 import { X, Plus, Trash2, ChevronLeft, Github, Check, AlertCircle, Loader } from 'lucide-react';
-import { DATABASE } from '../data.js';
-import { FORMATS } from '../formats.js';
+import { useSeason } from '../SeasonContext.jsx';
 import GoalFrame from './pitch/GoalFrame.jsx';
 import Pitch from './pitch/Pitch.jsx';
 import SubstitutionTimeline from './SubstitutionTimeline';
 
-// TODO: resoldre per partit quan AdminPanel consumeixi useSeason() —
-// de moment només escriu al Split 2 (FILE_PATH apunta a data.js), així
-// que fixem-ho explícit a fs5 en comptes de simular una resolució
-// que no fem de veritat.
-const ADMIN_FORMAT = FORMATS.fs5;
+// El panel treballa sempre sobre la temporada activa: plantilla, calendari,
+// format (fs5/f7) i fitxers de destí surten d'aquí.
+const AdminCtx = createContext(null);
+const useAdmin = () => useContext(AdminCtx);
 
 const BASE = import.meta.env.BASE_URL;
 const REPO_OWNER = 'arnausentiscort';
 const REPO_NAME  = 'real-tiesada';
-const FILE_PATH  = 'src/data.js';
+
+// On viu cada temporada al repo. Els partits sempre són un fitxer per
+// partit; l'índex és qui els importa i els posa a `matches`.
+const SEASON_PATHS = {
+  s1: { indexPath: 'src/data_s1.js',        matchesDir: 'src/matches'            },
+  s2: { indexPath: 'src/data.js',           matchesDir: 'src/matches'            },
+  s3: { indexPath: 'src/seasons/s3/index.js', matchesDir: 'src/seasons/s3/matches' },
+};
+
+// El fitxer d'un partit és el seu id sense el prefix de temporada:
+// "s3-j1-polanco" → "j1-polanco.js"
+const matchFileName = (id) => `${id.replace(/^s\d+-/, '')}.js`;
 
 // ── GitHub API ────────────────────────────────────────────────────
-async function getFileSha(token) {
-  const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+async function getFile(token, path) {
+  const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' }
   });
-  if (!r.ok) throw new Error(`GitHub error ${r.status}`);
+  if (r.status === 404) return { sha: null, content: null };
+  if (!r.ok) throw new Error(`GitHub error ${r.status} llegint ${path}`);
   const d = await r.json();
   const binary = atob(d.content.replace(/\n/g,''));
   const bytes = new Uint8Array(binary.length);
@@ -30,20 +40,22 @@ async function getFileSha(token) {
   const content = new TextDecoder('utf-8').decode(bytes);
   return { sha: d.sha, content };
 }
-async function pushFile(token, sha, newContent, message) {
-  const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`, {
+async function pushFile(token, path, sha, newContent, message) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(newContent))) };
+  if (sha) body.sha = sha;
+  const r = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, content: btoa(unescape(encodeURIComponent(newContent))), sha })
+    body: JSON.stringify(body)
   });
-  if (!r.ok) { const e = await r.json(); throw new Error(e.message || `Error ${r.status}`); }
+  if (!r.ok) { const e = await r.json(); throw new Error(e.message || `Error ${r.status} escrivint ${path}`); }
   return r.json();
 }
 
 // ── Extended roster (base + convidats) ────────────────────────────
-function buildExtRoster(guestNames = []) {
+function buildExtRoster(roster = [], guestNames = []) {
   return [
-    ...DATABASE.roster,
+    ...roster,
     ...(guestNames || []).map(name => ({ name, shirtName: name.toUpperCase(), position: 'Convidat', photo: null, photoCel: null, number: null })),
   ];
 }
@@ -59,12 +71,16 @@ function svgPoint(svgEl, clientX, clientY) {
 
 // ── Camp clickable ────────────────────────────────────────────────
 function PitchClickable({ points, onChange }) {
+  const { format } = useAdmin();
   const svgRef = useRef(null);
   const [mode, setMode] = useState('shot');
 
+  // La graella A1..D6 es calcula sobre la zona jugable del format actiu
+  // (sala 800×420, futbol 7 800×550), no sobre mides fixes.
   const zoneFromXY = (x, y) => {
-    const col  = Math.min(6, Math.max(1, Math.ceil((x - 18) / (764/6))));
-    const rowN = Math.min(4, Math.max(1, Math.ceil((y - 18) / (384/4))));
+    const playW = format.pitch.w - 36, playH = format.pitch.h - 36;
+    const col  = Math.min(6, Math.max(1, Math.ceil((x - 18) / (playW/6))));
+    const rowN = Math.min(4, Math.max(1, Math.ceil((y - 18) / (playH/4))));
     return ['A','B','C','D'][rowN-1] + col;
   };
 
@@ -90,7 +106,7 @@ function PitchClickable({ points, onChange }) {
       <p className="text-[10px] text-gray-600">
         Mode: <span className="text-white font-bold">{mode === 'assist' ? 'Punt assistència' : mode === 'conduct' ? 'Fi conducció' : 'Punt de tir'}</span> — clica al camp
       </p>
-      <Pitch format={ADMIN_FORMAT} svgRef={svgRef} onClick={handleClick}
+      <Pitch format={format} svgRef={svgRef} onClick={handleClick}
         className="w-full rounded-xl cursor-crosshair border border-white/10" style={{maxHeight:220}}>
         {[1,2,3,4,5].map(c=><line key={c} x1={18+c*764/6} y1="18" x2={18+c*764/6} y2="402" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
         {[1,2,3].map(r=><line key={r} x1="18" y1={18+r*384/4} x2="782" y2={18+r*384/4} stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>)}
@@ -120,7 +136,7 @@ function PitchClickable({ points, onChange }) {
 // ── Porteria clickable ─────────────────────────────────────────────
 function GoalClickable({ value, onChange, label }) {
   const svgRef = useRef(null);
-  const format = ADMIN_FORMAT;
+  const { format } = useAdmin();
   const { w, h } = format.goal;
   const handleClick = useCallback((e) => {
     const p = svgPoint(svgRef.current, e.clientX, e.clientY);
@@ -148,16 +164,18 @@ function GoalClickable({ value, onChange, label }) {
 }
 
 // ── Selector onPitch ──────────────────────────────────────────────
-function OnPitchSelector({ value = [], onChange, rosterProp = DATABASE.roster }) {
-  const names = rosterProp.map(p => p.name);
+function OnPitchSelector({ value = [], onChange, rosterProp }) {
+  const { roster, fieldN } = useAdmin();
+  const list = rosterProp || roster;
+  const names = list.map(p => p.name);
   const toggle = (name) => {
     if (value.includes(name)) onChange(value.filter(n => n !== name));
-    else if (value.length < 4) onChange([...value, name]);
+    else if (value.length < fieldN) onChange([...value, name]);
   };
-  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
+  const sn = (n) => list.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
     <div>
-      <p className="text-[10px] text-gray-500 mb-1.5">Al camp ({value.length}/4):{value.length === 4 && <span className="text-emerald-400 ml-1">✓</span>}</p>
+      <p className="text-[10px] text-gray-500 mb-1.5">Al camp ({value.length}/{fieldN}):{value.length === fieldN && <span className="text-emerald-400 ml-1">✓</span>}</p>
       <div className="flex flex-wrap gap-1.5">
         {names.map(name => {
           const sel = value.includes(name);
@@ -173,73 +191,11 @@ function OnPitchSelector({ value = [], onChange, rosterProp = DATABASE.roster })
   );
 }
 
-// ── Formulari de substitució ──────────────────────────────────────
-function SubForm({ sub, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
-  const roster = rosterProp.map(p => p.name);
-  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
-  const isBreak = !sub.onPitch || sub.onPitch.length === 0;
-
-  const togglePlayer = (name) => {
-    const current = sub.onPitch || [];
-    if (current.includes(name)) onChange({...sub, onPitch: current.filter(n => n !== name)});
-    else if (current.length < 4) onChange({...sub, onPitch: [...current, name]});
-  };
-
-  return (
-    <div className={`rounded-xl p-3 border space-y-2 ${isBreak ? 'bg-blue-500/5 border-blue-500/20' : 'bg-[#111] border-white/8'}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-gray-500">#{idx+1}</span>
-          {isBreak && <span className="text-[10px] font-black text-blue-400 px-2 py-0.5 bg-blue-500/15 rounded-full border border-blue-500/25">⏸ DESCANS / FINAL</span>}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onChange({...sub, onPitch: isBreak ? [] : []})}
-            title={isBreak ? "Convertir a canvi normal" : "Marcar com a descans/final"}
-            className={`text-[9px] px-2 py-0.5 rounded-full border transition-all ${isBreak ? 'border-blue-500/30 text-blue-400 hover:bg-blue-500/10' : 'border-white/10 text-gray-600 hover:text-blue-400 hover:border-blue-500/30'}`}>
-            {isBreak ? '↩ Canvi normal' : '⏸'}
-          </button>
-          <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3 h-3"/></button>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <input value={sub.time||''} onChange={e=>onChange({...sub,time:e.target.value})}
-          placeholder="Min (ex: 12:30)"
-          className="w-24 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none shrink-0"/>
-        <select value={sub.goalkeeper||''} onChange={e=>onChange({...sub,goalkeeper:e.target.value})}
-          className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-[#E5C07B]/40 outline-none">
-          <option value="">Porter...</option>
-          {roster.map(n=><option key={n} value={n}>{sn(n)}</option>)}
-        </select>
-      </div>
-
-      {isBreak ? (
-        <p className="text-[10px] text-blue-400/60 italic">Cap jugador de camp — el cronòmetre s'atura aquí</p>
-      ) : (
-        <div>
-          <p className="text-[10px] text-gray-600 mb-1">Al camp ({(sub.onPitch||[]).length}/4):</p>
-          <div className="flex flex-wrap gap-1">
-            {roster.map(name => {
-              const sel = (sub.onPitch||[]).includes(name);
-              const isGK = name === sub.goalkeeper;
-              if (isGK) return null;
-              return (
-                <button key={name} onClick={() => togglePlayer(name)}
-                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${sel ? 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]' : 'bg-[#0d0d0d] border-white/8 text-gray-600 hover:text-white'}`}>
-                  {sn(name)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Formulari de targeta ──────────────────────────────────────────
-function CardForm({ card, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
+function CardForm({ card, onChange, onRemove, idx, rosterProp }) {
+  const ctxCF = useAdmin();
+  rosterProp = rosterProp || ctxCF.roster;
   const roster = rosterProp.map(p => p.name);
   const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
@@ -274,7 +230,9 @@ function CardForm({ card, onChange, onRemove, idx, rosterProp = DATABASE.roster 
 }
 
 // ── Formulari de gol ──────────────────────────────────────────────
-function GoalForm({ goal, onChange, onRemove, idx, rosterProp = DATABASE.roster }) {
+function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
+  const ctxGF = useAdmin();
+  rosterProp = rosterProp || ctxGF.roster;
   const roster = rosterProp.map(p => p.name);
   const emptyPts = { assist: null, conduct: null, shot: null };
   const pts = goal.pts || emptyPts;
@@ -394,11 +352,11 @@ function goalToCode(g) {
   const gk = g.goalkeeper ? `"${g.goalkeeper}"` : 'null';
   if (g.type === 'favor') {
     const ass = g.assist ? `"${g.assist}"` : 'null';
-    return `          { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: ${gk},
-            zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp},
-            onPitch: ${onP}${notes} },`;
+    return `      { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: ${gk},
+        zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp},
+        onPitch: ${onP}${notes} },`;
   }
-  return `          { time: "${g.time}", type: "contra", goalkeeper: ${gk}, onPitch: ${onP}${notes} },`;
+  return `      { time: "${g.time}", type: "contra", goalkeeper: ${gk}, onPitch: ${onP}${notes} },`;
 }
 
 function subsToCode(subs) {
@@ -406,13 +364,13 @@ function subsToCode(subs) {
   return subs.map(s => {
     const op = s.onPitch?.length ? `["${s.onPitch.join('","')}"]` : '[]';
     const gk = s.goalkeeper ? `"${s.goalkeeper}"` : 'null';
-    return `          { time: "${s.time}", goalkeeper: ${gk}, onPitch: ${op} },`;
+    return `      { time: "${s.time}", goalkeeper: ${gk}, onPitch: ${op} },`;
   }).join('\n');
 }
 
 function cardsToCode(cards) {
   if (!cards || cards.length === 0) return '';
-  return cards.map(c => `          { time: "${c.time}", color: "${c.color}", player: "${c.player}" },`).join('\n');
+  return cards.map(c => `      { time: "${c.time}", color: "${c.color}", player: "${c.player}" },`).join('\n');
 }
 
 function eventMapToCode(map) {
@@ -437,96 +395,72 @@ function buildMatchCode(match, originalId) {
     const secs = Math.max(0, min*60+(sec||0)-3);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
-    return `          { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
+    return `      { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
   }).join('\n');
   const savesCode = Object.keys(match.savesManual||{}).length > 0
-    ? `      savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
-  const shotsCode    = `      shots: ${eventMapToCode(match.shots || {})},\n`;
-  const keyPassCode  = `      keyPasses: ${eventMapToCode(match.keyPasses || {})},\n`;
-  const dribblesCode2 = `      dribbles: ${eventMapToCode(match.dribbles || {})},\n`;
+    ? `  savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
+  const shotsCode    = `  shots: ${eventMapToCode(match.shots || {})},\n`;
+  const keyPassCode  = `  keyPasses: ${eventMapToCode(match.keyPasses || {})},\n`;
+  const dribblesCode2 = `  dribbles: ${eventMapToCode(match.dribbles || {})},\n`;
   const ytStr = ytId ? `"${ytId}"` : 'null';
-  const ideal = match.idealMinutesPerPlayer || 16.0;
+  const ideal = match.idealMinutesPerPlayer ? match.idealMinutesPerPlayer : null;
 
-  if (originalId) {
-    // edició
-    return `{
-      id: "${originalId}",
-      jornada: "${match.jornada || ''}",
-      opponent: "${match.opponent || ''}",
-      result: "${match.result || ''}",
-      date: "${match.date || ''}",
-      youtubeId: ${ytStr},
-      vimeoId: null,
-      idealMinutesPerPlayer: ${ideal},
-${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}      events: {
-        substitutions: [
+  return `// ${match.jornada || 'Jornada ?'} · ${match.date || ''} · Real Tiesada ${match.result || ''} ${match.opponent || ''}
+export default {
+  id: "${originalId}",
+  jornada: "${match.jornada || ''}",
+  opponent: "${match.opponent || ''}",
+  result: "${match.result || ''}",
+  date: "${match.date || ''}",
+  youtubeId: ${ytStr},
+  vimeoId: null,
+  idealMinutesPerPlayer: ${ideal},
+${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}  events: {
+    substitutions: [
 ${subsCode}
-        ],
-        cards: [
+    ],
+    cards: [
 ${cardsCode}
-        ],
-        goals: [
+    ],
+    goals: [
 ${goalsCode}
-        ],
-        retransmissio: [
+    ],
+    retransmissio: [
 ${momentsCode}
-        ],
-      }
-    },`;
-  } else {
-    // nou
-    const id = `j${DATABASE.matches.length+1}-${(match.opponent||'rival').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20)}`;
-    return `
-    // ── ${match.jornada||'Jornada ?'} — ${match.opponent||'Rival'} ──────────────────────────────────────────
-    {
-      id: "${id}",
-      jornada: "${match.jornada||''}",
-      opponent: "${match.opponent||''}",
-      result: "${match.result||''}",
-      date: "${match.date||''}",
-      youtubeId: ${ytStr},
-      vimeoId: null,
-      idealMinutesPerPlayer: ${ideal},
-${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}      events: {
-        substitutions: [
-${subsCode}
-        ],
-        cards: [
-${cardsCode}
-        ],
-        goals: [
-${goalsCode}
-        ],
-        retransmissio: [
-${momentsCode}
-        ],
-      }
-    },`;
-  }
+    ],
+  },
+};
+`;
 }
 
-function injectMatchIntoDataJs(currentJs, matchCode) {
-  const marker = '\n  ]\n};';
-  const idx = currentJs.lastIndexOf(marker);
-  if (idx === -1) throw new Error("No he trobat el marcador al data.js.");
-  return currentJs.slice(0, idx) + matchCode + '\n' + currentJs.slice(idx);
+// Identificador JS vàlid per a l'import: "j2-star-warros" → "j2StarWarros"
+function importIdent(id) {
+  const base = id.replace(/^s\d+-/, '').replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase());
+  return /^[0-9]/.test(base) ? `m${base}` : base;
 }
 
-function replaceMatchInDataJs(currentJs, matchId, newMatchCode) {
-  const idStr = `id: "${matchId}"`;
-  const start = currentJs.indexOf(idStr);
-  if (start === -1) throw new Error(`No he trobat el partit "${matchId}" al data.js`);
-  let braceStart = currentJs.lastIndexOf('{', start);
-  if (braceStart === -1) throw new Error('Error localitzant el bloc del partit');
-  let depth = 0, i = braceStart;
-  while (i < currentJs.length) {
-    if (currentJs[i] === '{') depth++;
-    else if (currentJs[i] === '}') { depth--; if (depth === 0) break; }
-    i++;
+// Afegeix l'import del partit nou i el posa a `matches` de l'índex de temporada.
+function registerMatchInIndex(indexJs, id, matchesDirName) {
+  const ident = importIdent(id);
+  const file  = matchFileName(id);
+  let out = indexJs;
+
+  if (!new RegExp(`from ['"]\\./${matchesDirName}/${file.replace('.', '\\.')}['"]`).test(out)) {
+    const importLine = `import ${ident} from './${matchesDirName}/${file}';`;
+    const imports = [...out.matchAll(/^import .+;$/gm)];
+    if (!imports.length) throw new Error('No he trobat cap import a l\'índex de temporada');
+    const last = imports[imports.length - 1];
+    const at = last.index + last[0].length;
+    out = out.slice(0, at) + '\n' + importLine + out.slice(at);
   }
-  let end = i + 1;
-  if (currentJs[end] === ',') end++;
-  return currentJs.slice(0, braceStart) + newMatchCode.trimStart() + currentJs.slice(end);
+
+  const m = out.match(/matches:\s*\[([\s\S]*?)\]/);
+  if (!m) throw new Error('No he trobat `matches: [...]` a l\'índex de temporada');
+  const inner = m[1];
+  if (new RegExp(`\\b${ident}\\b`).test(inner)) return out;
+  const listed = inner.trim();
+  const next = listed ? `${listed.replace(/,\s*$/, '')}, ${ident}` : ident;
+  return out.slice(0, m.index) + `matches: [${next}]` + out.slice(m.index + m[0].length);
 }
 
 function matchToForm(m) {
@@ -561,7 +495,7 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
-    idealMinutesPerPlayer: m.idealMinutesPerPlayer || 16.0,
+    idealMinutesPerPlayer: m.idealMinutesPerPlayer ?? null,
     goals, subs, cards, moments, savesManual, shots, keyPasses, dribbles,
     guestPlayers: m.guestPlayers || [],
   };
@@ -569,6 +503,7 @@ function matchToForm(m) {
 
 // ── Pantalla de selecció ──────────────────────────────────────────
 function MatchSelector({ onSelect, onNew }) {
+  const { db } = useAdmin();
   const getRS = (f, a) => f > a ? 'text-emerald-400' : f < a ? 'text-[#C0392B]' : 'text-yellow-400';
   return (
     <div className="space-y-3">
@@ -577,7 +512,7 @@ function MatchSelector({ onSelect, onNew }) {
         <Plus className="w-4 h-4"/> Nou Partit
       </button>
       <p className="text-xs text-gray-600 uppercase tracking-wider pt-2">Editar Partit Existent</p>
-      {[...DATABASE.matches].reverse().map(m => {
+      {[...(db.matches || [])].reverse().map(m => {
         const [f, a] = m.result.split('-').map(s => parseInt(s.trim()));
         return (
           <button key={m.id} onClick={() => onSelect(m)}
@@ -596,7 +531,9 @@ function MatchSelector({ onSelect, onNew }) {
 }
 
 // ── Secció d'events per jugador (tirs / key passes / regats) ─────
-function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange, rosterProp = DATABASE.roster }) {
+function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange, rosterProp }) {
+  const ctxES = useAdmin();
+  rosterProp = rosterProp || ctxES.roster;
   const roster = rosterProp;
   const [inputs, setInputs] = useState({});
 
@@ -675,7 +612,8 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
 
 // ── Formulari complet ─────────────────────────────────────────────
 function MatchForm({ match, setMatch, onPreview }) {
-  const extRoster = buildExtRoster(match.guestPlayers);
+  const { roster, format } = useAdmin();
+  const extRoster = buildExtRoster(roster, match.guestPlayers);
   const [newGuest, setNewGuest] = useState('');
 
   const addGuest = () => {
@@ -730,8 +668,8 @@ function MatchForm({ match, setMatch, onPreview }) {
           <input value={match.result} onChange={e=>setMatch(m=>({...m,result:e.target.value}))} placeholder="Resultat (ex: 3 - 2)"
             className="bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
           <div className="relative">
-            <input type="number" step="0.5" min="1" max="40"
-              value={match.idealMinutesPerPlayer||''} onChange={e=>setMatch(m=>({...m,idealMinutesPerPlayer:parseFloat(e.target.value)||16}))}
+            <input type="number" step="0.5" min="1" max={format.totalMinutes}
+              value={match.idealMinutesPerPlayer ?? ''} onChange={e=>setMatch(m=>({...m,idealMinutesPerPlayer:parseFloat(e.target.value)||null}))}
               placeholder="Min ideals/jugador"
               className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600">min ideal</span>
@@ -773,7 +711,7 @@ function MatchForm({ match, setMatch, onPreview }) {
       <div className="space-y-3">
         <p className="text-xs font-bold text-[#E5C07B]">🧤 Aturades per Porter</p>
         <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2">
-          {DATABASE.roster.map(pl => {
+          {roster.map(pl => {
             const hasSave = (match.savesManual||{})[pl.name] !== undefined;
             const isPorter = pl.position === 'Porter';
             if (!isPorter && !hasSave) return null;
@@ -797,7 +735,7 @@ function MatchForm({ match, setMatch, onPreview }) {
           <select onChange={e => { if (!e.target.value) return; setMatch(m=>({...m,savesManual:{...(m.savesManual||{}),[e.target.value]:0}})); e.target.value=''; }}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-gray-500 focus:border-emerald-500/40 outline-none mt-1">
             <option value="">+ Afegir jugador de camp que ha fet de porter...</option>
-            {DATABASE.roster.filter(p => p.position !== 'Porter' && (match.savesManual||{})[p.name] === undefined).map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
+            {roster.filter(p => p.position !== 'Porter' && (match.savesManual||{})[p.name] === undefined).map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
           </select>
         </div>
       </div>
@@ -881,30 +819,56 @@ function MatchForm({ match, setMatch, onPreview }) {
 
 // ── Admin Panel principal ─────────────────────────────────────────
 export default function AdminPanel({ onClose }) {
+  const { db, format, season } = useSeason();
+  const paths = SEASON_PATHS[season.id];
+
   const [token, setToken]           = useState(() => localStorage.getItem('gh_token') || '');
   const [tokenSaved, setTokenSaved] = useState(!!localStorage.getItem('gh_token'));
   const [screen, setScreen]         = useState('select');
   const [errorMsg, setErrorMsg]     = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [newId, setNewId]           = useState('');
   const [isEdit, setIsEdit]         = useState(false);
 
-  const emptyMatch = {
-    jornada: `Jornada ${DATABASE.matches.length + 1}`,
-    opponent: '', date: '', result: '', youtubeUrl: '',
-    idealMinutesPerPlayer: 20.0,
+  // Jornades del calendari que encara no tenen partit: el més probable és
+  // que el nou partit sigui la primera d'aquestes.
+  const pending = (db.calendar || []).filter(
+    c => !(db.matches || []).some(m => m.jornada === c.jornada)
+  );
+
+  // Amb el format sabem quants minuts de camp hi ha per repartir
+  const defaultIdeal = () => {
+    const players = (db.roster || []).filter(p => p.status !== 'baixa').length || 1;
+    return Math.round((format.totalMinutes * format.fieldPlayers) / players);
+  };
+
+  const emptyMatch = () => ({
+    jornada: pending[0]?.jornada || '',
+    opponent: pending[0]?.opponent || '',
+    date: '', result: '', youtubeUrl: '',
+    idealMinutesPerPlayer: defaultIdeal(),
     goals: [], subs: [], cards: [], moments: [], savesManual: {}, shots: {}, keyPasses: {}, dribbles: {},
     guestPlayers: [],
-  };
+  });
   const [match, setMatch] = useState(emptyMatch);
 
   const saveToken = () => { localStorage.setItem('gh_token', token); setTokenSaved(true); };
 
   const handleSelectMatch = (m) => { setMatch(matchToForm(m)); setIsEdit(true); setScreen('form'); };
-  const handleNewMatch    = () => { setMatch(emptyMatch); setIsEdit(false); setScreen('form'); };
+  const handleNewMatch    = () => { setMatch(emptyMatch()); setIsEdit(false); setScreen('form'); };
+
+  const makeId = () => {
+    const jn = (match.jornada || '').match(/\d+/)?.[0] || ((db.matches || []).length + 1);
+    const slug = (match.opponent || 'rival').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20);
+    return `${season.id}-j${jn}-${slug}`;
+  };
 
   const handlePreview = () => {
-    const code = buildMatchCode(match, isEdit ? match._id : null);
-    setGeneratedCode(code);
+    const id = isEdit ? match._id : makeId();
+    setNewId(id);
+    setGeneratedCode(buildMatchCode(match, id));
     setScreen('preview');
   };
 
@@ -913,21 +877,34 @@ export default function AdminPanel({ onClose }) {
     try {
       const tk = token || localStorage.getItem('gh_token');
       if (!tk) throw new Error('Cal el token de GitHub');
-      const { sha, content } = await getFileSha(tk);
-      const newContent = isEdit
-        ? replaceMatchInDataJs(content, match._id, generatedCode)
-        : injectMatchIntoDataJs(content, generatedCode);
-      const commitMsg = isEdit
-        ? `Edit ${match.jornada} vs ${match.opponent}`
-        : `Add ${match.jornada} vs ${match.opponent} (${match.result})`;
-      await pushFile(tk, sha, newContent, commitMsg);
+      if (!paths) throw new Error(`No sé on desar els partits de la temporada ${season.id}`);
+
+      const filePath = `${paths.matchesDir}/${matchFileName(newId)}`;
+      const existing = await getFile(tk, filePath);
+      await pushFile(tk, filePath, existing.sha, generatedCode,
+        `${isEdit ? 'Edita' : 'Afegeix'} ${match.jornada} vs ${match.opponent}${isEdit ? '' : ` (${match.result})`}`);
+
+      // Un partit nou també s'ha de registrar a l'índex de la temporada
+      if (!isEdit) {
+        const dirName = paths.matchesDir.split('/').pop();
+        const idx = await getFile(tk, paths.indexPath);
+        if (!idx.content) throw new Error(`No he trobat ${paths.indexPath}`);
+        const updated = registerMatchInIndex(idx.content, newId, dirName);
+        if (updated !== idx.content) {
+          await pushFile(tk, paths.indexPath, idx.sha, updated,
+            `Registra ${match.jornada} vs ${match.opponent} a la temporada`);
+        }
+      }
       setScreen('done');
     } catch(e) { setErrorMsg(e.message); setScreen('error'); }
   };
 
   const backLabel = screen === 'form' ? 'select' : screen === 'preview' ? 'form' : null;
 
+  const ctx = { db, format, season, roster: db.roster || [], fieldN: format.fieldPlayers };
+
   return (
+   <AdminCtx.Provider value={ctx}>
     <div className="fixed inset-0 z-[300] bg-[#0d0d0d] overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-white/8 px-4 py-3 flex items-center gap-3">
@@ -973,7 +950,7 @@ export default function AdminPanel({ onClose }) {
           <div className="space-y-4">
             {isEdit && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-400">
-                ⚠️ Modo edició — substituirà el bloc del {match.jornada} al data.js
+                ⚠️ Mode edició — reescriurà el fitxer del {match.jornada}
               </div>
             )}
             <div className="bg-[#111] rounded-xl border border-white/8 p-4">
@@ -985,6 +962,17 @@ export default function AdminPanel({ onClose }) {
               <p className="text-xs text-gray-500">
                 {match.goals.filter(g=>g.type==='favor').length}⚽ · {match.goals.filter(g=>g.type==='contra').length}❌ · {(match.cards||[]).length}🟨 · {match.moments.length} moments
               </p>
+              <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5">
+                <p className="text-[10px] text-gray-600">
+                  {season.label} · {format.label} · {format.fieldPlayers} de camp + porter
+                </p>
+                <p className="text-[10px] text-gray-600 font-mono">
+                  ✎ {paths?.matchesDir}/{matchFileName(newId)}
+                </p>
+                {!isEdit && (
+                  <p className="text-[10px] text-gray-600 font-mono">✎ {paths?.indexPath} (import + matches)</p>
+                )}
+              </div>
             </div>
             <button onClick={handlePush}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl transition-all flex items-center justify-center gap-2">
@@ -1034,5 +1022,6 @@ export default function AdminPanel({ onClose }) {
         )}
       </div>
     </div>
+   </AdminCtx.Provider>
   );
 }

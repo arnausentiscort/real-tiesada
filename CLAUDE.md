@@ -344,7 +344,20 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 ## Panel Admin
 
 - **Accés**: triple clic al logo (dins d'1 segon entre clics)
-- Genera codi per afegir/editar partits a `data.js`
+- Treballa **sempre sobre la temporada activa**: viu dins del `SeasonProvider`
+  i en treu plantilla, calendari, partits i format (`useSeason()`)
+- S'adapta sol al format: els selectors de camp són `format.fieldPlayers`
+  (4 a sala, 6 a futbol 7), el camp i la porteria surten de `format.pitch`/
+  `format.goal`, i la graella de zones A1..D6 es calcula sobre la mida real
+- **Un partit = un fitxer**. El panel genera un mòdul `export default {...}`:
+  - Partit nou → escriu `<matchesDir>/<id sense prefix>.js` **i** registra
+    l'import + l'entrada a `matches` de l'índex de temporada
+  - Editar → només reescriu el fitxer del partit
+  - Rutes per temporada a `SEASON_PATHS` dins d'`AdminPanel.jsx`
+- L'id d'un partit nou és `<temporada>-j<jornada>-<rival>`; el fitxer és
+  aquest id sense el prefix (`s3-j2-star-warros` → `j2-star-warros.js`)
+- La jornada i el rival es pre-omplen amb la primera del calendari que
+  encara no té partit — així no es tornen a numerar malament
 - Permet afegir jugadors de camp com a porters esporàdics (secció aturades)
 - Token GitHub per pujar canvis directament des del panel
 
