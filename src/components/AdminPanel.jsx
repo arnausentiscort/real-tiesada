@@ -829,6 +829,7 @@ export default function AdminPanel({ onClose }) {
   const [generatedCode, setGeneratedCode] = useState('');
   const [newId, setNewId]           = useState('');
   const [isEdit, setIsEdit]         = useState(false);
+  const [copied, setCopied]         = useState(false);
 
   // Jornades del calendari que encara no tenen partit: el més probable és
   // que el nou partit sigui la primera d'aquestes.
@@ -954,7 +955,16 @@ export default function AdminPanel({ onClose }) {
               </div>
             )}
             <div className="bg-[#111] rounded-xl border border-white/8 p-4">
-              <p className="text-xs text-gray-500 mb-2 font-bold">Codi {isEdit ? 'actualitzat' : 'nou'}</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-gray-500 font-bold">Codi {isEdit ? 'actualitzat' : 'nou'}</p>
+                <button onClick={async () => {
+                    try { await navigator.clipboard.writeText(generatedCode); setCopied(true); setTimeout(()=>setCopied(false), 2000); }
+                    catch { window.prompt('Copia el codi:', generatedCode); }
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold border bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all">
+                  {copied ? '✓ Copiat' : '📋 Copiar codi'}
+                </button>
+              </div>
               <pre className="text-[10px] text-[#E5C07B] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">{generatedCode}</pre>
             </div>
             <div className="bg-[#1a1a1a] rounded-xl border border-[#E5C07B]/20 p-4">
@@ -1009,6 +1019,17 @@ export default function AdminPanel({ onClose }) {
             </div>
             <p className="text-white font-bold">Error</p>
             <p className="text-gray-500 text-sm text-center max-w-xs">{errorMsg}</p>
+            {/* Encara que GitHub falli, el codi no s'ha de perdre */}
+            <button onClick={async () => {
+                try { await navigator.clipboard.writeText(generatedCode); setCopied(true); setTimeout(()=>setCopied(false), 2000); }
+                catch { window.prompt('Copia el codi:', generatedCode); }
+              }}
+              className="px-4 py-2 bg-[#E5C07B]/15 border border-[#E5C07B]/30 text-[#E5C07B] rounded-lg text-sm font-bold">
+              {copied ? '✓ Copiat' : '📋 Copiar el codi i desar-lo a mà'}
+            </button>
+            <p className="text-[10px] text-gray-600 font-mono text-center">
+              → {paths?.matchesDir}/{matchFileName(newId)}
+            </p>
             <div className="flex gap-3">
               <button onClick={()=>setScreen('preview')} className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg text-sm">← Tornar</button>
               {(errorMsg.includes('401') || errorMsg.includes('token')) && (
