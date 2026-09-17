@@ -164,10 +164,15 @@ function GoalClickable({ value, onChange, label }) {
 }
 
 // ── Selector onPitch ──────────────────────────────────────────────
-function OnPitchSelector({ value = [], onChange, rosterProp }) {
+// `value` són només els jugadors DE CAMP: el porter va al seu propi camp
+// del gol i per això no s'ofereix aquí (ningú pot ser les dues coses alhora).
+function OnPitchSelector({ value = [], onChange, rosterProp, goalkeeper }) {
   const { roster, fieldN } = useAdmin();
   const list = rosterProp || roster;
-  const names = list.map(p => p.name);
+  // Si un partit antic té el porter dins d'onPitch, l'hi deixem veure
+  // per poder-lo treure; si no, no s'ofereix.
+  const names = list.map(p => p.name).filter(n => n !== goalkeeper || value.includes(n));
+  const excess = value.length > fieldN;
   const toggle = (name) => {
     if (value.includes(name)) onChange(value.filter(n => n !== name));
     else if (value.length < fieldN) onChange([...value, name]);
@@ -175,7 +180,11 @@ function OnPitchSelector({ value = [], onChange, rosterProp }) {
   const sn = (n) => list.find(p => p.name === n)?.shirtName || n.split(' ')[0];
   return (
     <div>
-      <p className="text-[10px] text-gray-500 mb-1.5">Al camp ({value.length}/{fieldN}):{value.length === fieldN && <span className="text-emerald-400 ml-1">✓</span>}</p>
+      <p className={`text-[10px] mb-1.5 ${excess ? 'text-[#C0392B] font-bold' : 'text-gray-500'}`}>
+        Al camp ({value.length}/{fieldN}):
+        {value.length === fieldN && <span className="text-emerald-400 ml-1">✓</span>}
+        {excess && <span className="ml-1">— en sobren {value.length - fieldN}, treu-ne per poder-ne posar d'altres</span>}
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {names.map(name => {
           const sel = value.includes(name);
@@ -274,7 +283,7 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
             <option value="Porter rival">Porter rival (genèric)</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp}/>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp} goalkeeper={goal.goalkeeper}/>
           <PitchClickable points={pts}
             onChange={newPts => onChange({...goal, pts: newPts,
               shotPos:   newPts.shot    ? {x:newPts.shot.x,   y:newPts.shot.y}   : null,
@@ -295,7 +304,7 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
             <option value="">Porter nostre...</option>
             {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
           </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp}/>
+          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp} goalkeeper={goal.goalkeeper}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
             placeholder="Comentari (opcional)" rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
