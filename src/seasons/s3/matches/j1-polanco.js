@@ -10,7 +10,7 @@ export default {
   opponent: "Polanco FC",
   result: "5 - 7",
   date: "15 Set 2026",
-  youtubeId: null,
+  youtubeId: "jazavaezNic",
   vimeoId: null,
   idealMinutesPerPlayer: 35,
   savesManual: {},
@@ -92,7 +92,7 @@ export default {
         notes: "Cinquè i últim gol nostre: Serginho, altre cop amb assistència de l'Arnau Sentis." },
     ],
     retransmissio: [
-      { time: "15:07", type: "bona", text: "Rematada de cap de l'Arnau Sentis", players: ["Arnau Sentis"], videoUrl: null, photo: null, photoHover: null },
+      { time: "15:07", type: "bona", text: "Rematada de cap de l'Arnau Sentis", players: ["Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=904s", photo: null, photoHover: null },
     ],
   },
 };
