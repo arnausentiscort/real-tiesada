@@ -1,7 +1,9 @@
 // Jornada 1 · 15/09/2026 · Real Tiesada 5-7 Polanco FC
-// Dades parcials: cronologia de gols d'apuntamelo.com i alineacions
-// que va anotar en Marc Farreras pel WhatsApp. No tenim el registre
-// de canvis, per això `substitutions` va buit i no hi ha minutatges.
+// Cronologia i alineacions anotades pel Pau al grup (18/09). Els minuts
+// dels gols són els seus, més precisos que els d'apuntamelo.com, d'on
+// surten els golejadors rivals. Les substitucions estan DERIVADES dels
+// onze observats a cada gol: sabem qui hi havia en aquell moment, no
+// l'instant exacte del canvi, així que els minutatges són aproximats.
 export default {
   id: "s3-j1-polanco",
   jornada: "Jornada 1",
@@ -10,74 +12,84 @@ export default {
   date: "15 Set 2026",
   youtubeId: null,
   vimeoId: null,
-  idealMinutesPerPlayer: null,
+  idealMinutesPerPlayer: 35,
   savesManual: {},
   shots: {},
   keyPasses: {},
   dribbles: {},
   events: {
-    substitutions: [],
+    substitutions: [
+      { time: "00:00", goalkeeper: "Pau Ibañez",  onPitch: ["Arnau Sentis", "Coro", "Marc Farreras", "Roger Miro", "Roi Seoane", "Serginho"] },
+      { time: "11:30", goalkeeper: "Pau Ibañez",  onPitch: ["Arnau Sentis", "Roi Seoane", "Ivan Mico", "Serginho", "Coro", "Roger Miro"] },
+      { time: "20:45", goalkeeper: "Joan Medina", onPitch: ["Roi Seoane", "Ivan Mico", "Roger Miro", "Pau Ibañez", "Marc Farreras", "Serginho"] },
+      { time: "26:55", goalkeeper: "Joan Medina", onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Ivan Mico", "Serginho", "Roi Seoane"] },
+      { time: "32:49", goalkeeper: "Ivan Mico",   onPitch: ["Coro", "Chengzhi Li", "Roger Miro", "Joan Medina", "Serginho", "Arnau Sentis"] },
+      { time: "39:40", goalkeeper: "Ivan Mico",   onPitch: ["Coro", "Marc Farreras", "Pau Ibañez", "Serginho", "Roger Miro", "Chengzhi Li"] },
+      { time: "41:13", goalkeeper: "Ivan Mico",   onPitch: ["Roger Miro", "Roi Seoane", "Coro", "Chengzhi Li", "Serginho"] },
+      { time: "43:25", goalkeeper: "Ivan Mico",   onPitch: ["Serginho", "Arnau Sentis", "Pau Ibañez", "Roi Seoane", "Coro", "Chengzhi Li"] },
+      { time: "50:00", goalkeeper: null, onPitch: [], _isBreak: true },
+    ],
     cards: [],
     goals: [
-      { time: "07:00", type: "contra", goalkeeper: "Pau Ibañez",
+      { time: "07:20", type: "contra", goalkeeper: "Pau Ibañez",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Arnau Sentis", "Roi Seoane", "Marc Farreras", "Serginho", "Roger Miro", "Coro"],
+        onPitch: ["Arnau Sentis", "Coro", "Marc Farreras", "Roger Miro", "Roi Seoane", "Serginho"],
         notes: "Primer gol encaixat. David H. #16." },
 
-      { time: "08:00", type: "favor", scorer: "Serginho", assist: "Marc Farreras", goalkeeper: "Pau Ibañez",
+      { time: "07:54", type: "favor", scorer: "Serginho", assist: "Marc Farreras", goalkeeper: "Pau Ibañez",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Arnau Sentis", "Roi Seoane", "Marc Farreras", "Serginho", "Roger Miro", "Coro"],
-        notes: "Primer gol nostre: el marca en Serginho amb assistència d'en Farreras, amb els mateixos al camp." },
+        onPitch: ["Arnau Sentis", "Coro", "Marc Farreras", "Roger Miro", "Roi Seoane", "Serginho"],
+        notes: "Empatem de seguida, amb els mateixos al camp: gol d'en Serginho amb assistència d'en Farreras." },
 
       { time: "09:24", type: "contra", goalkeeper: "Pau Ibañez",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Marc Farreras", "Arnau Sentis", "Coro", "Roi Seoane", "Roger Miro", "Serginho"],
+        onPitch: ["Marc Farreras", "Arnau Sentis", "Serginho", "Roi Seoane", "Roger Miro", "Coro"],
         notes: "Segon gol encaixat. David H. #16." },
 
-      { time: "11:34", type: "contra", goalkeeper: "Pau Ibañez",
+      { time: "11:30", type: "contra", goalkeeper: "Pau Ibañez",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Arnau Sentis", "Roi Seoane", "Serginho", "Roger Miro", "Ivan Mico", "Coro"],
+        onPitch: ["Arnau Sentis", "Roi Seoane", "Ivan Mico", "Serginho", "Coro", "Roger Miro"],
         notes: "Tercer gol encaixat. Daniel I. #96." },
 
-      { time: "20:36", type: "contra", goalkeeper: "Joan Medina",
+      { time: "20:45", type: "contra", goalkeeper: "Joan Medina",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Roi Seoane", "Serginho", "Marc Farreras", "Roger Miro", "Ivan Mico", "Pau Ibañez"],
+        onPitch: ["Roi Seoane", "Ivan Mico", "Roger Miro", "Pau Ibañez", "Marc Farreras", "Serginho"],
         notes: "Quart gol encaixat: ens el fan mentre fem els canvis. Aitor R. #42." },
 
-      { time: "28:00", type: "contra", goalkeeper: null,
+      { time: "26:55", type: "contra", goalkeeper: "Joan Medina",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
+        onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Ivan Mico", "Serginho", "Roi Seoane"],
         notes: "Cinquè gol encaixat. Daniel I. #96." },
 
-      { time: "29:00", type: "contra", goalkeeper: null,
+      { time: "28:28", type: "contra", goalkeeper: "Joan Medina",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Sisè gol encaixat. Christian A. #27." },
+        onPitch: ["Arnau Sentis", "Chengzhi Li", "Roger Miro", "Ivan Mico", "Serginho", "Roi Seoane"],
+        notes: "Sisè gol encaixat, amb els mateixos al camp. Christian A. #27." },
 
-      { time: "34:00", type: "favor", scorer: "Serginho", assist: "Arnau Sentis", goalkeeper: null,
+      { time: "32:49", type: "favor", scorer: "Serginho", assist: "Arnau Sentis", goalkeeper: "Ivan Mico",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Segon gol nostre, en Serginho amb assistència de l'Arnau Sentis." },
+        onPitch: ["Coro", "Chengzhi Li", "Roger Miro", "Joan Medina", "Serginho", "Arnau Sentis"],
+        notes: "Segon gol nostre: Serginho amb assistència de l'Arnau Sentis." },
 
-      { time: "41:00", type: "favor", scorer: "Marc Farreras", assist: null, goalkeeper: null,
+      { time: "39:40", type: "favor", scorer: "Marc Farreras", assist: "Pau Ibañez", goalkeeper: "Ivan Mico",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Gol d'en Farreras." },
+        onPitch: ["Coro", "Marc Farreras", "Pau Ibañez", "Serginho", "Roger Miro", "Chengzhi Li"],
+        notes: "Gol d'en Farreras amb assistència d'en Pau Ibañez." },
 
-      { time: "42:00", type: "favor", scorer: "Roi Seoane", assist: null, goalkeeper: null,
+      { time: "41:13", type: "favor", scorer: "Roi Seoane", assist: "Roger Miro", goalkeeper: "Ivan Mico",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Gol d'en Roi." },
+        onPitch: ["Roger Miro", "Roi Seoane", "Coro", "Chengzhi Li", "Serginho"],
+        notes: "Gol d'en Roi amb assistència d'en Miró. Jugàvem amb sis: cinc de camp i porter." },
 
-      { time: "43:00", type: "contra", goalkeeper: null,
+      { time: "41:40", type: "contra", goalkeeper: "Ivan Mico",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Setè gol encaixat. Daniel I. #96." },
+        onPitch: ["Roger Miro", "Roi Seoane", "Coro", "Chengzhi Li", "Serginho"],
+        notes: "Setè gol encaixat, mig minut després del nostre i amb els mateixos sis. Daniel I. #96." },
 
-      { time: "44:00", type: "favor", scorer: "Serginho", assist: "Arnau Sentis", goalkeeper: null,
+      { time: "43:25", type: "favor", scorer: "Serginho", assist: "Arnau Sentis", goalkeeper: "Ivan Mico",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [],
-        notes: "Cinquè gol nostre, altre cop en Serginho amb assistència de l'Arnau Sentis." },
+        onPitch: ["Serginho", "Arnau Sentis", "Pau Ibañez", "Roi Seoane", "Coro", "Chengzhi Li"],
+        notes: "Cinquè i últim gol nostre: Serginho, altre cop amb assistència de l'Arnau Sentis." },
     ],
     retransmissio: [
       { time: "15:07", type: "bona", text: "Rematada de cap de l'Arnau Sentis", players: ["Arnau Sentis"], videoUrl: null, photo: null, photoHover: null },
