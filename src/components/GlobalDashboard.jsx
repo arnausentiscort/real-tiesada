@@ -766,13 +766,6 @@ export default function GlobalDashboard({ onSelectMatch }) {
                       );
                     })}
                   </div>
-                  <div className="flex flex-wrap gap-4 pt-3 mt-2 border-t border-white/5 text-[9px] text-gray-600">
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-blue-400"/>Xuts a porta (sense gol)</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background: POST_COLOR}}/>Al pal — no entra, però el porter no hi arriba</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-gray-500"/>Xuts fora</span>
-                    <span className="w-full text-gray-700">Ordenat per perill generat: un gol compta per {PERILL.gol}, un pal per {PERILL.pal} i un xut a porta per {PERILL.porta}.</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-emerald-400"/>Gols</span>
-                  </div>
                 </div>
               );
             })()}

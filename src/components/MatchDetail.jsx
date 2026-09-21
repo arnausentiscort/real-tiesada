@@ -335,9 +335,6 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
                   </div>
                 </div>
               ))}
-              <p className="text-[9px] text-gray-600 leading-snug pt-1">
-                ● a porta · ○ fora · <span style={{ color: POST_COLOR }}>◆ al pal</span>
-              </p>
             </div>
           </div>
         )}

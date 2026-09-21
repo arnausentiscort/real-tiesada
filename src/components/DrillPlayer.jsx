@@ -143,7 +143,9 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
   const step  = steps[frame.display] || steps[0];
   const ballSvg = pct2svg(frame.ball || [50,50]);
 
-  const gotoStep = (i) => { seek(timeline.segs[i].travelStart); };
+  // travelEnd, no travelStart: a l'inici de la transicio encara es dibuixa
+  // la fase anterior, i saltar a la fase 4 ensenyava la 3.
+  const gotoStep = (i) => { seek(timeline.segs[i].travelEnd); };
   const prevStep = () => gotoStep(Math.max(0, frame.display - (frame.moving ? 0 : 1)));
   const nextStep = () => gotoStep(Math.min(steps.length - 1, frame.display + 1));
 

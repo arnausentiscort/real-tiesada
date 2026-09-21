@@ -106,27 +106,10 @@ export default function Entrenaments({ drillId = null }) {
           </div>
           <h2 className="text-lg md:text-xl font-black text-[#E5C07B] mb-3">{open.title}</h2>
 
-          <div className="grid md:grid-cols-[1fr_260px] gap-3 md:gap-4 items-start">
+          <div className={open.video?.youtubeId ? 'grid md:grid-cols-[1fr_260px] gap-3 md:gap-4 items-start' : ''}>
             <DrillPlayer drill={open} autoPlay />
 
             <div className="space-y-3">
-              {open.summary && (
-                <p className="text-[12px] text-gray-400 leading-snug">{open.summary}</p>
-              )}
-
-              {open.keys?.length > 0 && (
-                <div className="bg-[#121212] border border-white/5 rounded-xl p-3">
-                  <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-2">Punts clau</p>
-                  <ul className="space-y-1.5">
-                    {open.keys.map((k, i) => (
-                      <li key={i} className="flex gap-2 text-[11.5px] text-gray-300 leading-snug">
-                        <span className="text-[#E5C07B] shrink-0">•</span><span>{k}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {open.video?.youtubeId && (
                 <div className="bg-[#121212] border border-white/5 rounded-xl p-3">
                   <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-2">Al partit</p>
@@ -138,17 +121,6 @@ export default function Entrenaments({ drillId = null }) {
                 </div>
               )}
 
-              <div className="bg-[#121212] border border-white/5 rounded-xl p-3">
-                <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-2">Fases</p>
-                <ol className="space-y-1.5">
-                  {open.steps.map((s, i) => (
-                    <li key={i} className="flex gap-2 text-[11px] text-gray-500 leading-snug">
-                      <span className="text-[#E5C07B]/70 font-bold shrink-0">{i+1}.</span>
-                      <span>{s.note}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
             </div>
           </div>
         </div>
@@ -177,8 +149,7 @@ export default function Entrenaments({ drillId = null }) {
       </div>
 
       <p className="text-[11px] text-gray-600 leading-snug">
-        Jugades animades pas a pas. Dona-li al play, para on vulguis i mira les fletxes:
-        daurat = moviment sense pilota, blanc = passada, vermell = pressió.
+        Daurat = moviment · blanc = passada · vermell = pressió · verd = conducció
       </p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
