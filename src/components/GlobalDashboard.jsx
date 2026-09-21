@@ -8,6 +8,7 @@ import LineupStats from './LineupStats.jsx';
 import ChanceCreationChart from './ChanceCreationChart.jsx';
 
 const BASE = import.meta.env.BASE_URL;
+const POST_COLOR = '#E8833A';   // els xuts al pal tenen color propi
 const ACCENT = '#E5C07B';
 const GARNET = '#C0392B';
 
@@ -721,15 +722,18 @@ export default function GlobalDashboard({ onSelectMatch }) {
               const rows = [...allNames].map(name => {
                 const total = stats.shotsTotal.find(([n]) => n === name)?.[1] ?? 0;
                 const onT   = stats.shotsOnTarget.find(([n]) => n === name)?.[1] ?? 0;
-                return { name, onTarget: onT, offTarget: total - onT, gols: goalsMap[name] ?? 0 };
-              }).filter(r => r.onTarget > 0 || r.offTarget > 0 || r.gols > 0)
-                .sort((a, b) => (b.gols + b.onTarget) - (a.gols + a.onTarget));
+                const pal   = (stats.shotsPost || []).find(([n]) => n === name)?.[1] ?? 0;
+                return { name, onTarget: onT, post: pal, offTarget: total - onT - pal, gols: goalsMap[name] ?? 0 };
+              }).filter(r => r.onTarget > 0 || r.post > 0 || r.offTarget > 0 || r.gols > 0)
+                // Un pal val gairebé tant com un xut a porta: hi va faltar un dit
+                .sort((a, b) => (b.gols + b.onTarget + b.post * 0.9) - (a.gols + a.onTarget + a.post * 0.9));
               return (
                 <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5 text-[10px] uppercase tracking-wider">
                     <div className="w-6 h-6 shrink-0"/>
                     <span className="flex-1 text-gray-600">Jugador</span>
                     <span className="w-16 text-center text-blue-400">A porta</span>
+                    <span className="w-12 text-center" style={{ color: POST_COLOR }}>Al pal</span>
                     <span className="w-14 text-center text-gray-500">Fora</span>
                     <span className="w-12 text-center text-emerald-400">Gols</span>
                   </div>
@@ -749,6 +753,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                           )}
                           <span className="flex-1 text-xs text-gray-400 truncate">{sName(DATABASE, r.name)}</span>
                           <span className="w-16 text-center text-sm font-black text-blue-400">{r.onTarget}</span>
+                          <span className="w-12 text-center text-sm font-black" style={{ color: r.post ? POST_COLOR : '#374151' }}>{r.post || '·'}</span>
                           <span className="w-14 text-center text-sm font-black text-gray-500">{r.offTarget}</span>
                           <span className="w-12 text-center text-sm font-black text-emerald-400">{r.gols}</span>
                         </div>
@@ -757,6 +762,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   </div>
                   <div className="flex flex-wrap gap-4 pt-3 mt-2 border-t border-white/5 text-[9px] text-gray-600">
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-blue-400"/>Xuts a porta (sense gol)</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background: POST_COLOR}}/>Al pal — no entra, però hi va faltar un dit</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-gray-500"/>Xuts fora</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-emerald-400"/>Gols</span>
                   </div>

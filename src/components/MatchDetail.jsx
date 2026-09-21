@@ -248,6 +248,9 @@ function MomentCard({ item, onJump, db }) {
   );
 }
 
+// El pal té color propi: ni gol ni error, i costa un dit de distància
+const POST_COLOR = '#E8833A';
+
 // ── Stats per jugador (tirs / key passes / regats) ───────────────
 function MatchPlayerStats({ match, onJumpToVideo, db }) {
   const shots     = match.shots     || {};
@@ -259,7 +262,11 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
   if (!hasData) return null;
 
   const shotStats = Object.entries(shots)
-    .map(([name, evs]) => ({ name, evs, total: evs.length, onTarget: evs.filter(e => e.onTarget).length }))
+    .map(([name, evs]) => ({
+      name, evs, total: evs.length,
+      onTarget: evs.filter(e => e.onTarget).length,
+      post:     evs.filter(e => e.post).length,
+    }))
     .sort((a, b) => b.total - a.total);
   const kpStats = Object.entries(keyPasses)
     .map(([name, evs]) => ({ name, evs, count: evs.length }))
@@ -285,7 +292,7 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
       onMouseEnter={e => { if (hasVideo && onJumpToVideo) { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent; }}}
       onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = hasVideo && onJumpToVideo ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)'; }}
     >
-      {ev.time}{dot !== undefined ? (dot ? ' ●' : ' ○') : ''}
+      {ev.time}{ev.post ? ' ◆' : dot !== undefined ? (dot ? ' ●' : ' ○') : ''}
     </button>
   );
 
@@ -302,22 +309,35 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
           <div>
             <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🎯 Tirs</p>
             <div className="space-y-3">
-              {shotStats.map(({ name, evs, total, onTarget }) => (
+              {shotStats.map(({ name, evs, total, onTarget, post }) => (
                 <div key={name}>
-                  <div className="flex justify-between mb-0.5">
+                  <div className="flex justify-between mb-0.5 items-center gap-1">
                     <span className="text-[11px] font-bold text-gray-300">{shirtName(db, name)}</span>
-                    <span className="text-[10px] font-mono text-gray-500">{onTarget}<span className="text-gray-700">/{total}</span></span>
+                    <span className="flex items-center gap-1.5">
+                      {post > 0 && (
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded"
+                          style={{ background: `${POST_COLOR}1f`, color: POST_COLOR }}
+                          title={post === 1 ? 'Un xut al pal' : `${post} xuts al pal`}>
+                          ◆ {post} {post === 1 ? 'pal' : 'pals'}
+                        </span>
+                      )}
+                      <span className="text-[10px] font-mono text-gray-500">{onTarget}<span className="text-gray-700">/{total}</span></span>
+                    </span>
                   </div>
                   <div className="h-1.5 bg-[#111] rounded-full overflow-hidden mb-1.5">
-                    <div className="h-full rounded-full bg-[#333] relative overflow-hidden" style={{width:`${(total/maxShots)*100}%`}}>
-                      <div className="absolute left-0 top-0 h-full bg-[#E5C07B]" style={{width:`${(onTarget/total)*100}%`}}/>
+                    <div className="h-full rounded-full bg-[#333] relative overflow-hidden flex" style={{width:`${(total/maxShots)*100}%`}}>
+                      <div className="h-full bg-[#E5C07B]" style={{width:`${(onTarget/total)*100}%`}}/>
+                      <div className="h-full" style={{width:`${(post/total)*100}%`, background: POST_COLOR}}/>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {evs.map((ev, i) => <Chip key={i} ev={ev} accent="#E5C07B" dot={ev.onTarget}/>)}
+                    {evs.map((ev, i) => <Chip key={i} ev={ev} accent={ev.post ? POST_COLOR : '#E5C07B'} dot={ev.onTarget}/>)}
                   </div>
                 </div>
               ))}
+              <p className="text-[9px] text-gray-600 leading-snug pt-1">
+                ● a porta · ○ fora · <span style={{ color: POST_COLOR }}>◆ al pal</span>
+              </p>
             </div>
           </div>
         )}

@@ -432,7 +432,7 @@ function sheetJornada(m, roster, format) {
   rows.push(['Jugador','Minut','A porta?','','','','','','','']);
   Object.entries(m.shots||{}).sort().forEach(([name, evs]) => {
     evs.forEach((e,i) => {
-      rows.push([i===0?name:'', e.time, e.onTarget?'✓ A porta':'✗ Fora','','','','','','','']);
+      rows.push([i===0?name:'', e.time, e.post?'◆ Al pal':e.onTarget?'✓ A porta':'✗ Fora','','','','','','','']);
     });
   });
   rows.push(SPACER);

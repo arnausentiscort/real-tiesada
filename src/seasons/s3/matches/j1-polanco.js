@@ -15,8 +15,8 @@ export default {
   idealMinutesPerPlayer: 34,
   savesManual: {},
   shots: {
-    "Arnau Sentis": [{ time: "15:07", onTarget: false }, { time: "35:40", onTarget: true }],
-    "Coro":         [{ time: "32:07", onTarget: true }, { time: "34:30", onTarget: false }, { time: "36:59", onTarget: false }],
+    "Arnau Sentis": [{ time: "15:07", onTarget: true }, { time: "35:40", onTarget: true }],
+    "Coro":         [{ time: "32:07", onTarget: true }, { time: "34:30", onTarget: false, post: true }, { time: "36:59", onTarget: false, post: true }],
   },
   keyPasses: {
     "Chengzhi Li": [{ time: "15:07" }, { time: "35:40" }],

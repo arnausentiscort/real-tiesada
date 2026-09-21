@@ -109,14 +109,14 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
   const goals = {}, assists = {}, minutesCamp = {}, minutesPorter = {};
   const goalsFor = {}, goalsAgainst = {}, yellowCards = {}, saves = {};
   const goalsForGK = {}, goalsAgainstGK = {};
-  const shotsTotal = {}, shotsOnTarget = {}, keyPassesMap = {}, dribblesMap = {};
+  const shotsTotal = {}, shotsOnTarget = {}, shotsPost = {}, keyPassesMap = {}, dribblesMap = {};
 
   const names = database.roster.map(p => typeof p === 'string' ? p : p.name);
   names.forEach(p => {
     goals[p] = 0; assists[p] = 0; minutesCamp[p] = 0; minutesPorter[p] = 0;
     goalsFor[p] = 0; goalsAgainst[p] = 0; yellowCards[p] = 0; saves[p] = 0;
     goalsForGK[p] = 0; goalsAgainstGK[p] = 0;
-    shotsTotal[p] = 0; shotsOnTarget[p] = 0; keyPassesMap[p] = 0; dribblesMap[p] = 0;
+    shotsTotal[p] = 0; shotsOnTarget[p] = 0; shotsPost[p] = 0; keyPassesMap[p] = 0; dribblesMap[p] = 0;
   });
 
   database.matches.forEach(match => {
@@ -168,8 +168,10 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
     countEvents(match.keyPasses, keyPassesMap);
     countEvents(match.dribbles,  dribblesMap);
     Object.entries(match.shots || {}).forEach(([name, evs]) => {
-      if (shotsOnTarget[name] !== undefined)
-        shotsOnTarget[name] += (evs || []).filter(e => e.onTarget).length;
+      if (shotsOnTarget[name] === undefined) return;
+      // El pal es compta a part: no ha entrat ni l'ha aturat ningu
+      shotsOnTarget[name] += (evs || []).filter(e => e.onTarget).length;
+      shotsPost[name]     += (evs || []).filter(e => e.post).length;
     });
 
     // Minuts de CAMP (ja nets gràcies al filtre del goalkeeper a calcMatchStats)
@@ -207,6 +209,7 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
     shotsTotal:    sortDesc(shotsTotal).filter(([,v]) => v > 0),
     shotsOnTarget: sortDesc(shotsOnTarget).filter(([,v]) => v > 0),
+    shotsPost:     sortDesc(shotsPost).filter(([,v]) => v > 0),
     keyPasses:     sortDesc(keyPassesMap).filter(([,v]) => v > 0),
     dribbles:      sortDesc(dribblesMap).filter(([,v]) => v > 0),
   };

@@ -315,6 +315,8 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
 }
 
 // ── Formulari de moment ───────────────────────────────────────────
+const POST_COLOR = '#E8833A';   // xuts al pal
+
 const MOMENT_TYPES = [
   { id: 'bona',    label: '👍 Bona'    },
   { id: 'dolenta', label: '👎 Dolenta' },
@@ -427,9 +429,11 @@ function eventMapToCode(map) {
   const entries = Object.entries(map || {}).filter(([, v]) => v && v.length > 0);
   if (entries.length === 0) return '{}';
   const inner = entries.map(([name, evs]) => {
-    const evStrs = evs.map(ev =>
-      ev.onTarget !== undefined ? `{ time: "${ev.time}", onTarget: ${ev.onTarget} }` : `{ time: "${ev.time}" }`
-    ).join(', ');
+    const evStrs = evs.map(ev => {
+      if (ev.onTarget === undefined) return `{ time: "${ev.time}" }`;
+      const pal = ev.post ? ', post: true' : '';
+      return `{ time: "${ev.time}", onTarget: ${ev.onTarget}${pal} }`;
+    }).join(', ');
     return `"${name}": [${evStrs}]`;
   }).join(', ');
   return `{ ${inner} }`;
@@ -588,7 +592,7 @@ function MatchSelector({ onSelect, onNew }) {
 function QuickAction({ match, setMatch, rosterProp }) {
   const ctx = useAdmin();
   const roster = rosterProp || ctx.roster;
-  const BLANK = { time:'', player:'', shot:false, onTarget:true, dribble:false, keyPass:false, keyPassBy:'', text:'', type:'bona' };
+  const BLANK = { time:'', player:'', shot:false, onTarget:true, post:false, dribble:false, keyPass:false, keyPassBy:'', text:'', type:'bona' };
   const [a, setA] = useState(BLANK);
   const set = (patch) => setA(p => ({ ...p, ...patch }));
 
@@ -600,7 +604,11 @@ function QuickAction({ match, setMatch, rosterProp }) {
     const push = (map, name, ev) => ({ ...map, [name]: [...(map[name] || []), ev] });
     setMatch(m => {
       const next = { ...m };
-      if (a.shot)    next.shots     = push(m.shots || {},     a.player, { time: a.time, onTarget: a.onTarget });
+      if (a.shot) {
+        const ev = { time: a.time, onTarget: a.post ? false : a.onTarget };
+        if (a.post) ev.post = true;
+        next.shots = push(m.shots || {}, a.player, ev);
+      }
       if (a.dribble) next.dribbles  = push(m.dribbles || {},  a.player, { time: a.time });
       if (a.keyPass) next.keyPasses = push(m.keyPasses || {}, a.player, { time: a.time });
       if (a.keyPassBy) next.keyPasses = push(next.keyPasses || m.keyPasses || {}, a.keyPassBy, { time: a.time });
@@ -644,8 +652,9 @@ function QuickAction({ match, setMatch, rosterProp }) {
 
       <div className="flex gap-1.5 flex-wrap items-center">
         {chip(a.shot, '🎯 Xut', () => set({ shot: !a.shot }))}
-        {a.shot && chip(a.onTarget, a.onTarget ? 'a porta' : 'fora',
+        {a.shot && !a.post && chip(a.onTarget, a.onTarget ? 'a porta' : 'fora',
           () => set({ onTarget: !a.onTarget }), a.onTarget ? '#10B981' : '#C0392B')}
+        {a.shot && chip(a.post, '◆ Al pal', () => set({ post: !a.post }), POST_COLOR)}
         {chip(a.dribble, '🪄 Regat', () => set({ dribble: !a.dribble }))}
         {chip(a.keyPass, '🔑 Pas clau', () => set({ keyPass: !a.keyPass }))}
         <span className="text-[10px] text-gray-700 ml-1">rep de:</span>
@@ -684,13 +693,14 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
   const roster = rosterProp;
   const [inputs, setInputs] = useState({});
 
-  const getInp = (name) => inputs[name] || { time: '', onTarget: true, keyPassBy: '' };
+  const getInp = (name) => inputs[name] || { time: '', onTarget: true, post: false, keyPassBy: '' };
   const setInp = (name, val) => setInputs(p => ({ ...p, [name]: val }));
 
   const addEvent = (name) => {
     const inp = getInp(name);
     if (!inp.time) return;
-    const ev = hasOnTarget ? { time: inp.time, onTarget: inp.onTarget } : { time: inp.time };
+    const ev = hasOnTarget ? { time: inp.time, onTarget: inp.post ? false : inp.onTarget } : { time: inp.time };
+    if (hasOnTarget && inp.post) ev.post = true;
     onChange({ ...data, [name]: [...(data[name] || []), ev] });
     if (linkedKeyPassData && onLinkedKeyPassChange && inp.keyPassBy) {
       onLinkedKeyPassChange({
@@ -698,7 +708,7 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
         [inp.keyPassBy]: [...(linkedKeyPassData[inp.keyPassBy] || []), { time: inp.time }]
       });
     }
-    setInp(name, { time: '', onTarget: true, keyPassBy: '' });
+    setInp(name, { time: '', onTarget: true, post: false, keyPassBy: '' });
   };
 
   const removeEvent = (name, i) => {
@@ -719,10 +729,19 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
               <input value={inp.time} onChange={e => setInp(pl.name, { ...inp, time: e.target.value })}
                 placeholder="MM:SS" onKeyDown={e => e.key === 'Enter' && addEvent(pl.name)}
                 className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none font-mono"/>
-              {hasOnTarget && (
+              {hasOnTarget && !inp.post && (
                 <button onClick={() => setInp(pl.name, { ...inp, onTarget: !inp.onTarget })}
                   className={`text-[9px] px-2 py-1 rounded-lg border font-bold transition-all ${inp.onTarget ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-[#C0392B]/20 border-[#C0392B]/40 text-[#C0392B]'}`}>
                   {inp.onTarget ? 'a porta' : 'fora'}
+                </button>
+              )}
+              {hasOnTarget && (
+                <button onClick={() => setInp(pl.name, { ...inp, post: !inp.post })}
+                  className="text-[9px] px-2 py-1 rounded-lg border font-bold transition-all"
+                  style={inp.post
+                    ? { background: `${POST_COLOR}33`, borderColor: `${POST_COLOR}66`, color: POST_COLOR }
+                    : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#6b7280' }}>
+                  ◆ pal
                 </button>
               )}
               {linkedKeyPassData && onLinkedKeyPassChange && (
