@@ -9,6 +9,13 @@ import ChanceCreationChart from './ChanceCreationChart.jsx';
 
 const BASE = import.meta.env.BASE_URL;
 const POST_COLOR = '#E8833A';   // els xuts al pal tenen color propi
+
+// Com s'ordena el ranking de tirs. Nomes serveix per ordenar: els numeros
+// de cada columna son els de veritat i no es toquen.
+// Un pal val mes que un xut a porta perque el porter no hi va arribar:
+// aquell xut anava a dins.
+const PERILL = { gol: 3, pal: 1.5, porta: 1 };
+const perill = (r) => r.gols * PERILL.gol + r.post * PERILL.pal + r.onTarget * PERILL.porta;
 const ACCENT = '#E5C07B';
 const GARNET = '#C0392B';
 
@@ -725,8 +732,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 const pal   = (stats.shotsPost || []).find(([n]) => n === name)?.[1] ?? 0;
                 return { name, onTarget: onT, post: pal, offTarget: total - onT - pal, gols: goalsMap[name] ?? 0 };
               }).filter(r => r.onTarget > 0 || r.post > 0 || r.offTarget > 0 || r.gols > 0)
-                // Un pal val gairebé tant com un xut a porta: hi va faltar un dit
-                .sort((a, b) => (b.gols + b.onTarget + b.post * 0.9) - (a.gols + a.onTarget + a.post * 0.9));
+                .sort((a, b) => perill(b) - perill(a));
               return (
                 <div className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5 text-[10px] uppercase tracking-wider">
@@ -762,8 +768,9 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   </div>
                   <div className="flex flex-wrap gap-4 pt-3 mt-2 border-t border-white/5 text-[9px] text-gray-600">
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-blue-400"/>Xuts a porta (sense gol)</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background: POST_COLOR}}/>Al pal — no entra, però hi va faltar un dit</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{background: POST_COLOR}}/>Al pal — no entra, però el porter no hi arriba</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-gray-500"/>Xuts fora</span>
+                    <span className="w-full text-gray-700">Ordenat per perill generat: un gol compta per {PERILL.gol}, un pal per {PERILL.pal} i un xut a porta per {PERILL.porta}.</span>
                     <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-emerald-400"/>Gols</span>
                   </div>
                 </div>
