@@ -8,7 +8,7 @@ import { useSeason } from '../SeasonContext.jsx';
  * Interfície visual mejorada para gestionar sustitucions amb:
  * - Timeline visual del partit
  * - Selector de porter per moment
- * - Selector de 4 jugadors de camp
+ * - Selector dels jugadors de camp segons el format
  * - Gestor de descans/final fàcil
  */
 
@@ -22,18 +22,25 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
     ...extraPlayers.map(name => ({ name, shirtName: name.toUpperCase(), position: 'Convidat', photo: null, photoCel: null, number: null })),
   ];
 
+  // Un canvi és gairebé sempre l'alineació anterior amb un o dos retocs:
+  // copiem l'última que tingui gent al camp i l'obrim per editar-la.
   const addSub = () => {
-    onChange([...subs, { time: '', goalkeeper: '', onPitch: [], _isBreak: false }]);
+    const prev = [...subs].reverse().find(s => !s._isBreak && (s.onPitch || []).length > 0);
+    onChange([...subs, {
+      time: '',
+      goalkeeper: prev?.goalkeeper || '',
+      onPitch: [...(prev?.onPitch || [])],
+      _isBreak: false,
+    }]);
+    setExpandedIdx(subs.length);
   };
 
   const removeSub = (idx) => {
     onChange(subs.filter((_, i) => i !== idx));
   };
 
-  const updateSub = (idx, field, value) => {
-    const newSubs = [...subs];
-    newSubs[idx][field] = value;
-    onChange(newSubs);
+  const updateSub = (idx, patch) => {
+    onChange(subs.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
 
   const togglePlayer = (idx, playerName) => {
@@ -47,16 +54,15 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
     } else {
       return; // ja hi ha tots els de camp
     }
-    updateSub(idx, 'onPitch', newPlayers);
+    updateSub(idx, { onPitch: newPlayers });
   };
 
   const setBreak = (idx) => {
-    updateSub(idx, 'onPitch', []);
-    updateSub(idx, '_isBreak', true);
+    updateSub(idx, { onPitch: [], _isBreak: true });
   };
 
   const unsetBreak = (idx) => {
-    updateSub(idx, '_isBreak', false);
+    updateSub(idx, { _isBreak: false });
   };
 
   const parseTime = (timeStr) => {
@@ -122,7 +128,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                     <input
                       type="text"
                       value={sub.time || ''}
-                      onChange={(e) => updateSub(idx, 'time', e.target.value)}
+                      onChange={(e) => updateSub(idx, { time: e.target.value })}
                       placeholder="MM:SS"
                       onClick={(e) => e.stopPropagation()}
                       className="w-full bg-[#111] border border-white/10 rounded-lg px-2 py-1 text-xs font-mono text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"
@@ -195,7 +201,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                           <label className="text-[10px] font-bold text-emerald-400 block">🧤 Porter:</label>
                           <select
                             value={sub.goalkeeper || ''}
-                            onChange={(e) => updateSub(idx, 'goalkeeper', e.target.value)}
+                            onChange={(e) => updateSub(idx, { goalkeeper: e.target.value })}
                             className="w-full bg-[#1a1a1a] border border-emerald-500/25 rounded-lg px-2 py-1.5 text-[10px] text-white focus:border-emerald-500/40 outline-none"
                           >
                             <option value="">— Selecciona porter —</option>
@@ -207,7 +213,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                           </select>
                         </div>
 
-                        {/* Selector jugadors de camp (4) — tots els jugadors, inclòs el porter */}
+                        {/* Selector jugadors de camp — tots menys el porter */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-[#E5C07B] block">
                             ⚽ Jugadors de camp ({(sub.onPitch || []).length}/{fieldN}):
@@ -216,7 +222,7 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                             {allPlayers.map((p) => {
                               const isSelected = (sub.onPitch || []).includes(p.name);
                               const isGK = p.name === sub.goalkeeper;
-                              const isDisabled = isGK || ((sub.onPitch || []).length >= 4 && !isSelected);
+                              const isDisabled = isGK || ((sub.onPitch || []).length >= fieldN && !isSelected);
 
                               return (
                                 <button
