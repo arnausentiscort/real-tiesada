@@ -315,12 +315,49 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
 }
 
 // ── Formulari de moment ───────────────────────────────────────────
-function MomentForm({ moment, onChange, onRemove, idx }) {
+const MOMENT_TYPES = [
+  { id: 'bona',    label: '👍 Bona'    },
+  { id: 'dolenta', label: '👎 Dolenta' },
+  { id: 'tactica', label: '🧠 Tàctica' },
+  { id: 'clip',    label: '🎬 Clip'    },
+];
+
+// Selector de jugadors implicats: afegeix amb el desplegable, treu amb la ×
+function PlayersPicker({ players = [], onChange, rosterProp }) {
+  const ctx = useAdmin();
+  const roster = rosterProp || ctx.roster;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {players.map(n => (
+        <span key={n} className="flex items-center gap-1 bg-[#E5C07B]/15 border border-[#E5C07B]/30 rounded-full px-2 py-0.5 text-[10px] text-[#E5C07B]">
+          {n}
+          <button onClick={() => onChange(players.filter(x => x !== n))}
+            className="text-[#E5C07B]/70 hover:text-red-400">×</button>
+        </span>
+      ))}
+      <select value="" onChange={e => { if (e.target.value) onChange([...players, e.target.value]); }}
+        className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-[10px] text-gray-500 focus:border-[#E5C07B]/40 outline-none">
+        <option value="">+ Jugador</option>
+        {roster.filter(p => !players.includes(p.name)).map(p =>
+          <option key={p.name} value={p.name}>{p.shirtName}</option>
+        )}
+      </select>
+    </div>
+  );
+}
+
+function MomentForm({ moment, onChange, onRemove, idx, rosterProp }) {
   return (
     <div className="bg-[#111] rounded-xl p-3 border border-white/8">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold text-gray-400">Moment #{idx+1}</span>
-        <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5"/></button>
+        <div className="flex items-center gap-2">
+          <select value={moment.type || 'bona'} onChange={e => onChange({...moment, type: e.target.value})}
+            className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-[10px] text-gray-400 focus:border-[#E5C07B]/40 outline-none">
+            {MOMENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+          <button onClick={onRemove} className="text-gray-600 hover:text-red-400"><Trash2 className="w-3.5 h-3.5"/></button>
+        </div>
       </div>
       <div className="flex gap-2">
         <input value={moment.time||''} onChange={e=>onChange({...moment,time:e.target.value})}
@@ -328,6 +365,10 @@ function MomentForm({ moment, onChange, onRemove, idx }) {
         <textarea value={moment.text||''} onChange={e=>onChange({...moment,text:e.target.value})}
           placeholder="Descriu el moment..." rows={2}
           className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
+      </div>
+      <div className="mt-2">
+        <PlayersPicker players={moment.players || []} rosterProp={rosterProp}
+          onChange={pl => onChange({...moment, players: pl})}/>
       </div>
     </div>
   );
@@ -404,7 +445,8 @@ function buildMatchCode(match, originalId) {
     const secs = Math.max(0, min*60+(sec||0)-3);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
-    return `      { time:"${m.time}", type:"bona", text:"${txt}", players:[], videoUrl:${ytUrl} },`;
+    const pls = (m.players || []).map(n => `"${n}"`).join(', ');
+    return `      { time:"${m.time}", type:"${m.type || 'bona'}", text:"${txt}", players:[${pls}], videoUrl:${ytUrl} },`;
   }).join('\n');
   const savesCode = Object.keys(match.savesManual||{}).length > 0
     ? `  savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
@@ -491,7 +533,9 @@ function matchToForm(m) {
   const cards = (m.events?.cards || []).map(c => ({
     time: c.time, color: c.color || 'yellow', player: c.player || ''
   }));
-  const moments = (m.events?.retransmissio || []).map(r => ({ time: r.time, text: r.text }));
+  const moments = (m.events?.retransmissio || []).map(r => ({
+    time: r.time, text: r.text, type: r.type || 'bona', players: r.players || [],
+  }));
   const savesManual = m.savesManual ? {...m.savesManual} : {};
   const shots    = m.shots     ? {...m.shots}     : {};
   const keyPasses = m.keyPasses ? {...m.keyPasses} : {};
@@ -540,6 +584,100 @@ function MatchSelector({ onSelect, onNew }) {
 }
 
 // ── Secció d'events per jugador (tirs / key passes / regats) ─────
+// Una jugada apuntada d'un cop: estadística + entrada a la crònica
+function QuickAction({ match, setMatch, rosterProp }) {
+  const ctx = useAdmin();
+  const roster = rosterProp || ctx.roster;
+  const BLANK = { time:'', player:'', shot:false, onTarget:true, dribble:false, keyPass:false, keyPassBy:'', text:'', type:'bona' };
+  const [a, setA] = useState(BLANK);
+  const set = (patch) => setA(p => ({ ...p, ...patch }));
+
+  const shirt = (n) => roster.find(p => p.name === n)?.shirtName || n;
+  const canAdd = a.time && a.player && (a.shot || a.dribble || a.keyPass || a.text.trim());
+
+  const add = () => {
+    if (!canAdd) return;
+    const push = (map, name, ev) => ({ ...map, [name]: [...(map[name] || []), ev] });
+    setMatch(m => {
+      const next = { ...m };
+      if (a.shot)    next.shots     = push(m.shots || {},     a.player, { time: a.time, onTarget: a.onTarget });
+      if (a.dribble) next.dribbles  = push(m.dribbles || {},  a.player, { time: a.time });
+      if (a.keyPass) next.keyPasses = push(m.keyPasses || {}, a.player, { time: a.time });
+      if (a.keyPassBy) next.keyPasses = push(next.keyPasses || m.keyPasses || {}, a.keyPassBy, { time: a.time });
+      if (a.text.trim()) {
+        const players = [a.player, ...(a.keyPassBy ? [a.keyPassBy] : [])];
+        const secs = (t) => { const [mi, se] = String(t || '0:0').split(':').map(Number); return (mi || 0) * 60 + (se || 0); };
+        next.moments = [...(m.moments || []), { time: a.time, text: a.text.trim(), type: a.type, players }]
+          .sort((x, y) => secs(x.time) - secs(y.time));
+      }
+      return next;
+    });
+    setA(BLANK);
+  };
+
+  const chip = (on, label, onClick, color = '#E5C07B') => (
+    <button onClick={onClick}
+      className="text-[10px] px-2.5 py-1 rounded-lg border font-bold transition-all"
+      style={on
+        ? { background: `${color}26`, borderColor: `${color}66`, color }
+        : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)', color: '#6b7280' }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="bg-[#111] rounded-xl p-3 border border-white/8 space-y-2.5">
+      <div className="flex gap-2 flex-wrap items-center">
+        <input value={a.time} onChange={e => set({ time: e.target.value })}
+          placeholder="MM:SS"
+          className="w-20 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none font-mono shrink-0"/>
+        <select value={a.player} onChange={e => set({ player: e.target.value })}
+          className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:border-[#E5C07B]/40 outline-none">
+          <option value="">Qui la fa...</option>
+          {roster.map(p => <option key={p.name} value={p.name}>{p.shirtName}</option>)}
+        </select>
+        <select value={a.type} onChange={e => set({ type: e.target.value })}
+          className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-gray-400 focus:border-[#E5C07B]/40 outline-none">
+          {MOMENT_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+        </select>
+      </div>
+
+      <div className="flex gap-1.5 flex-wrap items-center">
+        {chip(a.shot, '🎯 Xut', () => set({ shot: !a.shot }))}
+        {a.shot && chip(a.onTarget, a.onTarget ? 'a porta' : 'fora',
+          () => set({ onTarget: !a.onTarget }), a.onTarget ? '#10B981' : '#C0392B')}
+        {chip(a.dribble, '🪄 Regat', () => set({ dribble: !a.dribble }))}
+        {chip(a.keyPass, '🔑 Pas clau', () => set({ keyPass: !a.keyPass }))}
+        <span className="text-[10px] text-gray-700 ml-1">rep de:</span>
+        <select value={a.keyPassBy} onChange={e => set({ keyPassBy: e.target.value })}
+          className="bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1 text-[10px] text-gray-400 focus:border-[#E5C07B]/40 outline-none">
+          <option value="">— ningú —</option>
+          {roster.filter(p => p.name !== a.player).map(p =>
+            <option key={p.name} value={p.name}>🔑 {p.shirtName}</option>
+          )}
+        </select>
+      </div>
+
+      <textarea value={a.text} onChange={e => set({ text: e.target.value })} rows={2}
+        placeholder="Com ha anat? (si ho deixes buit, només compta com a estadística)"
+        className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
+
+      <div className="flex items-center gap-2">
+        <button onClick={add} disabled={!canAdd}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${canAdd
+            ? 'bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B] hover:bg-[#E5C07B]/25'
+            : 'bg-white/5 border-white/10 text-gray-700 cursor-not-allowed'}`}>
+          + Apuntar
+        </button>
+        <span className="text-[10px] text-gray-700">
+          {a.player ? shirt(a.player) : 'Tria minut i jugador'}
+          {a.keyPassBy ? ` · pas clau de ${shirt(a.keyPassBy)}` : ''}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linkedKeyPassData, onLinkedKeyPassChange, rosterProp }) {
   const ctxES = useAdmin();
   rosterProp = rosterProp || ctxES.roster;
@@ -749,6 +887,16 @@ function MatchForm({ match, setMatch, onPreview }) {
         </div>
       </div>
 
+      {/* ── ACCIÓ RÀPIDA ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-bold text-[#E5C07B]">⚡ Acció</p>
+        <p className="text-[10px] text-gray-600">
+          Una jugada, un formulari: marca què ha passat i escriu-ho. Compta com a
+          estadística <span className="text-gray-500">i</span> surt a la crònica del partit.
+        </p>
+        <QuickAction match={match} setMatch={setMatch} rosterProp={extRoster}/>
+      </div>
+
       {/* ── TIRS ── */}
       <div className="space-y-3">
         <p className="text-xs font-bold text-[#E5C07B]">🎯 Tirs</p>
@@ -814,7 +962,7 @@ function MatchForm({ match, setMatch, onPreview }) {
           <AddBtn onClick={addMoment} label="Afegir moment"/>
         </div>
         <p className="text-[11px] text-gray-600">Ordre cronològic. L'emoji s'assigna automàticament.</p>
-        {moments.map((m,i) => <MomentForm key={i} moment={m} idx={i} onChange={v=>updateMoment(i,v)} onRemove={()=>removeMoment(i)}/>)}
+        {moments.map((m,i) => <MomentForm key={i} moment={m} idx={i} rosterProp={extRoster} onChange={v=>updateMoment(i,v)} onRemove={()=>removeMoment(i)}/>)}
         {moments.length > 0 && <AddBtn onClick={addMoment} label="+ Moment" color="gold"/>}
       </div>
 

@@ -14,9 +14,16 @@ export default {
   vimeoId: null,
   idealMinutesPerPlayer: 34,
   savesManual: {},
-  shots: {},
-  keyPasses: {},
-  dribbles: {},
+  shots: {
+    "Arnau Sentis": [{ time: "15:07", onTarget: false }, { time: "35:40", onTarget: true }],
+    "Coro":         [{ time: "32:07", onTarget: true }, { time: "34:30", onTarget: false }, { time: "36:59", onTarget: false }],
+  },
+  keyPasses: {
+    "Chengzhi Li": [{ time: "15:07" }, { time: "35:40" }],
+  },
+  dribbles: {
+    "Coro": [{ time: "32:07" }, { time: "34:30" }],
+  },
   events: {
     substitutions: [
       { time: "00:00", goalkeeper: "Pau Ibañez",  onPitch: ["Chengzhi Li", "Coro", "Marc Farreras", "Roger Miro", "Roi Seoane", "Serginho"] },
@@ -104,8 +111,12 @@ export default {
         notes: "Cinquè i últim gol nostre: Serginho, altre cop amb assistència de l'Arnau Sentis." },
     ],
     retransmissio: [
-      { time: "15:07", type: "bona", text: "Rematada de cap de l'Arnau Sentis", players: ["Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=904s", photo: null, photoHover: null },
+      { time: "15:07", type: "bona", text: "Rematada de cap de l'Arnau Sentis, amb la passada clau d'en Chengzhi Li des de lluny", players: ["Arnau Sentis", "Chengzhi Li"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=904s", photo: null, photoHover: null },
       { time: "23:40", type: "bona", text: "Paradón d'en Medina", players: ["Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=1417s", photo: null, photoHover: null },
+      { time: "32:07", type: "bona", text: "Gran jugada individual d'en Coro que acaba en xut a porta", players: ["Coro"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=1924s", photo: null, photoHover: null },
+      { time: "34:30", type: "bona", text: "Gran acció d'en Coro: regateja un rival i acaba xutant al pal", players: ["Coro"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=2067s", photo: null, photoHover: null },
+      { time: "35:40", type: "bona", text: "En Chengzhi Li recupera la pilota al mig i li fa la passada de la mort a l'Arnau Sentis, que xuta al cos del porter", players: ["Chengzhi Li", "Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=2137s", photo: null, photoHover: null },
+      { time: "36:59", type: "bona", text: "Xut al pal d'en Coro des de molt lluny de l'àrea", players: ["Coro"], videoUrl: "https://www.youtube.com/watch?v=jazavaezNic&t=2216s", photo: null, photoHover: null },
     ],
   },
 };
