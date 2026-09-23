@@ -154,8 +154,12 @@ export default function SubstitutionTimeline({ subs = [], onChange, extraPlayers
                       </span>
                     )}
                     {campSelected > 0 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#E5C07B]/15 border border-[#E5C07B]/25 text-[#E5C07B] font-bold">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-bold ${
+                        campSelected === fieldN
+                          ? 'bg-[#E5C07B]/15 border-[#E5C07B]/25 text-[#E5C07B]'
+                          : 'bg-amber-500/15 border-amber-500/40 text-amber-400'}`}>
                         ⚽ {campSelected}/{fieldN}
+                        {campSelected < fieldN && <span className="ml-1.5">en falta {fieldN - campSelected}</span>}
                       </span>
                     )}
                   </div>
