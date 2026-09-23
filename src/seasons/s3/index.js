@@ -5,6 +5,7 @@
 // ==========================================
 
 import j1Polanco from './matches/j1-polanco.js';
+import j2StarWarros from './matches/j2-star-warros.js';
 
 export const DATABASE_S3 = {
   teamName: 'Real Tiesada',
@@ -32,17 +33,17 @@ export const DATABASE_S3 = {
     { date: "2027-02-02T23:00:00", dateLabel: "02 Feb · 23:00h", jornada: "Jornada 18", opponent: "Gola Seca FC",    location: "Velòdrom F7", isHome: false },
   ],
 
-  // Actualitzada a la jornada 1 (font: apuntamelo.com)
+  // Actualitzada a la jornada 2 (font: apuntamelo.com)
   classification: [
-    { pos: 1, equipo: 'Inafumaybeben',   pj: 1, pg: 1, pe: 0, pp: 0, gf: 12, gc: 3,  pts: 3, forma: ['V'], esNosaltres: false },
-    { pos: 2, equipo: 'FC Manguito',     pj: 1, pg: 1, pe: 0, pp: 0, gf: 8,  gc: 4,  pts: 3, forma: ['V'], esNosaltres: false },
-    { pos: 3, equipo: 'Polanco FC',      pj: 1, pg: 1, pe: 0, pp: 0, gf: 7,  gc: 5,  pts: 3, forma: ['V'], esNosaltres: false },
-    { pos: 4, equipo: 'Josefas FC',      pj: 1, pg: 1, pe: 0, pp: 0, gf: 4,  gc: 2,  pts: 3, forma: ['V'], esNosaltres: false },
-    { pos: 5, equipo: 'Pozito Murcia',   pj: 0, pg: 0, pe: 0, pp: 0, gf: 0,  gc: 0,  pts: 0, forma: [],    esNosaltres: false },
-    { pos: 6, equipo: 'Real Tiesada',    pj: 1, pg: 0, pe: 0, pp: 1, gf: 5,  gc: 7,  pts: 0, forma: ['D'], esNosaltres: true  },
-    { pos: 7, equipo: 'FC Lucky',        pj: 1, pg: 0, pe: 0, pp: 1, gf: 2,  gc: 4,  pts: 0, forma: ['D'], esNosaltres: false },
-    { pos: 8, equipo: 'Star Warros FC',  pj: 1, pg: 0, pe: 0, pp: 1, gf: 4,  gc: 8,  pts: 0, forma: ['D'], esNosaltres: false },
-    { pos: 9, equipo: 'Gola Seca FC',    pj: 1, pg: 0, pe: 0, pp: 1, gf: 3,  gc: 12, pts: 0, forma: ['D'], esNosaltres: false },
+    { pos: 1, equipo: 'Inafumaybeben',   pj: 2, pg: 2, pe: 0, pp: 0, gf: 19, gc: 4,  pts: 6, forma: ['V','V'], esNosaltres: false },
+    { pos: 2, equipo: 'Josefas FC',      pj: 2, pg: 2, pe: 0, pp: 0, gf: 13, gc: 6,  pts: 6, forma: ['V','V'], esNosaltres: false },
+    { pos: 3, equipo: 'FC Manguito',     pj: 1, pg: 1, pe: 0, pp: 0, gf: 8,  gc: 4,  pts: 3, forma: ['V'],     esNosaltres: false },
+    { pos: 4, equipo: 'Star Warros FC',  pj: 2, pg: 1, pe: 0, pp: 1, gf: 7,  gc: 10, pts: 3, forma: ['D','V'], esNosaltres: false },
+    { pos: 5, equipo: 'Polanco FC',      pj: 2, pg: 1, pe: 0, pp: 1, gf: 8,  gc: 12, pts: 3, forma: ['V','D'], esNosaltres: false },
+    { pos: 6, equipo: 'Gola Seca FC',    pj: 2, pg: 1, pe: 0, pp: 1, gf: 12, gc: 17, pts: 3, forma: ['D','V'], esNosaltres: false },
+    { pos: 7, equipo: 'Real Tiesada',    pj: 2, pg: 0, pe: 0, pp: 2, gf: 7,  gc: 10, pts: 0, forma: ['D','D'], esNosaltres: true  },
+    { pos: 8, equipo: 'Pozito Murcia',   pj: 1, pg: 0, pe: 0, pp: 1, gf: 4,  gc: 9,  pts: 0, forma: ['D'],     esNosaltres: false },
+    { pos: 9, equipo: 'FC Lucky',        pj: 2, pg: 0, pe: 0, pp: 2, gf: 7,  gc: 13, pts: 0, forma: ['D','D'], esNosaltres: false },
   ],
 
   roster: [
@@ -63,5 +64,5 @@ export const DATABASE_S3 = {
     { id: 'ivan-mico',     name: 'Ivan Mico',     number: 4,    position: 'Porter',      status: 'actiu' },
   ],
 
-  matches: [j1Polanco],
+  matches: [j1Polanco, j2StarWarros],
 };
