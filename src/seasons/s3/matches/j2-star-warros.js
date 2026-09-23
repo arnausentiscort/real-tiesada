@@ -1,8 +1,7 @@
 // Jornada 2 · 22/09/2026 · Star Warros FC 3-2 Real Tiesada
 // Resultat i golejadors rivals d'apuntamelo.com (partit 378409); els canvis,
 // els gols i les accions són de l'Arnau. Les 19 alineacions són reals.
-// Pendent: el minut en què acaba el partit. L'últim canvi és del 47:00 i,
-// mentre no hi hagi el final, aquells sis no sumen els minuts que van jugar.
+// El partit acaba al 50:00, confirmat amb el vídeo, que dura 50:16.
 export default {
   id: "s3-j2-star-warros",
   jornada: "Jornada 2",
@@ -11,7 +10,7 @@ export default {
   date: "22 Set 2026",
   youtubeId: "4anLj1OHBtk",
   vimeoId: null,
-  idealMinutesPerPlayer: null,
+  idealMinutesPerPlayer: 27,
   savesManual: {},
   shots: {
     "Serginho":     [{ time: "20:40", onTarget: false }, { time: "33:27", onTarget: true }],
@@ -48,6 +47,7 @@ export default {
       { time: "43:22", goalkeeper: "Joan Ribes", onPitch: ["Serginho","Coro","Roi Seoane","Arnau Sentis","Lluc","Roger Miro"] },
       { time: "46:40", goalkeeper: "Joan Ribes", onPitch: ["Serginho","Coro","Arnau Sentis","Lluc","Roger Miro","Ivan Mico"] },
       { time: "47:00", goalkeeper: "Joan Ribes", onPitch: ["Serginho","Coro","Lluc","Roger Miro","Ivan Mico","Paco Montero"] },
+      { time: "50:00", goalkeeper: null, onPitch: [], _isBreak: true },
     ],
     cards: [
       { time: "16:26", color: "yellow", player: "Coro" },
