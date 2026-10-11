@@ -1,6 +1,8 @@
 // Jornada 2 · 22/09/2026 · Star Warros FC 3-2 Real Tiesada
 // Resultat i golejadors rivals d'apuntamelo.com (partit 378409); els canvis,
 // els gols i les accions són de l'Arnau. Les 19 alineacions són reals.
+// Corregit l'11/10: el Paco entra pel Coro al 19:24 i no surt fins al 33:33
+// (abans hi faltava aquest canvi i un tall de 12 s al 24:48 el treia del camp).
 // El partit acaba al 50:00, confirmat amb el vídeo, que dura 50:16.
 export default {
   id: "s3-j2-star-warros",
@@ -35,8 +37,8 @@ export default {
       { time: "12:13", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Arnau Sentis","Coro","Lluc","Roi Seoane","Serginho"] },
       { time: "16:26", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Coro","Roi Seoane","Serginho","Chengzhi Li","Marc Farreras"] },
       { time: "18:39", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Coro","Serginho","Chengzhi Li","Marc Farreras","Joan Medina"] },
+      { time: "19:24", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Paco Montero","Serginho","Chengzhi Li","Marc Farreras","Joan Medina"] },
       { time: "20:54", goalkeeper: "Joan Ribes", onPitch: ["Chengzhi Li","Marc Farreras","Joan Medina","Ivan Mico","Pau Ibañez","Paco Montero"] },
-      { time: "24:48", goalkeeper: "Joan Ribes", onPitch: ["Chengzhi Li","Marc Farreras","Joan Medina","Ivan Mico","Pau Ibañez","Lluc"] },
       { time: "25:00", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Arnau Sentis","Roi Seoane","Roger Miro","Paco Montero","Ivan Mico"] },
       { time: "30:29", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Roger Miro","Paco Montero","Ivan Mico","Chengzhi Li","Joan Medina"] },
       { time: "32:00", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Roger Miro","Paco Montero","Chengzhi Li","Joan Medina","Serginho"] },
