@@ -4,6 +4,8 @@ import { useSeason } from '../SeasonContext.jsx';
 import GoalFrame from './pitch/GoalFrame.jsx';
 import Pitch from './pitch/Pitch.jsx';
 import SubstitutionTimeline from './SubstitutionTimeline';
+import { normTime, toSec, sameSet, lineupAt } from './admin/matchTime.js';
+import LiveLogger from './admin/LiveLogger.jsx';
 
 // El panel treballa sempre sobre la temporada activa: plantilla, calendari,
 // format (fs5/f7) i fitxers de destí surten d'aquí.
@@ -436,43 +438,6 @@ function AddBtn({ onClick, label, color = 'gold' }) {
   );
 }
 
-// ── Temps i alineacions ───────────────────────────────────────────
-// Accepta el que s'escriu de pressa: "0:15" → "00:15", "21::01" → "21:01",
-// "7" → "07:00". Retorna null si no se'n pot treure un temps.
-function normTime(t) {
-  const m = String(t ?? '').trim().match(/^(\d{1,3})\s*:+\s*(\d{1,2})$|^(\d{1,3})$/);
-  if (!m) return null;
-  const min = Number(m[1] ?? m[3]), sec = Number(m[2] ?? 0);
-  if (sec > 59) return null;
-  return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-}
-const toSec = (t) => {
-  const n = normTime(t);
-  if (!n) return null;
-  const [a, b] = n.split(':').map(Number);
-  return a * 60 + b;
-};
-const sameSet = (a = [], b = []) => a.length === b.length && a.every(x => b.includes(x));
-
-// L'alineació vigent en un minut: l'últim canvi que ja havia passat.
-// Els de camp, sense el porter.
-function lineupAt(subs, time) {
-  const t = toSec(time);
-  if (t == null) return null;
-  let cur = null;
-  for (const s of subs || []) {
-    const st = toSec(s.time);
-    if (st == null || st > t) continue;
-    if (!cur || st >= toSec(cur.time)) cur = s;
-  }
-  if (!cur || cur._isBreak || !(cur.onPitch || []).length) return null;
-  return {
-    time: normTime(cur.time),
-    goalkeeper: cur.goalkeeper || '',
-    onPitch: cur.onPitch.filter(p => p !== cur.goalkeeper),
-  };
-}
-
 // Tot el que abans es revisava a mà després de cada partit
 function reviewMatch(match, fieldN) {
   const out = [];
@@ -641,7 +606,7 @@ function buildMatchCode(match, originalId) {
   const subsCode    = subsToCode(match.subs || []);
   const cardsCode   = cardsToCode(match.cards || []);
   const momentsCode = match.moments.map(m => {
-    const secs = Math.max(0, (toSec(m.time) ?? 0) - 3);
+    const secs = Math.max(0, (toSec(m.time) ?? 0) + (match.videoOffset || 0) - 3);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
     const pls = (m.players || []).map(n => `"${n}"`).join(', ');
@@ -664,7 +629,8 @@ export default {
   date: "${match.date || ''}",
   youtubeId: ${ytStr},
   vimeoId: null,
-  idealMinutesPerPlayer: ${ideal},
+${match.videoOffset ? `  videoOffset: ${match.videoOffset},
+` : ''}  idealMinutesPerPlayer: ${ideal},
 ${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}  events: {
     substitutions: [
 ${subsCode}
@@ -768,6 +734,7 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
+    videoOffset: m.videoOffset || 0,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer ?? null,
     // Un gol desat amb una alineació diferent de la del canvi és una decisió
     // presa a mà: no s'ha de "corregir" sol en obrir el partit
@@ -1000,7 +967,7 @@ function PlayerEventSection({ title, hasOnTarget = false, data, onChange, linked
 }
 
 // ── Formulari complet ─────────────────────────────────────────────
-function MatchForm({ match, setMatch, onPreview }) {
+function MatchForm({ match, setMatch, onPreview, onLive }) {
   const { roster, format } = useAdmin();
   const extRoster = buildExtRoster(roster, match.guestPlayers);
   const [newGuest, setNewGuest] = useState('');
@@ -1066,6 +1033,10 @@ function MatchForm({ match, setMatch, onPreview }) {
         </div>
         <input value={match.youtubeUrl} onChange={e=>setMatch(m=>({...m,youtubeUrl:e.target.value}))} placeholder="URL YouTube (opcional)"
           className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+        <button onClick={onLive} disabled={!/(?:v=|youtu\.be\/)[^&?/]+/.test(match.youtubeUrl || '')}
+          className="w-full py-3 rounded-xl text-sm font-black border transition-all bg-[#E5C07B]/10 border-[#E5C07B]/35 text-[#E5C07B] hover:bg-[#E5C07B]/20 disabled:opacity-35 disabled:cursor-not-allowed">
+          🎬 Mode partit — apuntar mirant el vídeo
+        </button>
       </div>
 
       {/* Jugadors convidats */}
@@ -1245,7 +1216,7 @@ export default function AdminPanel({ onClose }) {
   const emptyMatch = () => ({
     jornada: pending[0]?.jornada || '',
     opponent: pending[0]?.opponent || '',
-    date: '', result: '', youtubeUrl: '',
+    date: '', result: '', youtubeUrl: '', videoOffset: 0,
     idealMinutesPerPlayer: defaultIdeal(),
     goals: [], subs: [], cards: [], moments: [], savesManual: {}, shots: {}, keyPasses: {}, dribbles: {},
     guestPlayers: [],
@@ -1268,9 +1239,16 @@ export default function AdminPanel({ onClose }) {
   };
 
   const handlePreview = () => {
-    const id = isEdit ? match._id : makeId();
+    // Sense resultat escrit, el treu dels gols apuntats (mode partit)
+    let m = match;
+    if (!(m.result || '').trim() && (m.goals || []).length) {
+      const gf = m.goals.filter(g => g.type === 'favor').length;
+      m = { ...m, result: `${gf} - ${m.goals.length - gf}` };
+      setMatch(m);
+    }
+    const id = isEdit ? m._id : makeId();
     setNewId(id);
-    setGeneratedCode(buildMatchCode(match, id));
+    setGeneratedCode(buildMatchCode(m, id));
     setScreen('preview');
   };
 
@@ -1301,6 +1279,10 @@ export default function AdminPanel({ onClose }) {
             `Registra ${match.jornada} vs ${match.opponent} a la temporada`);
         }
       }
+      try {
+        localStorage.removeItem(`rt:live:${match._id || 'nou'}`);
+        localStorage.removeItem(`rt:live:${match._id || 'nou'}:pos`);
+      } catch { /* res */ }
       setScreen('done');
     } catch(e) { setErrorMsg(e.message); setScreen('error'); }
   };
@@ -1311,6 +1293,11 @@ export default function AdminPanel({ onClose }) {
 
   return (
    <AdminCtx.Provider value={ctx}>
+    {screen === 'live' && (
+      <LiveLogger match={match} setMatch={setMatch}
+        roster={buildExtRoster(ctx.roster, match.guestPlayers)} fieldN={format.fieldPlayers}
+        onExit={() => setScreen('form')} onReview={handlePreview}/>
+    )}
     <div className="fixed inset-0 z-[300] bg-[#0d0d0d] overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-white/8 px-4 py-3 flex items-center gap-3">
@@ -1350,7 +1337,7 @@ export default function AdminPanel({ onClose }) {
         )}
 
         {screen === 'select'  && <MatchSelector onSelect={handleSelectMatch} onNew={handleNewMatch}/>}
-        {screen === 'form'    && <MatchForm match={match} setMatch={setMatch} onPreview={handlePreview}/>}
+        {screen === 'form'    && <MatchForm match={match} setMatch={setMatch} onPreview={handlePreview} onLive={() => setScreen('live')}/>}
 
         {screen === 'preview' && (
           <div className="space-y-4">

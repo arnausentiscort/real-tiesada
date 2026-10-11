@@ -66,7 +66,8 @@ function pickEmoji(text) {
 function buildCronica(match) {
   const items = [];
   const makeUrl = (timeStr) => {
-    const s = Math.max(0, parseTime(timeStr) - 3);
+    // videoOffset: segon del vídeo on comença el partit (0 si comença amb el vídeo)
+    const s = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 3);
     if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${s}s`;
     if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${s}s`;
     return null;
@@ -669,7 +670,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
 
   const jumpToGoal = (timeStr) => {
     if (!hasVideo) return;
-    const secs = Math.max(0, parseTime(timeStr) - 3);
+    const secs = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 3);
     setVideoStart(secs);
     setVideoOpen(true);
     setTimeout(() => document.getElementById('match-video')?.scrollIntoView({ behavior:'smooth', block:'start' }), 50);

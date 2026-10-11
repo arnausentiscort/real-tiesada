@@ -360,6 +360,16 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
   encara no té partit — així no es tornen a numerar malament
 - Permet afegir jugadors de camp com a porters esporàdics (secció aturades)
 - Token GitHub per pujar canvis directament des del panel
+- **Revisió** abans de pujar (`reviewMatch`): temps, canvis, final, gols contra el
+  resultat i gols/accions de gent que no era al camp. Amb errors demana confirmació
+- La **alineació dels gols surt sola** del canvi vigent (`lineupAt`); `_manual` marca
+  els que es van desar diferents a mà (J1 41:13, J3 24:40) i no es toquen
+- **Mode partit** (`admin/LiveLogger.jsx`): apuntar mirant el vídeo de YouTube. Cada
+  botó agafa el minut del vídeo; tecles G E X P R A C T M F, 1–9 per triar jugador.
+  Esborrany a `localStorage` (`rt:live:<id>`), s'esborra en pujar
+- `videoOffset` (opcional, en segons) = on comença el partit dins del vídeo. Els salts
+  de la crònica el tenen en compte. Sense el camp, el vídeo i el partit van junts
+- Funcions de temps compartides a `admin/matchTime.js` (`normTime`, `toSec`, `lineupAt`)
 
 ---
 
