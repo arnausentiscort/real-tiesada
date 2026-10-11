@@ -566,11 +566,14 @@ export default function GlobalDashboard({ onSelectMatch }) {
   const stats = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activeMatchId, setActiveMatchId] = useState(null);
-  const [collapsed, setCollapsed] = useState({
-    timeline: false, rankings: false, barres: false,
+  // Al mòbil les barres per jugador (tres llistes de 13) obertes allargaven
+  // massa la portada: hi comencen tancades
+  const [collapsed, setCollapsed] = useState(() => ({
+    timeline: false, rankings: false,
+    barres: typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px)').matches,
     tirs: true, chances: true, lineup: true, impact: true,
     minutsCamp: true, porter: true, targetes: false, matches: false,
-  });
+  }));
   const toggle = k => setCollapsed(p => ({ ...p, [k]: !p[k] }));
 
   const matchHistory = DATABASE.matches.map(m => {

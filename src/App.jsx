@@ -182,7 +182,8 @@ export default function App() {
             </Suspense>
           )}
           {!getSeason(season)?.legacy && (
-            <>
+            // La clau canvia amb la pantalla: el fos d'entrada es torna a fer a cada navegació
+            <div key={[route.view, route.matchId, route.tacticTab, route.drillId].join('|')} className="animate-page">
               {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
               {view === 'squad'         && <Squad />}
               {view === 'clasificacion' && <Clasificacion />}
@@ -192,7 +193,7 @@ export default function App() {
               {view === 'galeria'       && <Galeria />}
               {view === 'pissarra'      && <Pissarra tab={route.tacticTab} drillId={route.drillId} />}
               {isMatch                  && <MatchDetail match={view} onBack={() => navTo('dashboard')} onNavigate={handleSelectMatch} />}
-            </>
+            </div>
           )}
           {getSeason(season)?.legacy && <Split1Dashboard />}
         </SeasonProvider>

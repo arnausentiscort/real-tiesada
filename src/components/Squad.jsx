@@ -316,6 +316,106 @@ function PlayerCard({ player, stats, onClick, db }) {
 }
 
 // ── Perfil complet (modal) ────────────────────────────────────────
+// Evolució del jugador: una columna per jornada de la temporada, també les
+// que no ha jugat. Minuts en barra (escala comuna: la barra plena és el partit
+// més llarg) i a sota, alineats, gols, assistències i xuts: són recomptes de
+// 0–3 i en una taula es llegeixen millor que en una segona escala.
+const GOLD = '#E5C07B', GK_GREEN = '#10B981';
+
+function PlayerTrend({ player, db, format }) {
+  const rows = useMemo(() => db.matches.map(match => {
+    const { totals, finalTime } = calcMatchStats(match, format);
+    const gk = (calcGoalkeeperStints(match, format)[player.name] || []).reduce((a, s) => a + (s.end - s.start), 0);
+    const goals = match.events?.goals || [];
+    const shots = match.shots?.[player.name] || [];
+    return {
+      match, finalTime: finalTime || 0,
+      camp: totals[player.name] || 0, gk,
+      gols: goals.filter(g => g.type === 'favor' && g.scorer === player.name).length,
+      ass:  goals.filter(g => g.type === 'favor' && g.assist === player.name).length,
+      xuts: shots.length, aPorta: shots.filter(s => s.onTarget).length,
+    };
+  }), [db, player.name, format]);
+
+  const scale = Math.max(...rows.map(r => r.finalTime), 1);
+  const hasGk = rows.some(r => r.gk > 0);
+  const lastPlayed = rows.map((r, i) => (r.camp + r.gk > 0 ? i : -1)).filter(i => i >= 0).pop() ?? rows.length - 1;
+  const [active, setActive] = useState(lastPlayed);
+  const r = rows[active];
+  const H = 72;
+  // Tailwind no genera classes muntades amb variables: la graella va en línia
+  const grid = { display: 'grid', gridTemplateColumns: `52px repeat(${rows.length}, minmax(0, 1fr))`, columnGap: 6 };
+  const cell = (v, played) => !played ? '—' : v > 0 ? v : '·';
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-3">
+        <p className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold">📈 Jornada a jornada</p>
+        {hasGk && (
+          <span className="flex gap-3 text-[9px] text-gray-500">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: GOLD }}/>Camp</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: GK_GREEN }}/>Porter</span>
+          </span>
+        )}
+      </div>
+
+      <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        {/* Barres de minuts */}
+        <div className="items-end" style={{ ...grid, height: H }}>
+          <span className="text-[9px] text-gray-600 self-center">Minuts</span>
+          {rows.map((row, i) => {
+            const played = row.camp + row.gk > 0;
+            const hC = (row.camp / scale) * H, hG = (row.gk / scale) * H;
+            return (
+              <button key={row.match.id} onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onClick={() => setActive(i)}
+                aria-label={`${row.match.jornada}: ${formatTime(row.camp + row.gk)}`}
+                className="h-full flex flex-col justify-end items-stretch rounded-t-[4px] relative"
+                style={{ background: i === active ? 'rgba(255,255,255,0.05)' : 'transparent' }}>
+                {played ? <>
+                  {hG > 0 && <div style={{ height: hG, background: GK_GREEN, borderRadius: hC > 0 ? '4px 4px 0 0' : '4px 4px 0 0', marginBottom: hC > 0 ? 2 : 0 }}/>}
+                  {hC > 0 && <div style={{ height: hC, background: GOLD, opacity: i === active ? 1 : 0.75, borderRadius: hG > 0 ? 0 : '4px 4px 0 0' }}/>}
+                </> : <div className="h-px w-full" style={{ background: 'rgba(255,255,255,0.12)' }}/>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Recomptes alineats amb les barres */}
+        <div className="mt-1.5 space-y-0.5">
+          {[['J', null], ['Gols', 'gols'], ['Assist.', 'ass'], ['Xuts', 'xuts']].map(([label, key]) => (
+            <div key={label} className="text-center" style={grid}>
+              <span className="text-[9px] text-gray-600 text-left">{key ? label : ''}</span>
+              {rows.map((row, i) => {
+                const played = row.camp + row.gk > 0;
+                const v = key ? cell(row[key], played) : row.match.jornada.replace('Jornada ', 'J');
+                return (
+                  <span key={row.match.id} onMouseEnter={() => setActive(i)}
+                    className={`text-[11px] font-mono leading-5 ${!key ? 'text-gray-500 text-[10px]'
+                      : typeof v === 'number' ? 'text-white font-black' : 'text-gray-700'} ${i === active ? 'bg-white/5 rounded' : ''}`}>
+                    {v}
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Lectura de la jornada triada: toc o ratolí */}
+        {r && (
+          <p className="mt-2 pt-2 text-[11px] text-gray-400 leading-snug" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <b className="text-white">{r.match.jornada.replace('Jornada ', 'J')} · {r.match.opponent}</b>
+            <span className="text-gray-600"> ({r.match.result})</span>
+            {r.camp + r.gk > 0 ? <>
+              {' · '}{formatTime(r.camp)} al camp{r.gk > 0 && <> + <span style={{ color: GK_GREEN }}>{formatTime(r.gk)} porter</span></>}
+              {r.xuts > 0 && <> · {r.aPorta}/{r.xuts} xuts a porta</>}
+            </> : <span className="text-gray-600"> · no va jugar</span>}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PlayerProfile({ player, stats, onClose, db, format }) {
   const [activeTab, setActiveTab] = useState('stats');
 
@@ -511,37 +611,8 @@ function PlayerProfile({ player, stats, onClose, db, format }) {
                 </div>
               </div>
 
-              {/* Minuts per jornada */}
-              {minutesByMatch.length > 0 && (
-                <div>
-                  <p className="text-[10px] text-gray-600 uppercase tracking-wider font-semibold mb-3">Minuts jugats</p>
-                  <div className="space-y-2">
-                    {minutesByMatch.map(({match, campSecs: cs, gkSecs: gs}) => {
-                      const maxSecs = 41*60;
-                      return (
-                        <div key={match.id} className="flex items-center gap-3">
-                          <span className="text-[10px] font-bold w-20 shrink-0" style={{color:'rgba(255,255,255,0.4)'}}>{match.jornada.replace('Jornada ','J')}</span>
-                          <div className="flex-1 flex flex-col gap-0.5">
-                            {cs>0 && <div className="h-2 rounded-full" style={{background:'rgba(255,255,255,0.06)'}}>
-                              <div className="h-full rounded-full bg-[#C0392B]" style={{width:`${(cs/maxSecs)*100}%`}}/>
-                            </div>}
-                            {gs>0 && <div className="h-2 rounded-full" style={{background:'rgba(255,255,255,0.06)'}}>
-                              <div className="h-full rounded-full bg-emerald-500" style={{width:`${(gs/maxSecs)*100}%`}}/>
-                            </div>}
-                          </div>
-                          <span className="text-[10px] font-mono w-12 text-right shrink-0" style={{color:'rgba(255,255,255,0.5)'}}>
-                            {formatTime(cs+gs)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-3 mt-2 text-[9px]" style={{color:'rgba(255,255,255,0.3)'}}>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#C0392B] inline-block"/>Camp</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/>Porter</span>
-                  </div>
-                </div>
-              )}
+              {/* Evolució jornada a jornada */}
+              {minutesByMatch.length > 0 && <PlayerTrend player={player} db={db} format={format}/>}
 
               {/* Gols */}
               {scoredGoals.length > 0 && (
