@@ -168,16 +168,17 @@ function CountdownHero({ onSelectMatch, db }) {
 
           {/* Últim resultat */}
           {lastMatch && (
-            <div className="flex-shrink-0 md:w-52">
+            <div className="flex-shrink-0 md:w-60">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Últim Resultat</span>
               </div>
               <div className="flex items-center gap-3 mb-2">
-                <div className={`text-3xl font-black font-mono px-3 py-1.5 rounded-xl ${lastRS.color}`}
+                {/* whitespace-nowrap: en 13 rem el "4 - 5" es partia en dues línies */}
+                <div className={`text-3xl font-black font-mono px-3 py-1.5 rounded-xl whitespace-nowrap shrink-0 ${lastRS.color}`}
                   style={{background:'rgba(0,0,0,0.3)'}}>
                   {lastMatch.result}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-bold text-white">{lastMatch.opponent}</div>
                   <div className="text-[10px] text-gray-600">{lastMatch.jornada} · {lastMatch.date}</div>
                 </div>
@@ -299,6 +300,42 @@ function PlayerCard({ rank, name, value, label, emoji, db }) {
         <span className={`font-black font-mono ${isTop?'text-2xl text-[#E5C07B]':'text-lg text-white'}`}>{value}</span>
         <span className="text-sm">{emoji}</span>
       </div>
+    </div>
+  );
+}
+
+// El podi en targeta gran, la resta en files compactes: amb una targeta per
+// jugador, la llista de golejadors i la d'assistències feien la portada eterna al mòbil
+function RankList({ entries, label, emoji, db, onPick }) {
+  const podium = entries.slice(0, 3);
+  const rest = entries.slice(3);
+  return (
+    <div className="space-y-2">
+      {podium.map(([name, count], idx) => (
+        <div key={name} onClick={() => onPick(name)} className="cursor-pointer hover:scale-[1.01] transition-transform">
+          <PlayerCard rank={idx} name={name} value={count} emoji={emoji} label={label} db={db}/>
+        </div>
+      ))}
+      {rest.length > 0 && (
+        <div className="rounded-xl border border-white/5 bg-[#1a1a1a] divide-y divide-white/5">
+          {rest.map(([name, count], i) => {
+            const player = db.roster.find(p => p.name === name);
+            return (
+              <button key={name} onClick={() => onPick(name)}
+                className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.03] transition-colors">
+                <span className="w-4 text-[11px] font-mono text-gray-600 text-right shrink-0">{i + 4}</span>
+                <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#111] shrink-0">
+                  {player?.photo
+                    ? <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{ objectPosition: 'center 15%' }}/>
+                    : <div className="w-full h-full flex items-center justify-center text-[11px] font-black text-[#E5C07B]/30">{name[0]}</div>}
+                </div>
+                <span className="flex-1 min-w-0 truncate text-[13px] font-semibold text-gray-300">{sName(db, name)}</span>
+                <span className="font-mono font-black text-sm text-white">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -622,14 +659,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   <Target className="w-3.5 h-3.5 text-[#E5C07B]"/> Golejadors
                   <span className="text-[10px] text-gray-600 font-normal ml-auto">clica per veure detall</span>
                 </h3>
-                <div className="space-y-2">
-                  {stats.topScorers.map(([name, count], idx) => (
-                    <div key={name} onClick={() => setSelectedPlayer(DATABASE.roster.find(p=>p.name===name))}
-                      className="cursor-pointer hover:scale-[1.01] transition-transform">
-                      <PlayerCard rank={idx} name={name} value={count} emoji="⚽" label="Gols" db={DATABASE}/>
-                    </div>
-                  ))}
-                </div>
+                <RankList entries={stats.topScorers} label="Gols" emoji="⚽" db={DATABASE}
+                  onPick={name => setSelectedPlayer(DATABASE.roster.find(p => p.name === name))}/>
               </section>
             )}
             {stats.topAssists.length > 0 && (
@@ -637,14 +668,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Trophy className="w-3.5 h-3.5 text-[#E5C07B]"/> Assistències
                 </h3>
-                <div className="space-y-2">
-                  {stats.topAssists.map(([name, count], idx) => (
-                    <div key={name} onClick={() => setSelectedPlayer(DATABASE.roster.find(p=>p.name===name))}
-                      className="cursor-pointer hover:scale-[1.01] transition-transform">
-                      <PlayerCard rank={idx} name={name} value={count} emoji="👟" label="Assists" db={DATABASE}/>
-                    </div>
-                  ))}
-                </div>
+                <RankList entries={stats.topAssists} label="Assists" emoji="👟" db={DATABASE}
+                  onPick={name => setSelectedPlayer(DATABASE.roster.find(p => p.name === name))}/>
               </section>
             )}
           </div>

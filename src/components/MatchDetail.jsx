@@ -450,9 +450,11 @@ function TimelineChart({ match, matchStats, db }) {
   return (
     <div className="space-y-5">
       {/* Gantt */}
-      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5 overflow-x-auto">
-        <h3 className="text-sm font-bold text-[#E5C07B] mb-4 flex items-center gap-2">
+      <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 sm:p-5 overflow-x-auto">
+        <h3 className="text-sm font-bold text-[#E5C07B] mb-4 flex items-center gap-2 sticky left-0">
           <Clock className="w-4 h-4"/> Línia de Temps
+          {/* Al mòbil el gràfic no hi cap sencer: sense avís semblava tallat */}
+          <span className="sm:hidden ml-auto text-[10px] font-normal text-gray-600">llisca →</span>
         </h3>
         <div style={{minWidth:560}}>
           {/* Ticks */}

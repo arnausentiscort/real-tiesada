@@ -6,6 +6,11 @@ function FormaCircle({ r }) {
   return <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:color, margin:'0 2px' }}/>;
 }
 
+// Al mòbil només Pts, PJ, DG i forma: amb les 8 columnes el nom de l'equip
+// es quedava en "I…" i no se sabia qui era qui
+const COLS = 'grid grid-cols-[22px_minmax(0,1fr)_30px_24px_34px_50px] sm:grid-cols-[28px_minmax(0,1fr)_36px_28px_28px_28px_28px_36px_36px_36px_60px] gap-x-1';
+const WIDE = 'hidden sm:block';
+
 export default function Clasificacion() {
   const { db: DATABASE, season } = useSeason();
   const [showIframe, setShowIframe] = useState(false);
@@ -36,7 +41,7 @@ export default function Clasificacion() {
               <div className="text-4xl font-black text-[#E5C07B]">#{nosaltres.pos}</div>
               <div>
                 <p className="text-white font-bold">Real Tiesada</p>
-                <p className="text-gray-500 text-sm">{nosaltres.pts} punts · {nosaltres.pj} partits jugats · GD {nosaltres.gf - nosaltres.gc}</p>
+                <p className="text-gray-500 text-sm">{nosaltres.pts} punts · {nosaltres.pj} partits jugats · DG {nosaltres.gf - nosaltres.gc > 0 ? "+" : ""}{nosaltres.gf - nosaltres.gc}</p>
               </div>
             </div>
           )}
@@ -44,17 +49,17 @@ export default function Clasificacion() {
           {/* Taula */}
           <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden">
             {/* Capçalera */}
-            <div className="grid text-[10px] font-bold text-gray-600 uppercase tracking-wider px-4 py-2 border-b border-white/5"
-              style={{ gridTemplateColumns: '28px 1fr 36px 28px 28px 28px 36px 36px 36px 60px' }}>
+            <div className={`${COLS} text-[10px] font-bold text-gray-600 uppercase tracking-wider px-3 sm:px-4 py-2 border-b border-white/5`}>
               <span>Pos</span>
               <span>Equip</span>
               <span className="text-center">Pts</span>
               <span className="text-center">PJ</span>
-              <span className="text-center">G</span>
-              <span className="text-center">E</span>
-              <span className="text-center">P</span>
-              <span className="text-center">GF</span>
-              <span className="text-center">GC</span>
+              <span className={`${WIDE} text-center`}>G</span>
+              <span className={`${WIDE} text-center`}>E</span>
+              <span className={`${WIDE} text-center`}>P</span>
+              <span className={`${WIDE} text-center`}>GF</span>
+              <span className={`${WIDE} text-center`}>GC</span>
+              <span className="text-center">DG</span>
               <span className="text-center">Últims</span>
             </div>
 
@@ -62,9 +67,9 @@ export default function Clasificacion() {
               const isUs = eq.esNosaltres;
               return (
                 <div key={eq.equipo}
-                  className={`grid items-center px-4 py-3 border-b border-white/5 last:border-0 transition-colors
+                  className={`${COLS} items-center px-3 sm:px-4 py-3 border-b border-white/5 last:border-0 transition-colors
                     ${isUs ? 'bg-[#E5C07B]/5 border-l-2 border-l-[#E5C07B]' : 'hover:bg-white/[0.02]'}`}
-                  style={{ gridTemplateColumns: '28px 1fr 36px 28px 28px 28px 36px 36px 36px 60px' }}>
+>
 
                   {/* Posició */}
                   <span className={`text-sm font-black ${i < 2 ? 'text-[#E5C07B]' : i < 4 ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -74,7 +79,7 @@ export default function Clasificacion() {
                   {/* Nom */}
                   <span className={`text-sm font-semibold truncate ${isUs ? 'text-[#E5C07B]' : 'text-white'}`}>
                     {eq.equipo}
-                    {isUs && <span className="ml-1 text-[9px] text-[#E5C07B]/60">← nosaltres</span>}
+                    {isUs && <span className="hidden sm:inline ml-1 text-[9px] text-[#E5C07B]/60">← nosaltres</span>}
                   </span>
 
                   {/* Punts */}
@@ -83,11 +88,14 @@ export default function Clasificacion() {
                   </span>
 
                   <span className="text-center text-xs text-gray-400">{eq.pj}</span>
-                  <span className="text-center text-xs text-emerald-400">{eq.pg}</span>
-                  <span className="text-center text-xs text-yellow-400">{eq.pe}</span>
-                  <span className="text-center text-xs text-red-400">{eq.pp}</span>
-                  <span className="text-center text-xs text-gray-400">{eq.gf}</span>
-                  <span className="text-center text-xs text-gray-400">{eq.gc}</span>
+                  <span className={`${WIDE} text-center text-xs text-emerald-400`}>{eq.pg}</span>
+                  <span className={`${WIDE} text-center text-xs text-yellow-400`}>{eq.pe}</span>
+                  <span className={`${WIDE} text-center text-xs text-red-400`}>{eq.pp}</span>
+                  <span className={`${WIDE} text-center text-xs text-gray-400`}>{eq.gf}</span>
+                  <span className={`${WIDE} text-center text-xs text-gray-400`}>{eq.gc}</span>
+                  <span className={`text-center text-xs font-bold ${eq.gf - eq.gc > 0 ? 'text-emerald-400' : eq.gf - eq.gc < 0 ? 'text-red-400/80' : 'text-gray-500'}`}>
+                    {eq.gf - eq.gc > 0 ? '+' : ''}{eq.gf - eq.gc}
+                  </span>
 
                   {/* Forma */}
                   <span className="flex items-center justify-center gap-0">
