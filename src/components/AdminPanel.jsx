@@ -239,7 +239,61 @@ function CardForm({ card, onChange, onRemove, idx, rosterProp }) {
 }
 
 // ── Formulari de gol ──────────────────────────────────────────────
-function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
+// Porter i jugadors de camp d'un gol. Amb el minut i els canvis ja se sap
+// qui hi era: es posen sols i només cal tocar-los si van ser uns altres.
+function GoalLineup({ goal, onChange, subs, rosterProp }) {
+  const roster = rosterProp.map(p => p.name);
+  const sn = (n) => rosterProp.find(p => p.name === n)?.shirtName || n;
+  const auto = lineupAt(subs, goal.time);
+  const matchesAuto = auto && auto.goalkeeper === goal.goalkeeper && sameSet(auto.onPitch, goal.onPitch || []);
+
+  useEffect(() => {
+    if (!auto || goal._manual || matchesAuto) return;
+    onChange({ ...goal, goalkeeper: auto.goalkeeper, onPitch: auto.onPitch });
+  }, [goal.time, goal._manual, auto?.time, auto?.goalkeeper, auto?.onPitch.join('|')]);
+
+  if (auto && !goal._manual) {
+    return (
+      <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] font-bold text-emerald-400">✓ Alineació del canvi de les {auto.time}</span>
+          <button onClick={() => onChange({ ...goal, _manual: true })}
+            className="text-[10px] text-gray-500 hover:text-white underline shrink-0">editar a mà</button>
+        </div>
+        <p className="text-[11px] text-gray-400 mt-1 leading-snug">
+          🧤 {sn(auto.goalkeeper)} · {auto.onPitch.map(sn).join(', ')}
+        </p>
+      </div>
+    );
+  }
+
+  const manual = (patch) => onChange({ ...goal, ...patch, _manual: true });
+  return (
+    <>
+      {auto && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2">
+          <span className="text-[11px] text-amber-400">
+            {matchesAuto ? 'Editada a mà, igual que la del canvi' : `Editada a mà: no és la del canvi de les ${auto.time}`}
+          </span>
+          <button onClick={() => onChange({ ...goal, _manual: false, goalkeeper: auto.goalkeeper, onPitch: auto.onPitch })}
+            className="text-[10px] text-gray-400 hover:text-white underline shrink-0">↻ la del canvi</button>
+        </div>
+      )}
+      {!auto && (
+        <p className="text-[10px] text-gray-600">Posa el minut i els canvis, i l'alineació sortirà sola.</p>
+      )}
+      <select value={goal.goalkeeper || ''} onChange={e => manual({ goalkeeper: e.target.value })}
+        className="w-full bg-[#1a1a1a] border border-emerald-500/20 rounded-lg px-2 py-2 text-sm text-white focus:border-emerald-500/40 outline-none">
+        <option value="">Porter nostre...</option>
+        {roster.map(n => <option key={n} value={n}>{sn(n)}</option>)}
+      </select>
+      <OnPitchSelector value={goal.onPitch || []} onChange={v => manual({ onPitch: v })}
+        rosterProp={rosterProp} goalkeeper={goal.goalkeeper}/>
+    </>
+  );
+}
+
+function GoalForm({ goal, onChange, onRemove, idx, rosterProp, subs }) {
   const ctxGF = useAdmin();
   rosterProp = rosterProp || ctxGF.roster;
   const roster = rosterProp.map(p => p.name);
@@ -277,13 +331,7 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
               {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
             </select>
           </div>
-          <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
-            className="w-full bg-[#1a1a1a] border border-emerald-500/20 rounded-lg px-2 py-2 text-sm text-white focus:border-emerald-500/40 outline-none">
-            <option value="">Porter rival (qui ha encaixat)...</option>
-            <option value="Porter rival">Porter rival (genèric)</option>
-            {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
-          </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp} goalkeeper={goal.goalkeeper}/>
+          <GoalLineup goal={goal} onChange={onChange} subs={subs} rosterProp={rosterProp}/>
           <PitchClickable points={pts}
             onChange={newPts => onChange({...goal, pts: newPts,
               shotPos:   newPts.shot    ? {x:newPts.shot.x,   y:newPts.shot.y}   : null,
@@ -299,12 +347,7 @@ function GoalForm({ goal, onChange, onRemove, idx, rosterProp }) {
         </>
       ) : (
         <>
-          <select value={goal.goalkeeper||''} onChange={e=>onChange({...goal,goalkeeper:e.target.value})}
-            className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-sm text-white focus:border-[#E5C07B]/40 outline-none">
-            <option value="">Porter nostre...</option>
-            {roster.map(n=><option key={n} value={n}>{n.split(' ')[0]}</option>)}
-          </select>
-          <OnPitchSelector value={goal.onPitch||[]} onChange={v=>onChange({...goal,onPitch:v})} rosterProp={rosterProp} goalkeeper={goal.goalkeeper}/>
+          <GoalLineup goal={goal} onChange={onChange} subs={subs} rosterProp={rosterProp}/>
           <textarea value={goal.notes||''} onChange={e=>onChange({...goal,notes:e.target.value})}
             placeholder="Comentari (opcional)" rows={2}
             className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none resize-none"/>
@@ -393,7 +436,157 @@ function AddBtn({ onClick, label, color = 'gold' }) {
   );
 }
 
+// ── Temps i alineacions ───────────────────────────────────────────
+// Accepta el que s'escriu de pressa: "0:15" → "00:15", "21::01" → "21:01",
+// "7" → "07:00". Retorna null si no se'n pot treure un temps.
+function normTime(t) {
+  const m = String(t ?? '').trim().match(/^(\d{1,3})\s*:+\s*(\d{1,2})$|^(\d{1,3})$/);
+  if (!m) return null;
+  const min = Number(m[1] ?? m[3]), sec = Number(m[2] ?? 0);
+  if (sec > 59) return null;
+  return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+const toSec = (t) => {
+  const n = normTime(t);
+  if (!n) return null;
+  const [a, b] = n.split(':').map(Number);
+  return a * 60 + b;
+};
+const sameSet = (a = [], b = []) => a.length === b.length && a.every(x => b.includes(x));
+
+// L'alineació vigent en un minut: l'últim canvi que ja havia passat.
+// Els de camp, sense el porter.
+function lineupAt(subs, time) {
+  const t = toSec(time);
+  if (t == null) return null;
+  let cur = null;
+  for (const s of subs || []) {
+    const st = toSec(s.time);
+    if (st == null || st > t) continue;
+    if (!cur || st >= toSec(cur.time)) cur = s;
+  }
+  if (!cur || cur._isBreak || !(cur.onPitch || []).length) return null;
+  return {
+    time: normTime(cur.time),
+    goalkeeper: cur.goalkeeper || '',
+    onPitch: cur.onPitch.filter(p => p !== cur.goalkeeper),
+  };
+}
+
+// Tot el que abans es revisava a mà després de cada partit
+function reviewMatch(match, fieldN) {
+  const out = [];
+  const add = (level, text) => out.push({ level, text });
+  const subs  = match.subs  || [];
+  const goals = match.goals || [];
+  const ACTIONS = [['shots', 'xut'], ['keyPasses', 'pas clau'], ['dribbles', 'regat']];
+
+  const times = [
+    ...subs.map(s => ['canvi', s.time]),
+    ...goals.map(g => ['gol', g.time]),
+    ...(match.cards   || []).map(c => ['targeta', c.time]),
+    ...(match.moments || []).map(m => ['moment', m.time]),
+    ...ACTIONS.flatMap(([k, l]) => Object.values(match[k] || {}).flat().map(e => [l, e.time])),
+  ];
+  times.filter(([, t]) => !normTime(t))
+    .forEach(([k, t]) => add('error', `Temps il·legible en un ${k}: "${t || '(buit)'}"`));
+  const fixable = times.filter(([, t]) => normTime(t) && normTime(t) !== t);
+  if (fixable.length) add('info', `${fixable.length} temps amb un format irregular (${
+    fixable.slice(0, 3).map(([, t]) => `"${t}"`).join(', ')}${fixable.length > 3 ? '…' : ''}): es desaran com a MM:SS`);
+
+  if (!subs.length) add('warn', 'Sense canvis: no hi haurà minuts per jugador ni alineació als gols');
+  else {
+    if (toSec(subs[0].time) !== 0) add('warn', `El primer canvi és al ${subs[0].time}, no al 00:00`);
+    for (let i = 1; i < subs.length; i++)
+      if (toSec(subs[i].time) < toSec(subs[i - 1].time))
+        add('error', `Canvis desordenats: el ${subs[i].time} va darrere del ${subs[i - 1].time}`);
+    subs.filter(s => !s._isBreak).forEach(s => {
+      const field = (s.onPitch || []).filter(p => p !== s.goalkeeper);
+      if (!s.goalkeeper) add('warn', `Canvi del ${s.time}: sense porter`);
+      if ((s.onPitch || []).includes(s.goalkeeper)) add('error', `Canvi del ${s.time}: el porter també surt de camp`);
+      if (field.length > fieldN) add('error', `Canvi del ${s.time}: ${field.length} de camp, el màxim és ${fieldN}`);
+      else if (field.length < fieldN) add('warn', `Canvi del ${s.time}: ${field.length} de camp, en falta${fieldN - field.length > 1 ? 'n' : ''} ${fieldN - field.length}`);
+    });
+    const last = subs[subs.length - 1];
+    if (last._isBreak) add('ok', `El partit acaba al ${normTime(last.time) || last.time}`);
+    else add('warn', `Falta el final del partit: l'última alineació (${last.time}) no suma cap minut`);
+  }
+
+  const [rf, ra] = (match.result || '').split('-').map(x => parseInt(x, 10));
+  const gf = goals.filter(g => g.type === 'favor').length;
+  const ga = goals.filter(g => g.type === 'contra').length;
+  if (Number.isFinite(rf) && Number.isFinite(ra)) {
+    if (rf === gf && ra === ga) add('ok', `Els gols quadren amb el resultat (${gf}-${ga})`);
+    else add('error', `El resultat diu ${rf}-${ra}, però hi ha ${gf} gol${gf === 1 ? '' : 's'} a favor i ${ga} en contra`);
+  }
+
+  let goalsOk = 0, goalsChecked = 0;
+  goals.forEach(g => {
+    const a = lineupAt(subs, g.time);
+    if (!a) return;
+    goalsChecked++;
+    if (a.goalkeeper === g.goalkeeper && sameSet(a.onPitch, g.onPitch || [])) goalsOk++;
+    else {
+      // El cas típic: el gol anotat amb els que entren uns segons després
+      const next = subs.find(s => !s._isBreak && toSec(s.time) > toSec(g.time));
+      const withNext = next && sameSet(next.onPitch.filter(p => p !== next.goalkeeper), g.onPitch || []);
+      add('warn', withNext
+        ? `Gol del ${g.time}: té l'alineació que entra al ${next.time}, ${toSec(next.time) - toSec(g.time)} s després`
+        : `Gol del ${g.time}: l'alineació no és la del canvi de les ${a.time}`);
+    }
+    if (g.type === 'favor') {
+      if (g.scorer && !a.onPitch.includes(g.scorer)) add('warn', `Gol del ${g.time}: ${g.scorer} no era al camp`);
+      if (g.assist && !a.onPitch.includes(g.assist)) add('warn', `Gol del ${g.time}: ${g.assist} (assistència) no era al camp`);
+    }
+  });
+  if (goalsChecked && goalsOk === goalsChecked) add('ok', `Els ${goalsChecked} gols tenen l'alineació del moment`);
+
+  let acts = 0, actsOk = 0;
+  for (const [k, label] of ACTIONS)
+    for (const [p, evs] of Object.entries(match[k] || {}))
+      for (const e of evs) {
+        const a = lineupAt(subs, e.time);
+        if (!a) continue;
+        acts++;
+        if (a.onPitch.includes(p) || a.goalkeeper === p) actsOk++;
+        else add('warn', `${label[0].toUpperCase() + label.slice(1)} del ${e.time}: ${p} no era al camp`);
+      }
+  if (acts && actsOk === acts) add('ok', `Les ${acts} accions són de gent que era al camp`);
+  return out;
+}
+
+const REVIEW_STYLE = {
+  error: { icon: '❌', cls: 'text-[#E06B5E]' },
+  warn:  { icon: '⚠️', cls: 'text-amber-400' },
+  info:  { icon: '🔧', cls: 'text-sky-400'   },
+  ok:    { icon: '✅', cls: 'text-emerald-400' },
+};
+
+function ReviewPanel({ items }) {
+  const errors = items.filter(i => i.level === 'error').length;
+  const warns  = items.filter(i => i.level === 'warn').length;
+  const order  = { error: 0, warn: 1, info: 2, ok: 3 };
+  const head = errors ? `❌ ${errors} error${errors > 1 ? 's' : ''} per arreglar`
+    : warns ? `⚠️ ${warns} avís${warns > 1 ? 'os' : ''} per revisar`
+    : '✅ Tot quadra';
+  return (
+    <div className={`rounded-xl border p-4 ${errors ? 'bg-[#C0392B]/10 border-[#C0392B]/30'
+      : warns ? 'bg-amber-500/5 border-amber-500/25' : 'bg-emerald-500/5 border-emerald-500/25'}`}>
+      <p className="text-sm font-bold text-white mb-2">Revisió · {head}</p>
+      <ul className="space-y-1">
+        {[...items].sort((a, b) => order[a.level] - order[b.level]).map((it, i) => (
+          <li key={i} className={`flex gap-2 text-[11px] leading-snug ${REVIEW_STYLE[it.level].cls}`}>
+            <span className="shrink-0">{REVIEW_STYLE[it.level].icon}</span><span>{it.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // ── Generadors de codi ────────────────────────────────────────────
+const T = (t) => normTime(t) || t;
+
 function goalToCode(g) {
   const sp  = g.shotPos    ? `{ x: ${g.shotPos.x}, y: ${g.shotPos.y} }` : 'null';
   const ap  = g.assistPos  ? `{ x: ${g.assistPos.x}, y: ${g.assistPos.y} }` : 'null';
@@ -404,25 +597,28 @@ function goalToCode(g) {
   const gk = g.goalkeeper ? `"${g.goalkeeper}"` : 'null';
   if (g.type === 'favor') {
     const ass = g.assist ? `"${g.assist}"` : 'null';
-    return `      { time: "${g.time}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: ${gk},
+    return `      { time: "${T(g.time)}", type: "favor", scorer: "${g.scorer||''}", assist: ${ass}, goalkeeper: ${gk},
         zone: "${g.zone||''}", shotPos: ${sp}, assistPos: ${ap}, conductPos: ${cp}, goalPos: ${gp},
         onPitch: ${onP}${notes} },`;
   }
-  return `      { time: "${g.time}", type: "contra", goalkeeper: ${gk}, onPitch: ${onP}${notes} },`;
+  return `      { time: "${T(g.time)}", type: "contra", goalkeeper: ${gk}, onPitch: ${onP}${notes} },`;
 }
 
 function subsToCode(subs) {
   if (!subs || subs.length === 0) return '';
   return subs.map(s => {
-    const op = s.onPitch?.length ? `["${s.onPitch.join('","')}"]` : '[]';
+    // Sense _isBreak l'app llegeix el final com una alineació buida
+    if (s._isBreak || !(s.onPitch || []).length)
+      return `      { time: "${T(s.time)}", goalkeeper: null, onPitch: [], _isBreak: true },`;
+    const op = `["${s.onPitch.join('","')}"]`;
     const gk = s.goalkeeper ? `"${s.goalkeeper}"` : 'null';
-    return `      { time: "${s.time}", goalkeeper: ${gk}, onPitch: ${op} },`;
+    return `      { time: "${T(s.time)}", goalkeeper: ${gk}, onPitch: ${op} },`;
   }).join('\n');
 }
 
 function cardsToCode(cards) {
   if (!cards || cards.length === 0) return '';
-  return cards.map(c => `      { time: "${c.time}", color: "${c.color}", player: "${c.player}" },`).join('\n');
+  return cards.map(c => `      { time: "${T(c.time)}", color: "${c.color}", player: "${c.player}" },`).join('\n');
 }
 
 function eventMapToCode(map) {
@@ -430,9 +626,9 @@ function eventMapToCode(map) {
   if (entries.length === 0) return '{}';
   const inner = entries.map(([name, evs]) => {
     const evStrs = evs.map(ev => {
-      if (ev.onTarget === undefined) return `{ time: "${ev.time}" }`;
+      if (ev.onTarget === undefined) return `{ time: "${T(ev.time)}" }`;
       const pal = ev.post ? ', post: true' : '';
-      return `{ time: "${ev.time}", onTarget: ${ev.onTarget}${pal} }`;
+      return `{ time: "${T(ev.time)}", onTarget: ${ev.onTarget}${pal} }`;
     }).join(', ');
     return `"${name}": [${evStrs}]`;
   }).join(', ');
@@ -445,12 +641,11 @@ function buildMatchCode(match, originalId) {
   const subsCode    = subsToCode(match.subs || []);
   const cardsCode   = cardsToCode(match.cards || []);
   const momentsCode = match.moments.map(m => {
-    const [min,sec] = (m.time||'0:0').split(':').map(Number);
-    const secs = Math.max(0, min*60+(sec||0)-3);
+    const secs = Math.max(0, (toSec(m.time) ?? 0) - 3);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
     const pls = (m.players || []).map(n => `"${n}"`).join(', ');
-    return `      { time:"${m.time}", type:"${m.type || 'bona'}", text:"${txt}", players:[${pls}], videoUrl:${ytUrl} },`;
+    return `      { time:"${T(m.time)}", type:"${m.type || 'bona'}", text:"${txt}", players:[${pls}], videoUrl:${ytUrl} },`;
   }).join('\n');
   const savesCode = Object.keys(match.savesManual||{}).length > 0
     ? `  savesManual: { ${Object.entries(match.savesManual).map(([n,v])=>`"${n}": ${v}`).join(', ')} },\n` : '';
@@ -490,8 +685,26 @@ ${momentsCode}
 
 // Identificador JS vàlid per a l'import: "j2-star-warros" → "j2StarWarros"
 function importIdent(id) {
-  const base = id.replace(/^s\d+-/, '').replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase());
-  return /^[0-9]/.test(base) ? `m${base}` : base;
+  const base = id.replace(/^s\d+-/, '')
+    .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase());
+  const ident = /^[0-9]/.test(base) ? `m${base}` : base;
+  // Un import mal format trenca el build de tota la web: millor parar aquí
+  if (!/^[A-Za-z_$][\w$]*$/.test(ident)) throw new Error(`Id de partit no vàlid: "${id}"`);
+  return ident;
+}
+
+// Troba el `[` ... `]` de `matches:` comptant claudàtors, no fins al primer `]`
+function findMatchesArray(src) {
+  const m = src.match(/matches:\s*\[/);
+  if (!m) return null;
+  const open = m.index + m[0].length - 1;
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '[') depth++;
+    else if (src[i] === ']' && --depth === 0) return { start: m.index, open, close: i };
+  }
+  return null;
 }
 
 // Afegeix l'import del partit nou i el posa a `matches` de l'índex de temporada.
@@ -509,13 +722,16 @@ function registerMatchInIndex(indexJs, id, matchesDirName) {
     out = out.slice(0, at) + '\n' + importLine + out.slice(at);
   }
 
-  const m = out.match(/matches:\s*\[([\s\S]*?)\]/);
-  if (!m) throw new Error('No he trobat `matches: [...]` a l\'índex de temporada');
-  const inner = m[1];
+  const arr = findMatchesArray(out);
+  if (!arr) throw new Error('No he trobat `matches: [...]` a l\'índex de temporada');
+  const inner = out.slice(arr.open + 1, arr.close);
+  // Temporades antigues (Split 1) tenen els partits escrits dins de l'índex:
+  // afegir-hi un import trencaria el fitxer
+  if (inner.includes('{')) throw new Error('Aquesta temporada té els partits dins de l\'índex: no s\'hi poden afegir des de l\'admin');
   if (new RegExp(`\\b${ident}\\b`).test(inner)) return out;
   const listed = inner.trim();
   const next = listed ? `${listed.replace(/,\s*$/, '')}, ${ident}` : ident;
-  return out.slice(0, m.index) + `matches: [${next}]` + out.slice(m.index + m[0].length);
+  return out.slice(0, arr.start) + `matches: [${next}]` + out.slice(arr.close + 1);
 }
 
 function matchToForm(m) {
@@ -553,7 +769,14 @@ function matchToForm(m) {
     result: m.result,
     youtubeUrl: ytUrl,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer ?? null,
-    goals, subs, cards, moments, savesManual, shots, keyPasses, dribbles,
+    // Un gol desat amb una alineació diferent de la del canvi és una decisió
+    // presa a mà: no s'ha de "corregir" sol en obrir el partit
+    goals: goals.map(g => {
+      const a = lineupAt(subs, g.time);
+      const same = a && a.goalkeeper === g.goalkeeper && sameSet(a.onPitch, g.onPitch);
+      return { ...g, _manual: g.onPitch.length > 0 && !same };
+    }),
+    subs, cards, moments, savesManual, shots, keyPasses, dribbles,
     guestPlayers: m.guestPlayers || [],
   };
 }
@@ -969,7 +1192,7 @@ function MatchForm({ match, setMatch, onPreview }) {
           <p className="text-xs font-bold text-[#E5C07B]">⚽ Gols ({match.goals.length})</p>
           <AddBtn onClick={addGoal} label="Afegir gol"/>
         </div>
-        {match.goals.map((g,i) => <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)} rosterProp={extRoster}/>)}
+        {match.goals.map((g,i) => <GoalForm key={i} goal={g} idx={i} onChange={g=>updateGoal(i,g)} onRemove={()=>removeGoal(i)} rosterProp={extRoster} subs={match.subs || []}/>)}
         {/* Botó afegir al final */}
         <AddBtn onClick={addGoal} label="+ Gol" color="gold"/>
       </div>
@@ -1038,7 +1261,9 @@ export default function AdminPanel({ onClose }) {
     const jn = (match.jornada || '').match(/\d+/)?.[0] || ((db.matches || []).length + 1);
     const slug = (match.opponent || 'rival').toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20);
+      .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 20)
+      // tallar a 20 pot deixar un guió al final, i "j4GolaSeca-" no és JS vàlid
+      .replace(/-+/g, '-').replace(/^-|-$/g, '') || 'rival';
     return `${season.id}-j${jn}-${slug}`;
   };
 
@@ -1050,6 +1275,10 @@ export default function AdminPanel({ onClose }) {
   };
 
   const handlePush = async () => {
+    const errors = reviewMatch(match, format.fieldPlayers).filter(i => i.level === 'error');
+    if (errors.length && !window.confirm(
+      `La revisió ha trobat ${errors.length} error${errors.length > 1 ? 's' : ''}:\n\n` +
+      errors.map(e => '• ' + e.text).join('\n') + '\n\nPujar igualment?')) return;
     setScreen('saving');
     try {
       const tk = token || localStorage.getItem('gh_token');
@@ -1125,6 +1354,7 @@ export default function AdminPanel({ onClose }) {
 
         {screen === 'preview' && (
           <div className="space-y-4">
+            <ReviewPanel items={reviewMatch(match, format.fieldPlayers)}/>
             {isEdit && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-400">
                 ⚠️ Mode edició — reescriurà el fitxer del {match.jornada}
