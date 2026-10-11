@@ -48,14 +48,14 @@ export const DATABASE_S3 = {
   ],
 
   roster: [
-    { id: 'joan-ribes',    name: 'Joan Ribes',    number: null, position: 'Porter',      status: 'actiu', note: 'Fitxatge' },
-    { id: 'coro',          name: 'Coro',          number: null, position: 'Defensa',     status: 'actiu', note: 'Retorn del Split 1' },
-    { id: 'lluc',          name: 'Lluc',          number: null, position: 'Defensa',     status: 'actiu', note: 'Retorn del Split 1' },
+    { id: 'joan-ribes',    name: 'Joan Ribes',    number: 1,    position: 'Porter',      status: 'actiu', note: 'Fitxatge' },
+    { id: 'coro',          name: 'Coro',          number: 2,    position: 'Defensa',     status: 'actiu', note: 'Retorn del Split 1' },
+    { id: 'lluc',          name: 'Lluc',          number: 3,    position: 'Defensa',     status: 'actiu', note: 'Retorn del Split 1' },
     { id: 'joan-medina',   name: 'Joan Medina',   number: 11,   position: 'Defensa',     status: 'actiu' },
     { id: 'pau-ibanez',    name: 'Pau Ibañez',    number: 10,   position: 'Defensa',     status: 'actiu' },
     { id: 'paco-montero',  name: 'Paco Montero',  number: 22,   position: 'Defensa',     status: 'actiu' },
     { id: 'roger-miro',    name: 'Roger Miro',    number: 9,    position: 'Defensa',     status: 'actiu' },
-    { id: 'serginho',      name: 'Serginho',      number: null, position: 'Migcampista', status: 'actiu', note: 'Fitxatge' },
+    { id: 'serginho',      name: 'Serginho',      number: 56,   position: 'Migcampista', status: 'actiu', note: 'Fitxatge' },
     { id: 'chengzhi-li',   name: 'Chengzhi Li',   number: 12,   position: 'Migcampista', status: 'actiu' },
     { id: 'roi-seoane',    name: 'Roi Seoane',    number: 24,   position: 'Davanter',    status: 'actiu' },
     { id: 'arnau-sentis',  name: 'Arnau Sentis',  number: 8,    position: 'Davanter',    status: 'actiu' },
