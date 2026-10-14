@@ -2,10 +2,9 @@
 // Marcador i golejadors d'apuntamelo.com (partit 380449), només amb el minut;
 // canvis, accions i aturades de l'Arnau amb el mode partit. Acaba al 48:22.
 // Golejadors nostres: #22 i #2 a apuntamelo → Paco Montero i Coro pel dorsal.
-// Apuntamelo marca "27'" el gol que al vídeo ve del penal del 25:45: el seu
-// minut N vol dir de (N-1):00 a (N-1):59. Amb això, l'1', el 27', el 29' i el
-// 45' tenen l'alineació segura; al 17', 23', 31' i 48' hi cau un canvi dins
-// del minut i falten els segons per saber qui hi era.
+// El 17:20, 23:30, 29:58 i 47:07 són els temps reals del vídeo (l'Arnau,
+// 14/10): a cadascun hi queia un canvi dins del minut d'apuntamelo. La resta
+// de gols només tenen el minut d'apuntamelo, sense cap canvi a prop.
 export default {
   id: "s3-j5-inafumaybeben",
   jornada: "Jornada 5",
@@ -72,13 +71,15 @@ export default {
         onPitch: ["Roi Seoane","Pau Ibañez","Roger Miro","Coro","Paco Montero","Serginho"],
         notes: "Al primer minut. Jorge D. #3." },
 
-      { time: "17:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "17:20", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Brais M. #81." },
+        onPitch: ["Ivan Mico","Marc Farreras","Joan Medina","Chengzhi Li","Lluc","Pau Ibañez"],
+        notes: "Brais M. #81." },
 
-      { time: "23:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "23:30", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Lorenzo C. #9." },
+        onPitch: ["Marc Farreras","Joan Medina","Lluc","Pau Ibañez","Roi Seoane","Paco Montero"],
+        notes: "Lorenzo C. #9." },
 
       { time: "27:00", type: "favor", scorer: "Paco Montero", assist: null, goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
@@ -90,18 +91,20 @@ export default {
         onPitch: ["Roi Seoane","Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis"],
         notes: "Jorge D. #3, el segon seu." },
 
-      { time: "31:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+      { time: "29:58", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "" },
+        onPitch: ["Roi Seoane","Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis"],
+        notes: "" },
 
       { time: "45:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho","Arnau Sentis"],
         notes: "Alvaro M. #41." },
 
-      { time: "48:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "47:07", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Brais M. #81, MVP del partit." },
+        onPitch: ["Lluc","Pau Ibañez","Serginho","Arnau Sentis","Ivan Mico","Roger Miro"],
+        notes: "Brais M. #81, MVP del partit." },
     ],
     retransmissio: [
       { time: "01:44", type: "clip", text: "Intenten un xut des del mig del camp", players: ["Roi Seoane", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=101s", photo: null, photoHover: null },
