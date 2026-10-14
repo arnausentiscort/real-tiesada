@@ -5,6 +5,9 @@
 // El 17:20, 23:30, 29:58 i 47:07 són els temps reals del vídeo (l'Arnau,
 // 14/10): a cadascun hi queia un canvi dins del minut d'apuntamelo. La resta
 // de gols només tenen el minut d'apuntamelo, sense cap canvi a prop.
+// Corregit el 14/10: al 36:59 i al 40:24 hi havia dos canvis de "tornada"
+// (en Miró i en Paco tornaven a entrar al cap d'un minut) que eren clics
+// equivocats. Reals: 36:11 Miró→Medina, 39:20 Paco→Ibáñez, 40:47 Farreras→Coro.
 export default {
   id: "s3-j5-inafumaybeben",
   jornada: "Jornada 5",
@@ -53,9 +56,7 @@ export default {
       { time: "33:43", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Serginho","Roger Miro","Ivan Mico","Marc Farreras","Lluc"] },
       { time: "35:05", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Roger Miro","Ivan Mico","Marc Farreras","Lluc","Chengzhi Li"] },
       { time: "36:11", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Ivan Mico","Marc Farreras","Lluc","Chengzhi Li","Joan Medina"] },
-      { time: "36:59", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Paco Montero","Roger Miro","Chengzhi Li","Ivan Mico"] },
-      { time: "39:20", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Roger Miro","Chengzhi Li","Ivan Mico","Pau Ibañez"] },
-      { time: "40:24", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Ivan Mico","Pau Ibañez","Paco Montero"] },
+      { time: "39:20", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Marc Farreras","Chengzhi Li","Ivan Mico","Pau Ibañez"] },
       { time: "40:47", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Ivan Mico","Pau Ibañez","Coro"] },
       { time: "40:59", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho"] },
       { time: "42:00", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho","Arnau Sentis"] },
