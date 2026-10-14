@@ -61,10 +61,12 @@ function useKeys(map, deps) {
 }
 
 // Graella de jugadors amb número de tecla (1–9, 0)
-function PlayerGrid({ names, sn, onPick, selected = [], disabled = [] }) {
-  const keyOf = (i) => (i < 9 ? String(i + 1) : i === 9 ? '0' : null);
-  useKeys(Object.fromEntries(names.slice(0, 10).map((n, i) => [keyOf(i), () => !disabled.includes(n) && onPick(n)])),
-    [names.join('|'), selected.join('|'), disabled.join('|')]);
+// keys={false}: quan n'hi ha dues a la vegada (golejador i assistència), les
+// tecles 1–9 xocarien
+function PlayerGrid({ names, sn, onPick, selected = [], disabled = [], keys = true }) {
+  const keyOf = (i) => (keys && i < 9 ? String(i + 1) : keys && i === 9 ? '0' : null);
+  useKeys(keys ? Object.fromEntries(names.slice(0, 10).map((n, i) => [keyOf(i), () => !disabled.includes(n) && onPick(n)])) : {},
+    [names.join('|'), selected.join('|'), disabled.join('|'), keys]);
   return (
     <div className="grid grid-cols-2 gap-1.5">
       {names.map((n, i) => {
@@ -228,15 +230,20 @@ function MomentForm({ pick, sn, onSave }) {
   </>;
 }
 
-function LineupEditor({ lineup, allNames, sn, fieldN, initial, onSave }) {
-  const [field, setField] = useState(lineup?.onPitch || []);
-  const [gk, setGk] = useState(lineup?.goalkeeper || '');
+// lineup: d'on es parteix · compareTo: contra què es marca qui entra i qui surt
+// (en editar un canvi, l'alineació d'abans) · onChange: mode incrustat, sense
+// botó ni Enter propis (dins de l'editor d'un gol)
+function LineupEditor({ lineup, compareTo = lineup, allNames, sn, fieldN, initial, onSave, onChange, saveLabel = 'Desar canvi' }) {
+  const [field, setFieldRaw] = useState(lineup?.onPitch || []);
+  const [gk, setGkRaw] = useState(lineup?.goalkeeper || '');
+  const setField = (fn) => setFieldRaw(f => { const v = typeof fn === 'function' ? fn(f) : fn; onChange?.({ goalkeeper: gk, onPitch: v }); return v; });
+  const setGk = (n) => { setGkRaw(n); onChange?.({ goalkeeper: n, onPitch: field.filter(x => x !== n) }); };
   const bench = allNames.filter(n => !field.includes(n) && n !== gk);
-  const entering = lineup ? field.filter(n => !lineup.onPitch.includes(n)) : [];
-  const leaving  = lineup ? lineup.onPitch.filter(n => !field.includes(n)) : [];
+  const entering = compareTo ? field.filter(n => !compareTo.onPitch.includes(n)) : [];
+  const leaving  = compareTo ? compareTo.onPitch.filter(n => !field.includes(n)) : [];
   const ok = gk && field.length > 0 && field.length <= fieldN;
-  const save = () => ok && onSave({ goalkeeper: gk, onPitch: field });
-  useKeys({ enter: save }, [field.join('|'), gk]);
+  const save = () => ok && onSave?.({ goalkeeper: gk, onPitch: field });
+  useKeys(onChange ? {} : { enter: save }, [field.join('|'), gk, !!onChange]);
   return <>
     {initial && <p className="text-[11px] text-sky-400">Alineació inicial: es desa al 00:00.</p>}
     <div className="flex items-center gap-2">
@@ -276,8 +283,166 @@ function LineupEditor({ lineup, allNames, sn, fieldN, initial, onSave }) {
         {leaving.length > 0 && <>surt <b className="text-[#E06B5E]">{leaving.map(sn).join(', ')}</b></>}
       </p>
     )}
-    <div className="flex gap-2"><Btn tone="gold" k="↵" onClick={save} disabled={!ok}>Desar canvi</Btn></div>
+    {!onChange && <div className="flex gap-2"><Btn tone="gold" k="↵" onClick={save} disabled={!ok}>{saveLabel}</Btn></div>}
   </>;
+}
+
+// Minut editable: a mà o "on és ara el vídeo"
+function TimeField({ t, setT, now }) {
+  const [txt, setTxt] = useState(t);
+  useEffect(() => setTxt(t), [t]);
+  const valid = !!normTime(txt);
+  return (
+    <div className="flex items-center gap-2">
+      <input value={txt} onChange={e => { setTxt(e.target.value); const n = normTime(e.target.value); if (n) setT(n); }}
+        className={`w-20 bg-[#111] border rounded-lg px-2 py-1.5 text-sm font-mono text-white outline-none ${valid ? 'border-white/15 focus:border-[#E5C07B]/50' : 'border-[#C0392B]/60'}`}/>
+      <button onClick={() => setT(now)}
+        className="flex-1 px-2 py-1.5 rounded-lg border text-[11px] font-bold bg-white/5 border-white/10 text-gray-300 hover:text-white">
+        ⏱ On és el vídeo ({now})
+      </button>
+    </div>
+  );
+}
+
+// ── Editar el que ja hi ha apuntat ───────────────────────────────
+function EditDialog({ dlg, ctx, subs, onSave, onCancel, now }) {
+  const { allNames, sn, fieldN } = ctx;
+  const [t, setT] = useState(normTime(dlg.item.time) || '00:00');
+  useKeys({ escape: onCancel }, []);
+  const head = (icon, label, color) => (
+    <div className="flex items-center justify-between">
+      <p className="text-sm font-black" style={{ color }}>{icon} {label}</p>
+      <span className="text-[10px] text-gray-500">editant</span>
+    </div>
+  );
+  const cancel = <button onClick={onCancel} className="w-full text-[11px] text-gray-500 hover:text-white py-1">Cancel·lar <span className="font-mono">Esc</span></button>;
+
+  if (dlg.kind === 'editFinal') {
+    return (
+      <div className="space-y-3">
+        {head('🏁', 'Final del partit', '#9CA3AF')}
+        <TimeField t={t} setT={setT} now={now}/>
+        <EnterKey fn={() => onSave({ time: t })}/>
+        <div className="flex gap-2"><Btn tone="gold" k="↵" onClick={() => onSave({ time: t })}>Desar</Btn></div>
+        {cancel}
+      </div>
+    );
+  }
+
+  if (dlg.kind === 'editCanvi') {
+    const s = dlg.item;
+    const others = subs.filter(x => x !== s);
+    const prev = lineupAt(others, normTime(s.time) === '00:00' ? null : t) ;
+    const lineup = { goalkeeper: s.goalkeeper, onPitch: s.onPitch.filter(p => p !== s.goalkeeper) };
+    return (
+      <div className="space-y-3">
+        {head('🔄', 'Canvi', ACTION.canvi.color)}
+        <TimeField t={t} setT={setT} now={now}/>
+        <p className="text-[10px] text-gray-500">Verd = entra · vermell = surt, comparat amb l'alineació d'abans d'aquest canvi.</p>
+        <LineupEditor lineup={lineup} compareTo={prev} allNames={allNames} sn={sn} fieldN={fieldN}
+          saveLabel="Desar canvi" onSave={(l) => onSave({ time: t, ...l })}/>
+        {cancel}
+      </div>
+    );
+  }
+
+  // Gol
+  return <GoalEditor goal={dlg.item} t={t} setT={setT} now={now} ctx={ctx} subs={subs} onSave={onSave} cancel={cancel} head={head}/>;
+}
+
+function GoalEditor({ goal, t, setT, now, ctx, subs, onSave, cancel, head }) {
+  const { allNames, sn, fieldN } = ctx;
+  const favor = goal.type === 'favor';
+  const [scorer, setScorer] = useState(goal.scorer || '');
+  const [assist, setAssist] = useState(goal.assist || null);
+  const [notes, setNotes] = useState(goal.notes || '');
+  const [manual, setManual] = useState(!!goal._manual);
+  const [own, setOwn] = useState({ goalkeeper: goal.goalkeeper || '', onPitch: goal.onPitch || [] });
+  const auto = lineupAt(subs, t);
+  const lineup = manual ? own : (auto || own);
+  const pick = lineup.onPitch.length ? lineup.onPitch : allNames;
+  const save = () => onSave({
+    time: t, scorer, assist, notes, _manual: manual,
+    goalkeeper: lineup.goalkeeper, onPitch: lineup.onPitch,
+  });
+  return (
+    <div className="space-y-3">
+      {head(favor ? '⚽' : '❌', favor ? 'Gol a favor' : 'Gol en contra', favor ? '#10B981' : '#E06B5E')}
+      <TimeField t={t} setT={setT} now={now}/>
+
+      {favor && <>
+        <p className="text-[11px] text-gray-400">Golejador</p>
+        <PlayerGrid names={pick} sn={sn} selected={scorer ? [scorer] : []} keys={false}
+          onPick={n => { setScorer(n); if (assist === n) setAssist(null); }}/>
+        <p className="text-[11px] text-gray-400">Assistència <span className="text-gray-600">(clica-la un altre cop per treure-la)</span></p>
+        <PlayerGrid names={pick.filter(n => n !== scorer)} sn={sn} selected={assist ? [assist] : []} keys={false}
+          onPick={n => setAssist(a => (a === n ? null : n))}/>
+      </>}
+
+      {!manual && auto ? (
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-emerald-400">✓ Alineació del canvi de les {auto.time}</span>
+            <button onClick={() => { setOwn(auto); setManual(true); }} className="text-[10px] text-gray-500 hover:text-white underline shrink-0">editar a mà</button>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1 leading-snug">🧤 {sn(auto.goalkeeper)} · {auto.onPitch.map(sn).join(', ')}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2">
+            <span className="text-[11px] text-amber-400">{auto ? `Editada a mà (el canvi de les ${auto.time} diu una altra cosa)` : 'Sense canvis en aquest minut: tria-la a mà'}</span>
+            {auto && <button onClick={() => setManual(false)} className="text-[10px] text-gray-400 hover:text-white underline shrink-0">↻ la del canvi</button>}
+          </div>
+          <LineupEditor lineup={own} allNames={allNames} sn={sn} fieldN={fieldN} onChange={setOwn}/>
+        </div>
+      )}
+
+      <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Nota (opcional)"
+        className="w-full bg-[#111] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-600 focus:border-[#E5C07B]/40 outline-none"/>
+      <EnterKey fn={save}/>
+      <div className="flex gap-2"><Btn tone="gold" k="↵" onClick={save} disabled={favor && !scorer}>Desar gol</Btn></div>
+      {cancel}
+    </div>
+  );
+}
+
+// Franja de tot el partit sota el vídeo: gols i canvis al seu minut.
+// Clicar la franja hi salta; clicar un gol hi salta i l'obre per editar.
+function MatchStrip({ duration, vt, offset, goals, subs, onSeek, onEdit, sn }) {
+  const ref = useRef(null);
+  const pos = (t) => (toSec(t) ?? 0) + offset;
+  const end = Math.max(duration, ...goals.map(g => pos(g.time)), ...subs.map(s => pos(s.time)), 60);
+  const x = (sec) => `${Math.min(100, Math.max(0, (sec / end) * 100))}%`;
+  const click = (e) => {
+    const r = ref.current.getBoundingClientRect();
+    onSeek(((e.clientX - r.left) / r.width) * end);
+  };
+  return (
+    <div>
+      <div ref={ref} onClick={click} className="relative h-9 rounded-lg bg-[#141414] border border-white/8 cursor-pointer">
+        {subs.map((s, i) => s._isBreak
+          ? <span key={'f' + i} title={`Final · ${normTime(s.time)}`} className="absolute top-1 text-[10px] -translate-x-1/2" style={{ left: x(pos(s.time)) }}>🏁</span>
+          : <span key={'s' + i} title={`Canvi · ${normTime(s.time)}`} className="absolute top-1.5 bottom-1.5 w-px bg-[#A78BFA]/45" style={{ left: x(pos(s.time)) }}/>)}
+        {goals.map((g, i) => {
+          const fav = g.type === 'favor';
+          return (
+            <button key={'g' + i} onClick={(e) => { e.stopPropagation(); onSeek(pos(g.time) - 3); onEdit(g); }}
+              title={`${normTime(g.time) || g.time} · ${fav ? `gol d'en ${sn(g.scorer)}` : 'gol en contra'}`}
+              className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full border flex items-center justify-center text-[9px] hover:scale-125 transition-transform"
+              style={{ left: x(pos(g.time)),
+                background: fav ? 'rgba(16,185,129,0.25)' : 'rgba(192,57,43,0.25)',
+                borderColor: (g.onPitch || []).length ? (fav ? '#10B981' : '#E06B5E') : '#F59E0B' }}>
+              {fav ? '⚽' : '✕'}
+            </button>
+          );
+        })}
+        <span className="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none" style={{ left: x(vt) }}/>
+      </div>
+      <p className="text-[9px] text-gray-600 mt-1">
+        ⚽ a favor · ✕ en contra · <span className="text-[#A78BFA]">|</span> canvi · vora <span className="text-amber-400">taronja</span> = gol sense alineació · clica un gol per editar-lo
+      </p>
+    </div>
+  );
 }
 
 // ── Pantalla ──────────────────────────────────────────────────────
@@ -306,6 +471,7 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
   const playerRef = useRef(null);
   const [vt, setVt] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [dur, setDur] = useState(0);
   useEffect(() => {
     if (!ytId) return;
     let dead = false;
@@ -328,6 +494,8 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
       if (!p?.getCurrentTime) return;
       const t = p.getCurrentTime() || 0;
       setVt(t);
+      const d = p.getDuration?.() || 0;
+      if (d) setDur(d);
       if (++ticks % 10 === 0 && t > 0) {
         try { localStorage.setItem(`${draftKey}:pos`, String(t)); } catch { /* res */ }
       }
@@ -429,13 +597,40 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
   };
   const onSave = (d) => { save(dlg, d); close(true); };
 
+  // Editar el que ja hi ha: el vídeo salta al moment i es queda aturat, i es
+  // desa sobre el mateix canvi o gol (no se n'afegeix un altre a sobre)
+  const openEdit = (kind, item) => {
+    document.activeElement?.blur?.();
+    p()?.pauseVideo?.();
+    seekTo((toSec(item.time) ?? 0) + offset - 3);
+    setDlg({ kind, item, was: false, id: Date.now() });
+  };
+  const saveEdit = (d) => {
+    const { kind, item } = dlg;
+    upd(m => {
+      if (kind === 'editCanvi')
+        m.subs = [...m.subs.filter(x => x !== item),
+          { ...item, time: d.time, goalkeeper: d.goalkeeper, onPitch: [...d.onPitch], _isBreak: false }].sort(bySec);
+      else if (kind === 'editFinal')
+        m.subs = [...m.subs.filter(x => x !== item), { ...item, time: d.time }].sort(bySec);
+      else if (kind === 'editGol')
+        m.goals = m.goals.map(g => (g === item ? { ...g, ...d } : g)).sort(bySec);
+      return m;
+    });
+    document.activeElement?.blur?.();
+    setDlg(null);
+  };
+
   // Tecles globals (amb el diàleg tancat)
   useEffect(() => {
     const h = (e) => {
-      if (dlg || isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+      // Editant es pot seguir movent el vídeo per mirar la jugada
+      if (dlg && !dlg.kind.startsWith('edit')) return;
       if (e.key === ' ') { e.preventDefault(); toggle(); return; }
       if (e.key === 'ArrowLeft')  { e.preventDefault(); seek(e.shiftKey ? -15 : -5); return; }
       if (e.key === 'ArrowRight') { e.preventDefault(); seek(e.shiftKey ? 15 : 5); return; }
+      if (dlg) return;
       const a = ACTIONS.find(x => x.key === e.key.toLowerCase());
       if (a) { e.preventDefault(); open(a.kind); }
     };
@@ -449,19 +644,22 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
     const ss = [...subs].sort(bySec);
     ss.forEach((s, i) => {
       const del = () => upd(m => ({ ...m, subs: m.subs.filter(x => x !== s) }));
-      if (s._isBreak) { out.push({ t: s.time, icon: '🏁', text: 'Final del partit', del }); return; }
+      if (s._isBreak) { out.push({ t: s.time, icon: '🏁', text: 'Final del partit', del, edit: () => openEdit('editFinal', s) }); return; }
+      const edit = () => openEdit('editCanvi', s);
       const field = s.onPitch.filter(x => x !== s.goalkeeper);
       const prev = ss.slice(0, i).reverse().find(x => !x._isBreak);
-      if (!prev) { out.push({ t: s.time, icon: '📋', text: `Alineació: 🧤 ${sn(s.goalkeeper)} · ${field.map(sn).join(', ')}`, del }); return; }
+      if (!prev) { out.push({ t: s.time, icon: '📋', text: `Alineació: 🧤 ${sn(s.goalkeeper)} · ${field.map(sn).join(', ')}`, del, edit }); return; }
       const pf = prev.onPitch.filter(x => x !== prev.goalkeeper);
       const inn = field.filter(x => !pf.includes(x)), outp = pf.filter(x => !field.includes(x));
       const gkTxt = prev.goalkeeper !== s.goalkeeper ? ` · 🧤 ${sn(s.goalkeeper)}` : '';
-      out.push({ t: s.time, icon: '🔄', text: `${inn.length ? 'Entra ' + inn.map(sn).join(', ') : ''}${inn.length && outp.length ? ' · ' : ''}${outp.length ? 'surt ' + outp.map(sn).join(', ') : ''}${gkTxt}` || 'Canvi', del });
+      out.push({ t: s.time, icon: '🔄', text: `${inn.length ? 'Entra ' + inn.map(sn).join(', ') : ''}${inn.length && outp.length ? ' · ' : ''}${outp.length ? 'surt ' + outp.map(sn).join(', ') : ''}${gkTxt}` || 'Canvi', del, edit });
     });
     (match.goals || []).forEach(g => out.push({
       t: g.time, icon: g.type === 'favor' ? '⚽' : '❌',
       text: g.type === 'favor' ? `Gol d'en ${sn(g.scorer)}${g.assist ? ` · assist. ${sn(g.assist)}` : ''}` : `Gol en contra${g.notes ? ' · ' + g.notes : ''}`,
       del: () => upd(m => ({ ...m, goals: m.goals.filter(x => x !== g) })),
+      edit: () => openEdit('editGol', g),
+      warn: !(g.onPitch || []).length,
     }));
     const evDel = (key, pl, ev) => () => upd(m => {
       const map = { ...m[key] };
@@ -556,6 +754,8 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
             <span className="flex-1"/>
             <span className="text-[10px] text-gray-600 hidden xl:inline">Espai: play · ←/→: 5 s (Maj: 15 s)</span>
           </div>
+          <MatchStrip duration={dur} vt={vt} offset={offset} goals={match.goals || []} subs={subs}
+            onSeek={seekTo} onEdit={(g) => openEdit('editGol', g)} sn={sn}/>
           <div className="rounded-lg border border-white/8 bg-[#141414] px-3 py-2 text-[11px]">
             {lu
               ? <span className="text-gray-400">Al camp <span className="text-gray-600">(des del {lu.time})</span>: 🧤 <b className="text-emerald-400">{sn(lu.goalkeeper)}</b> · {lu.onPitch.map(sn).join(', ')}
@@ -564,7 +764,7 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
           </div>
           <div className="rounded-xl border border-white/8 bg-[#141414]">
             <p className="px-3 py-2 text-[11px] font-bold text-gray-400 border-b border-white/5">
-              Apuntat ({items.length}) <span className="font-normal text-gray-600">· clica un minut per anar-hi</span>
+              Apuntat ({items.length}) <span className="font-normal text-gray-600">· clica el minut per anar-hi, i un canvi o un gol per editar-lo</span>
             </p>
             <ul className="divide-y divide-white/5">
               {items.map((it, i) => (
@@ -572,7 +772,13 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
                   <button onClick={() => seekTo((toSec(it.t) ?? 0) + offset - 3)}
                     className="font-mono text-[11px] text-[#E5C07B] hover:underline w-11 shrink-0 text-left">{normTime(it.t) || it.t}</button>
                   <span className="shrink-0">{it.icon}</span>
-                  <span className="text-xs text-gray-300 truncate flex-1">{it.text}</span>
+                  {it.edit
+                    ? <button onClick={it.edit} title="Editar"
+                        className="text-xs text-gray-300 truncate flex-1 text-left hover:text-white">
+                        {it.text}{it.warn && <span className="ml-1.5 text-amber-400">· sense alineació</span>}
+                        <span className="ml-1.5 text-gray-600 opacity-0 group-hover:opacity-100">✎</span>
+                      </button>
+                    : <span className="text-xs text-gray-300 truncate flex-1">{it.text}</span>}
                   <button onClick={it.del} title="Esborrar"
                     className="text-gray-700 hover:text-[#E06B5E] text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                 </li>
@@ -585,7 +791,9 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
         {/* Accions o diàleg */}
         <div className="min-h-0 overflow-y-auto border-l border-white/10 bg-[#121212] p-4">
           {dlg
-            ? <Dialog key={dlg.id} dlg={dlg} ctx={ctx} onSave={onSave} onCancel={() => close(true)}/>
+            ? dlg.kind.startsWith('edit')
+              ? <EditDialog key={dlg.id} dlg={dlg} ctx={ctx} subs={subs} now={now} onSave={saveEdit} onCancel={() => setDlg(null)}/>
+              : <Dialog key={dlg.id} dlg={dlg} ctx={ctx} onSave={onSave} onCancel={() => close(true)}/>
             : <div className="space-y-3">
                 <p className="text-[11px] text-gray-500">Cada botó agafa el minut del vídeo i l'atura mentre tries.</p>
                 <div className="grid grid-cols-2 gap-2">

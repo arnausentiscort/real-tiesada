@@ -367,6 +367,9 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 - **Mode partit** (`admin/LiveLogger.jsx`): apuntar mirant el vídeo de YouTube. Cada
   botó agafa el minut del vídeo; tecles G E X P R A C T M F, 1–9 per triar jugador.
   Esborrany a `localStorage` (`rt:live:<id>`), s'esborra en pujar
+  Clicar un canvi, un gol o el final de la llista l'edita **sobre si mateix** (no
+  n'afegeix un altre): minut ("on és el vídeo"), golejador, assistència i alineació.
+  Franja sota el vídeo amb els gols i canvis al seu minut; vora taronja = gol sense alineació
 - `videoOffset` (opcional, en segons) = on comença el partit dins del vídeo. Els salts
   de la crònica el tenen en compte. Sense el camp, el vídeo i el partit van junts
 - Funcions de temps compartides a `admin/matchTime.js` (`normTime`, `toSec`, `lineupAt`)
