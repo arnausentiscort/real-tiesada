@@ -409,8 +409,10 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
   const [dlg, setDlg] = useState(null);
   const open = (kind) => {
     if (kind === 'final') {
+      // Sempre amb confirmació: un final per error deixava sense alineació tot
+      // el que s'apuntava després
       const has = subs.some(s => s._isBreak);
-      if (has && !window.confirm(`Ja hi ha un final marcat. El moc al ${now}?`)) return;
+      if (!window.confirm(has ? `Ja hi ha un final marcat. El moc al ${now}?` : `Marcar el final del partit al ${now}?`)) return;
       upd(m => ({ ...m, subs: [...(m.subs || []).filter(s => !s._isBreak), { time: now, goalkeeper: '', onPitch: [], _isBreak: true }].sort(bySec) }));
       return;
     }

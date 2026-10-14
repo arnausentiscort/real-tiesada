@@ -1241,11 +1241,19 @@ export default function AdminPanel({ onClose }) {
   const handlePreview = () => {
     // Sense resultat escrit, el treu dels gols apuntats (mode partit)
     let m = match;
+    // Gols sense alineació (creats fora del formulari, p. ex. d'apuntamelo o
+    // des del mode partit): la del canvi vigent. Els editats a mà no es toquen.
+    const filled = (m.goals || []).map(g => {
+      if (g._manual || (g.onPitch || []).length) return g;
+      const a = lineupAt(m.subs, g.time);
+      return a ? { ...g, goalkeeper: g.goalkeeper || a.goalkeeper, onPitch: a.onPitch } : g;
+    });
+    if (filled.some((g, i) => g !== m.goals[i])) m = { ...m, goals: filled };
     if (!(m.result || '').trim() && (m.goals || []).length) {
       const gf = m.goals.filter(g => g.type === 'favor').length;
       m = { ...m, result: `${gf} - ${m.goals.length - gf}` };
-      setMatch(m);
     }
+    if (m !== match) setMatch(m);
     const id = isEdit ? m._id : makeId();
     setNewId(id);
     setGeneratedCode(buildMatchCode(m, id));

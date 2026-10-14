@@ -1,9 +1,11 @@
 // Jornada 5 · 13/10/2026 · Inafumaybeben 6-2 Real Tiesada
-// Marcador i golejadors d'apuntamelo.com (partit 380449), només amb el minut.
-// Els nostres hi surten com a #22 Francisco M. i #2 Martí C.: Paco Montero i
-// Coro pel dorsal. A la J3 apuntamelo es va equivocar de golejadors: pendent
-// de confirmar.
-// Pendent: alineacions i canvis, porters, assistències, accions i final.
+// Marcador i golejadors d'apuntamelo.com (partit 380449), només amb el minut;
+// canvis, accions i aturades de l'Arnau amb el mode partit. Acaba al 48:22.
+// Golejadors nostres: #22 i #2 a apuntamelo → Paco Montero i Coro pel dorsal.
+// Apuntamelo marca "27'" el gol que al vídeo ve del penal del 25:45: el seu
+// minut N vol dir de (N-1):00 a (N-1):59. Amb això, l'1', el 27', el 29' i el
+// 45' tenen l'alineació segura; al 17', 23', 31' i 48' hi cau un canvi dins
+// del minut i falten els segons per saber qui hi era.
 export default {
   id: "s3-j5-inafumaybeben",
   jornada: "Jornada 5",
@@ -12,47 +14,100 @@ export default {
   date: "13 Oct 2026",
   youtubeId: "E-5-KSM_zqs",
   vimeoId: null,
-  idealMinutesPerPlayer: null,
-  savesManual: {},
-  shots: {},
-  keyPasses: {},
+  idealMinutesPerPlayer: 26,
+  savesManual: { "Joan Ribes": 3 },
+  shots: {
+    "Serginho":      [{ time: "05:08", onTarget: false }, { time: "28:58", onTarget: true }, { time: "48:09", onTarget: false }],
+    "Marc Farreras": [{ time: "12:35", onTarget: false }],
+    "Ivan Mico":     [{ time: "15:23", onTarget: false }],
+    "Roi Seoane":    [{ time: "20:47", onTarget: true }],
+    "Chengzhi Li":   [{ time: "21:55", onTarget: true }, { time: "36:03", onTarget: false }],
+    "Arnau Sentis":  [{ time: "27:15", onTarget: true }, { time: "32:06", onTarget: true }],
+    "Roger Miro":    [{ time: "34:14", onTarget: true }],
+    "Joan Medina":   [{ time: "39:47", onTarget: false }],
+    "Pau Ibañez":    [{ time: "41:18", onTarget: true }, { time: "48:11", onTarget: true }],
+  },
+  keyPasses: {
+    "Chengzhi Li":   [{ time: "15:23" }],
+    "Marc Farreras": [{ time: "20:47" }],
+    "Lluc":          [{ time: "21:55" }],
+    "Ivan Mico":     [{ time: "34:14" }, { time: "39:47" }],
+    "Roger Miro":    [{ time: "36:03" }],
+  },
   dribbles: {},
   events: {
-    substitutions: [],
+    substitutions: [
+      { time: "00:00", goalkeeper: "Joan Ribes", onPitch: ["Roi Seoane","Pau Ibañez","Roger Miro","Coro","Paco Montero","Serginho"] },
+      { time: "07:23", goalkeeper: "Joan Ribes", onPitch: ["Roi Seoane","Roger Miro","Coro","Paco Montero","Serginho","Arnau Sentis"] },
+      { time: "09:03", goalkeeper: "Joan Ribes", onPitch: ["Roi Seoane","Roger Miro","Paco Montero","Serginho","Arnau Sentis","Lluc"] },
+      { time: "09:48", goalkeeper: "Joan Ribes", onPitch: ["Roi Seoane","Roger Miro","Serginho","Arnau Sentis","Ivan Mico","Marc Farreras"] },
+      { time: "11:27", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Serginho","Arnau Sentis","Ivan Mico","Marc Farreras","Joan Medina"] },
+      { time: "12:16", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Arnau Sentis","Ivan Mico","Marc Farreras","Joan Medina","Chengzhi Li"] },
+      { time: "15:17", goalkeeper: "Joan Ribes", onPitch: ["Arnau Sentis","Ivan Mico","Marc Farreras","Joan Medina","Chengzhi Li","Lluc"] },
+      { time: "16:45", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Marc Farreras","Joan Medina","Chengzhi Li","Lluc","Pau Ibañez"] },
+      { time: "19:21", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Joan Medina","Chengzhi Li","Lluc","Pau Ibañez","Roi Seoane"] },
+      { time: "22:52", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Joan Medina","Lluc","Pau Ibañez","Roi Seoane","Paco Montero"] },
+      { time: "23:49", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Lluc","Roi Seoane","Paco Montero","Coro","Serginho"] },
+      { time: "24:05", goalkeeper: "Joan Ribes", onPitch: ["Roi Seoane","Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis"] },
+      { time: "30:49", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis","Ivan Mico"] },
+      { time: "33:18", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Coro","Serginho","Roger Miro","Ivan Mico","Marc Farreras"] },
+      { time: "33:43", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Serginho","Roger Miro","Ivan Mico","Marc Farreras","Lluc"] },
+      { time: "35:05", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Roger Miro","Ivan Mico","Marc Farreras","Lluc","Chengzhi Li"] },
+      { time: "36:11", goalkeeper: "Joan Ribes", onPitch: ["Paco Montero","Ivan Mico","Marc Farreras","Lluc","Chengzhi Li","Joan Medina"] },
+      { time: "36:59", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Paco Montero","Roger Miro","Chengzhi Li","Ivan Mico"] },
+      { time: "39:20", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Roger Miro","Chengzhi Li","Ivan Mico","Pau Ibañez"] },
+      { time: "40:24", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Ivan Mico","Pau Ibañez","Paco Montero"] },
+      { time: "40:47", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Ivan Mico","Pau Ibañez","Coro"] },
+      { time: "40:59", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho"] },
+      { time: "42:00", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho","Arnau Sentis"] },
+      { time: "45:13", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Chengzhi Li","Pau Ibañez","Serginho","Arnau Sentis","Ivan Mico"] },
+      { time: "46:07", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Pau Ibañez","Serginho","Arnau Sentis","Ivan Mico","Roger Miro"] },
+      { time: "47:32", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Serginho","Arnau Sentis","Ivan Mico","Roger Miro","Marc Farreras"] },
+      { time: "48:22", goalkeeper: null, onPitch: [], _isBreak: true },
+    ],
     cards: [],
     goals: [
-      { time: "01:00", type: "contra", goalkeeper: null,
+      { time: "01:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Al primer minut. Jorge D. #3." },
+        onPitch: ["Roi Seoane","Pau Ibañez","Roger Miro","Coro","Paco Montero","Serginho"],
+        notes: "Al primer minut. Jorge D. #3." },
 
-      { time: "17:00", type: "contra", goalkeeper: null,
+      { time: "17:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: [], notes: "Brais M. #81." },
 
-      { time: "23:00", type: "contra", goalkeeper: null,
+      { time: "23:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: [], notes: "Lorenzo C. #9." },
 
-      { time: "27:00", type: "favor", scorer: "Paco Montero", assist: null, goalkeeper: null,
+      { time: "27:00", type: "favor", scorer: "Paco Montero", assist: null, goalkeeper: "Joan Ribes",
+        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+        onPitch: ["Roi Seoane","Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis"],
+        notes: "De penal." },
+
+      { time: "29:00", type: "contra", goalkeeper: "Joan Ribes",
+        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+        onPitch: ["Roi Seoane","Paco Montero","Coro","Serginho","Roger Miro","Arnau Sentis"],
+        notes: "Jorge D. #3, el segon seu." },
+
+      { time: "31:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: [], notes: "" },
 
-      { time: "29:00", type: "contra", goalkeeper: null,
+      { time: "45:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Jorge D. #3, el segon seu." },
+        onPitch: ["Lluc","Chengzhi Li","Pau Ibañez","Coro","Serginho","Arnau Sentis"],
+        notes: "Alvaro M. #41." },
 
-      { time: "31:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: null,
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "" },
-
-      { time: "45:00", type: "contra", goalkeeper: null,
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Alvaro M. #41." },
-
-      { time: "48:00", type: "contra", goalkeeper: null,
+      { time: "48:00", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: [], notes: "Brais M. #81, MVP del partit." },
     ],
-    retransmissio: [],
+    retransmissio: [
+      { time: "01:44", type: "clip", text: "Intenten un xut des del mig del camp", players: ["Roi Seoane", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=101s", photo: null, photoHover: null },
+      { time: "25:45", type: "clip", text: "PENAAAL", players: ["Paco Montero"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=1542s", photo: null, photoHover: null },
+      { time: "33:39", type: "bona", text: "Es mata sol", players: ["Serginho"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=2016s", photo: null, photoHover: null },
+      { time: "36:59", type: "dolenta", text: "Penal a en Medina que no xiulen", players: ["Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=2216s", photo: null, photoHover: null },
+    ],
   },
 };
