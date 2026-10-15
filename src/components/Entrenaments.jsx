@@ -6,11 +6,19 @@ import { goTo } from '../router.js';
 
 const MODE_LABEL = { fs5: 'Sala 5v5', f7: 'Futbol 7', f11: 'Futbol 11' };
 
+const SECTIONS = [
+  { id: 'defensa', label: 'Defensa',           icon: '🛡️', cats: ['defensa', 'pressio'] },
+  { id: 'atac',    label: 'Atac',              icon: '⚡', cats: ['atac'] },
+  { id: 'abp',     label: 'Jugades assajades', icon: '🎯', cats: ['abp'] },
+];
+const sectionOf = (d) => SECTIONS.find(sec => sec.cats.includes(d.category))?.id || 'defensa';
+
 function DrillCard({ drill, onOpen, onDelete }) {
   const cat = DRILL_CATEGORIES[drill.category] || DRILL_CATEGORIES.pressio;
   return (
     <button onClick={() => onOpen(drill)}
-      className="text-left bg-[#1E1E1E] border border-white/5 rounded-2xl p-3.5 hover:border-[#E5C07B]/30 hover:bg-[#232323] transition-all group w-full">
+      className={`text-left bg-[#1E1E1E] border rounded-2xl p-3.5 hover:border-[#E5C07B]/40 hover:bg-[#232323] transition-all group w-full ${
+        drill.featured ? 'border-[#E5C07B]/35 shadow-[0_0_0_1px_rgba(229,192,123,0.08)]' : 'border-white/5'}`}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs px-2 py-0.5 rounded-lg font-bold"
           style={{ background: `${cat.color}22`, color: cat.color }}>
@@ -18,6 +26,7 @@ function DrillCard({ drill, onOpen, onDelete }) {
         </span>
         <span className="text-[10px] text-gray-600 font-bold">{MODE_LABEL[drill.mode]}</span>
         {drill.custom && <span className="text-[10px] text-[#E5C07B]/70 font-bold">· pròpia</span>}
+        {drill.featured && <span className="text-[10px] text-[#E5C07B] font-black">★ clau</span>}
         <span className="flex-1"/>
         {drill.custom && onDelete && (
           <span role="button" tabIndex={0}
@@ -48,7 +57,12 @@ export default function Entrenaments({ drillId = null }) {
     () => [...custom.map(d => ({ ...d, custom: true })), ...DRILLS],
     [custom]
   );
-  const list = cat === 'all' ? all : all.filter(d => d.category === cat);
+  // Dins de cada secció, les destacades primer
+  const bySection = SECTIONS.map(sec => ({
+    ...sec,
+    items: all.filter(d => sectionOf(d) === sec.id)
+      .sort((a, b) => Number(!!b.featured) - Number(!!a.featured)),
+  })).filter(sec => sec.items.length && (cat === 'all' || cat === sec.id));
 
   // La jugada oberta viu a la URL (#/tactica/<id>), així es pot enviar pel grup
   const open = drillId ? all.find(d => d.id === drillId) : null;
@@ -138,12 +152,11 @@ export default function Entrenaments({ drillId = null }) {
             cat === 'all' ? 'bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}>
           Totes
         </button>
-        {Object.entries(DRILL_CATEGORIES).map(([key, c]) => (
-          <button key={key} onClick={() => setCat(key)}
+        {SECTIONS.map(sec => (
+          <button key={sec.id} onClick={() => setCat(sec.id)}
             className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${
-              cat === key ? 'border-transparent' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}
-            style={cat === key ? { background: `${c.color}22`, color: c.color } : undefined}>
-            {c.icon} {c.label}
+              cat === sec.id ? 'bg-[#E5C07B]/15 border-[#E5C07B]/30 text-[#E5C07B]' : 'bg-white/5 border-white/10 text-gray-500 hover:text-white'}`}>
+            {sec.icon} {sec.label}
           </button>
         ))}
       </div>
@@ -152,11 +165,19 @@ export default function Entrenaments({ drillId = null }) {
         Daurat = moviment · blanc = passada · vermell = pressió · verd = conducció · verd ple = cap a l'espai · vermell discontinu = no
       </p>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {list.map(d => <DrillCard key={d.id} drill={d} onOpen={openDrill} onDelete={handleDelete}/>)}
-      </div>
+      {bySection.map(sec => (
+        <section key={sec.id} className="space-y-2 pt-1">
+          <h3 className="flex items-center gap-2 text-sm font-black text-white uppercase tracking-wider">
+            <span>{sec.icon}</span>{sec.label}
+            <span className="flex-1 h-px bg-white/10 ml-1"/>
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {sec.items.map(d => <DrillCard key={d.id} drill={d} onOpen={openDrill} onDelete={handleDelete}/>)}
+          </div>
+        </section>
+      ))}
 
-      {list.length === 0 && (
+      {bySection.length === 0 && (
         <p className="text-xs text-gray-700 italic py-8 text-center">Cap jugada en aquesta categoria.</p>
       )}
     </div>

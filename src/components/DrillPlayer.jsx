@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback, memo } from 'react';
 import { VB_W, VB_H, F, pct2svg, FieldLines } from './pitch/FieldLines.jsx';
 import { buildTimeline } from '../drills.js';
 
@@ -14,6 +14,12 @@ const ARROW_STYLE = {
   no:    { color: '#E06B5E', dash: '5 4',   width: 2.4 },  // moviment que no: et trepitges amb un company
 };
 const SPACE = '#3DDC84';
+
+// "Ningú es mou *fins a la passada*": el que va entre asteriscs, subratllat
+const emphasize = (txt = '') => txt.split(/(\*[^*]+\*)/g).map((part, i) =>
+  part.startsWith('*') && part.endsWith('*')
+    ? <span key={i} className="text-[#E5C07B] underline decoration-[#E5C07B] decoration-2 underline-offset-4">{part.slice(1, -1)}</span>
+    : part);
 
 const ease = k => (k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3) / 2);
 const lerp  = (a, b, k) => a + (b - a) * k;
@@ -170,13 +176,42 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
   const vy1 = drill.view ? Math.min(VB_H, F.y + (drill.view.y[1] / 100) * F.h + 26) : VB_H;
   const vbH = vy1 - vy0;
   const tk = drill.tokenScale || 1;
+  // Al mòbil, amb la frase a dalt i la barra de navegació a baix, el camp a
+  // una alçada fixa quedava tallat per sota segons el telèfon: es mesura
+  // l'espai que hi ha de debò entre el camp i la barra (64 px + marge)
+  const pitchRef = useRef(null);
+  const [fitH, setFitH] = useState(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (!pitchRef.current || window.innerWidth >= 768) { setFitH(null); return; }
+      const top = pitchRef.current.getBoundingClientRect().top + window.scrollY;
+      setFitH(Math.max(260, window.innerHeight - top - 76));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [drill?.id]);
 
   return (
     <div className="space-y-2.5" tabIndex={0} onKeyDown={onKey} style={{ outline: 'none' }}>
 
+      {/* Narració de la fase: gran, curta i DAMUNT del camp. Sota quedava fora de
+          la pantalla del mòbil i ningú la llegia. *així* = subratllat en daurat */}
+      <div className="rounded-xl bg-[#E5C07B]/[0.07] border-l-4 border-[#E5C07B] px-3.5 py-3 min-h-[64px] flex items-center">
+        <div className="flex items-baseline gap-3 w-full">
+          <span className="shrink-0 text-[11px] font-black text-[#E5C07B]/70 tabular-nums">
+            {frame.display + 1}/{steps.length}
+          </span>
+          <p key={frame.display} className="text-gray-300 text-lg md:text-xl font-black text-white leading-tight animate-fade-in">
+            {emphasize(step?.note)}
+          </p>
+        </div>
+      </div>
+
       {/* Camp */}
       <div className="rounded-xl overflow-hidden bg-[#0a0a0a] border border-white/5 mx-auto w-full"
-        style={{ maxWidth: `calc(min(62vh, 600px) * ${VB_W / vbH})` }}>
+        ref={pitchRef}
+        style={{ maxWidth: fitH ? `${fitH * VB_W / vbH}px` : `calc(min(62vh, 600px) * ${VB_W / vbH})` }}>
         <svg viewBox={`0 ${vy0} ${VB_W} ${vbH}`} width="100%" className="block select-none">
           <defs>
             {Object.entries(ARROW_STYLE).map(([k, st]) => (
@@ -198,8 +233,8 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
           {/* Amb zoom, el nom de sota quedava darrere del porter i el 1P */}
           {!drill.view && <text x={F.x+F.w/2} y={F.y+F.h-10} textAnchor="middle" fontSize={9}
             fill="rgba(229,192,123,0.35)" fontWeight="bold" letterSpacing={1}>REAL TIESADA</text>}
-          <text x={F.x+F.w/2} y={F.y+18} textAnchor="middle" fontSize={9}
-            fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>
+          {!drill.view && <text x={F.x+F.w/2} y={F.y+18} textAnchor="middle" fontSize={9}
+            fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>}
 
           {/* Espais lliures (rectangles), en % del camp */}
           {(step?.rects || []).map((r, i) => {
@@ -248,16 +283,6 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
           <circle cx={ballSvg.x} cy={ballSvg.y} r={BALL_R * tk} fill="#fff" fillOpacity={0.95}
             stroke="#FFD700" strokeWidth={1.2} filter="url(#drillBallGlow)"/>
         </svg>
-      </div>
-
-      {/* Narració de la fase */}
-      <div className="bg-[#121212] border border-[#E5C07B]/15 rounded-xl p-3">
-        <div className="flex items-start gap-2.5">
-          <span className="shrink-0 w-6 h-6 rounded-lg bg-[#E5C07B]/15 text-[#E5C07B] text-[11px] font-black flex items-center justify-center">
-            {frame.display + 1}
-          </span>
-          <p className="text-[12px] md:text-[13px] text-gray-300 leading-snug">{step?.note}</p>
-        </div>
       </div>
 
       {/* Controls */}

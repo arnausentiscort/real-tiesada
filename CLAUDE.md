@@ -325,7 +325,14 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
   (x 0=esquerra 100=dreta, y 0=porteria rival 100=porteria pròpia)
 - `buildTimeline()` converteix els steps en segments (`dur` de transició + `hold` de pausa)
 - `DrillPlayer` interpola posicions amb easing i mostra les fletxes del step d'origen
-- Fletxes: `run` daurat · `pass` blanc discontinu · `press` grana · `carry` verd
+- Fletxes: `run` daurat · `pass` blanc discontinu · `press` grana · `carry` verd ·
+  `opt` verd ple (cap a un espai) · `no` vermell discontinu (moviment que no)
+- **Frase de cada fase**: curta, damunt del camp i gran; `*així*` surt subratllat en daurat.
+  L'Arnau: "les frases de sota no les llegeix ningú" → mai paràgrafs
+- Per fase: `rects` (espais en verd), `roles` (canviar noms de rol quan canvia el sistema).
+  Per jugada: `view: { y: [des de, fins a] }` (enquadrament), `tokenScale` (fitxes petites),
+  `featured: true` (★ clau, primer de la seva secció)
+- Catàleg en seccions: **Defensa** (`defensa` + `pressio`), **Atac**, **Jugades assajades** (`abp`)
 - Gravadora (botó 🎥 a la pissarra): captura fases → `withAutoArrows()` genera les fletxes soles
 - Jugades gravades → `localStorage` (`rt:drills:v1`, a `src/drillStore.js`).
   Per publicar-les a tot l'equip: exportar JSON i enganxar-lo a `DRILLS` de `src/drills.js`
