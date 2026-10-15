@@ -149,7 +149,7 @@ export default function Entrenaments({ drillId = null }) {
       </div>
 
       <p className="text-[11px] text-gray-600 leading-snug">
-        Daurat = moviment · blanc = passada · vermell = pressió · verd = conducció
+        Daurat = moviment · blanc = passada · vermell = pressió · verd = conducció · verd ple = cap a l'espai · vermell discontinu = no
       </p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">

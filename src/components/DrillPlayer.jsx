@@ -10,7 +10,10 @@ const ARROW_STYLE = {
   pass:  { color: '#ffffff', dash: '7 5',   width: 2.2 },
   press: { color: '#C0392B', dash: null,    width: 3   },
   carry: { color: '#7BC0A0', dash: '3 4',   width: 2.4 },
+  opt:   { color: '#3DDC84', dash: null,    width: 2.4 },  // moviment possible cap a un espai
+  no:    { color: '#E06B5E', dash: '5 4',   width: 2.4 },  // moviment que no: et trepitges amb un company
 };
+const SPACE = '#3DDC84';
 
 const ease = k => (k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3) / 2);
 const lerp  = (a, b, k) => a + (b - a) * k;
@@ -71,10 +74,14 @@ const Arrow = memo(function Arrow({ a, idx, dim }) {
   );
 });
 
-const OwnToken = memo(function OwnToken({ pos, role, hot }) {
+// k: escala de la fitxa (drill.tokenScale). Al córner amb zoom, les fitxes de
+// mida normal tapaven les posicions
+const scaleAt = (x, y, k) => (k === 1 ? undefined : `translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})`);
+
+const OwnToken = memo(function OwnToken({ pos, role, hot, k = 1 }) {
   const { x, y } = pct2svg(pos);
   return (
-    <g>
+    <g transform={scaleAt(x, y, k)}>
       <circle cx={x} cy={y+2.5} r={TR+2} fill="rgba(0,0,0,0.4)"/>
       {hot && (
         <circle cx={x} cy={y} r={TR+5} fill="none" stroke="#E5C07B" strokeWidth={2} opacity={0.6}>
@@ -89,10 +96,10 @@ const OwnToken = memo(function OwnToken({ pos, role, hot }) {
   );
 });
 
-const RivalToken = memo(function RivalToken({ pos, idx }) {
+const RivalToken = memo(function RivalToken({ pos, idx, k = 1 }) {
   const { x, y } = pct2svg(pos);
   return (
-    <g>
+    <g transform={scaleAt(x, y, k)}>
       <circle cx={x} cy={y+2.5} r={TR+2} fill="rgba(0,0,0,0.4)"/>
       <circle cx={x} cy={y} r={TR} fill="#C0392B" fillOpacity={0.9} stroke="#ff6b6b" strokeWidth={1.6} strokeOpacity={0.7}/>
       <text x={x} y={y} textAnchor="middle" dominantBaseline="central"
@@ -162,6 +169,7 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
   const vy0 = drill.view ? Math.max(0, F.y + (drill.view.y[0] / 100) * F.h - 6) : 0;
   const vy1 = drill.view ? Math.min(VB_H, F.y + (drill.view.y[1] / 100) * F.h + 26) : VB_H;
   const vbH = vy1 - vy0;
+  const tk = drill.tokenScale || 1;
 
   return (
     <div className="space-y-2.5" tabIndex={0} onKeyDown={onKey} style={{ outline: 'none' }}>
@@ -187,10 +195,26 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
           <rect x={F.x} y={F.y} width={F.w} height={F.h} fill="#1c3d1c"/>
           <FieldLines mode={drill.mode}/>
 
-          <text x={F.x+F.w/2} y={F.y+F.h-10} textAnchor="middle" fontSize={9}
-            fill="rgba(229,192,123,0.35)" fontWeight="bold" letterSpacing={1}>REAL TIESADA</text>
+          {/* Amb zoom, el nom de sota quedava darrere del porter i el 1P */}
+          {!drill.view && <text x={F.x+F.w/2} y={F.y+F.h-10} textAnchor="middle" fontSize={9}
+            fill="rgba(229,192,123,0.35)" fontWeight="bold" letterSpacing={1}>REAL TIESADA</text>}
           <text x={F.x+F.w/2} y={F.y+18} textAnchor="middle" fontSize={9}
             fill="rgba(192,57,43,0.35)" fontWeight="bold" letterSpacing={1}>RIVAL</text>
+
+          {/* Espais lliures (rectangles), en % del camp */}
+          {(step?.rects || []).map((r, i) => {
+            const a = pct2svg([r.x0, r.y0]), b = pct2svg([r.x1, r.y1]);
+            return (
+              <g key={`r-${frame.display}-${i}`} opacity={frame.moving ? 0.3 : 0.9}>
+                <rect x={a.x} y={a.y} width={b.x - a.x} height={b.y - a.y} rx={4}
+                  fill="rgba(61,220,132,0.12)" stroke={SPACE} strokeWidth={1.6} strokeDasharray="6 4"/>
+                {r.label && (
+                  <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 + 3} textAnchor="middle" fontSize={8.5} fontWeight="bold"
+                    fill="#9ff0c2" stroke="#121212" strokeWidth={3} paintOrder="stroke">{r.label}</text>
+                )}
+              </g>
+            );
+          })}
 
           {/* Zona destacada */}
           {step?.zone && (() => {
@@ -215,13 +239,13 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
             <Arrow key={`a-${frame.display}-${i}`} a={a} idx={i} dim={frame.moving}/>
           ))}
 
-          {(frame.rivals || []).map((p, i) => <RivalToken key={`r${i}`} pos={p} idx={i}/>)}
+          {(frame.rivals || []).map((p, i) => <RivalToken key={`r${i}`} pos={p} idx={i} k={tk}/>)}
           {(frame.own || []).map((p, i) => (
-            <OwnToken key={`o${i}`} pos={p} role={drill.roles[i] || String(i+1)}
-              hot={!frame.moving && (step?.highlight || []).includes(i)}/>
+            <OwnToken key={`o${i}`} pos={p} role={(step?.roles || drill.roles)[i] || String(i+1)}
+              hot={!frame.moving && (step?.highlight || []).includes(i)} k={tk}/>
           ))}
 
-          <circle cx={ballSvg.x} cy={ballSvg.y} r={BALL_R} fill="#fff" fillOpacity={0.95}
+          <circle cx={ballSvg.x} cy={ballSvg.y} r={BALL_R * tk} fill="#fff" fillOpacity={0.95}
             stroke="#FFD700" strokeWidth={1.2} filter="url(#drillBallGlow)"/>
         </svg>
       </div>
