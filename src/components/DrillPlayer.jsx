@@ -157,13 +157,19 @@ export default function DrillPlayer({ drill, autoPlay = false }) {
 
   if (!drill) return null;
 
+  // drill.view.y = [des de, fins a] en % del camp: les jugades d'estratègia
+  // passen totes a l'àrea i amb el camp sencer quedaven en un racó il·legible
+  const vy0 = drill.view ? Math.max(0, F.y + (drill.view.y[0] / 100) * F.h - 6) : 0;
+  const vy1 = drill.view ? Math.min(VB_H, F.y + (drill.view.y[1] / 100) * F.h + 26) : VB_H;
+  const vbH = vy1 - vy0;
+
   return (
     <div className="space-y-2.5" tabIndex={0} onKeyDown={onKey} style={{ outline: 'none' }}>
 
       {/* Camp */}
       <div className="rounded-xl overflow-hidden bg-[#0a0a0a] border border-white/5 mx-auto w-full"
-        style={{ maxWidth: `calc(min(62vh, 600px) * ${VB_W / VB_H})` }}>
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} width="100%" className="block select-none">
+        style={{ maxWidth: `calc(min(62vh, 600px) * ${VB_W / vbH})` }}>
+        <svg viewBox={`0 ${vy0} ${VB_W} ${vbH}`} width="100%" className="block select-none">
           <defs>
             {Object.entries(ARROW_STYLE).map(([k, st]) => (
               <marker key={k} id={`ah-${k}`} viewBox="0 0 10 10" refX="8" refY="5"

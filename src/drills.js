@@ -5,6 +5,7 @@
 //   steps[]: { note, hold?, dur?, own[[x,y]], rivals[[x,y]], ball[x,y],
 //              arrows?: [{ from:[x,y], to:[x,y], type:'run'|'pass'|'press'|'carry', label? }],
 //              zone?: { cx, cy, r, label? }, highlight?: [idx] }
+//   view?: { y: [des de, fins a] }  → enquadra només aquesta franja del camp (%)
 // Totes les coordenades són % del camp: x 0=esquerra 100=dreta,
 // y 0=porteria RIVAL (dalt), 100=porteria PRÒPIA (baix).
 //
@@ -238,6 +239,112 @@ export const DRILLS = [
           { from: [62,50], to: [66,28], type: 'carry', label: 'la contra' },
           { from: [63,42], to: [58,28], type: 'run', label: 'acompanya' },
         ],
+      },
+    ],
+  },
+
+  {
+    // Proposta d'en Joan Ribes (àudios del 14/10): defensar els córners com al
+    // futsal, per zones i no per persona. Posicions del seu dibuix, passades a
+    // l'àrea de futbol 7.
+    id: 'corner-defensa-zona',
+    title: 'Córner en contra — en zona',
+    category: 'abp',
+    mode: 'f7',
+    view: { y: [66, 100] },
+    roles: ['POR', '1P', 'Z1', 'Z2', '2P', 'MIG', 'LLI'],
+    summary: 'Per zones, no per persona: cinc espais fixos i un lliure. Per l\'altre costat, igual reflectit.',
+    steps: [
+      {
+        note: 'Cinc zones fixes i un lliure. Ningú persegueix ningú.',
+        hold: 3400,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[34,82],[46,80],[58,81],[68,86],[50,74],[50,6]],
+        ball:   [3,97.5],
+        highlight: [6],
+      },
+      {
+        note: 'Ells entren corrent; nosaltres no sortim de la zona.',
+        dur: 1300, hold: 2600,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [3,97.5],
+      },
+      {
+        note: 'Al primer pal: és del 1P, i fora sense pensar.',
+        dur: 1000, hold: 2800,
+        own:    [[53,98.2],[42,97.8],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33.5,96.6],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [40.3,97.3],
+        highlight: [1],
+        zone: { cx: 41, cy: 97, r: 7, label: 'primer pal' },
+        arrows: [{ from: [3,97.5], to: [40,97.2], type: 'pass', label: 'primer pal' }],
+      },
+      {
+        note: 'Una altra.',
+        dur: 700, hold: 700,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [3,97.5],
+      },
+      {
+        note: 'Passada enrere, les que ens han matat: el MIG surt al que la rep.',
+        dur: 1100, hold: 3200,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[45,84],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [48.6,80.5],
+        highlight: [5],
+        zone: { cx: 47, cy: 80.5, r: 7, label: 'passada enrere' },
+        arrows: [
+          { from: [3,97.5], to: [47.5,80.8], type: 'pass', label: 'enrere' },
+          { from: [40,87.5], to: [44.8,84.3], type: 'press', label: 'surt' },
+        ],
+      },
+      {
+        note: 'Una altra.',
+        dur: 700, hold: 700,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [3,97.5],
+      },
+      {
+        note: 'Al mig: els dos del mig, al que entra.',
+        dur: 1100, hold: 3000,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[47.5,93],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[47.8,88.3],[66,89],[48,79],[50,6]],
+        ball:   [45.6,90.7],
+        highlight: [2,3],
+        zone: { cx: 45, cy: 92, r: 8, label: 'el mig' },
+        arrows: [
+          { from: [3,97.5], to: [45.5,90.8], type: 'pass', label: 'al mig' },
+          { from: [50,93.5], to: [47.8,92.8], type: 'press' },
+        ],
+      },
+      {
+        note: 'Una altra.',
+        dur: 700, hold: 700,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [3,97.5],
+      },
+      {
+        note: 'Llarga al segon pal: és del 2P.',
+        dur: 1200, hold: 3000,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[64,96.3],[40,87.5],[57,87.5]],
+        rivals: [[3,97.5],[33,96.5],[32,88.5],[48.5,88.5],[66.5,92],[48,79],[50,6]],
+        ball:   [62.3,94.8],
+        highlight: [4],
+        zone: { cx: 64, cy: 95, r: 7, label: 'segon pal' },
+        arrows: [{ from: [3,97.5], to: [62.3,94.8], type: 'pass', label: 'llarga' }],
+      },
+      {
+        note: 'El lliure llegeix: va on ells deixin un home sol.',
+        dur: 1300, hold: 3400,
+        own:    [[53,98.2],[43,98.6],[40,93.5],[50,93.5],[62,93.5],[40,87.5],[61,84]],
+        rivals: [[3,97.5],[33,96.5],[63,79.5],[48.5,88.5],[66,89],[48,79],[50,6]],
+        ball:   [3,97.5],
+        highlight: [6],
+        arrows: [{ from: [57,87.5], to: [60.8,84.3], type: 'run', label: 'on calgui' }],
       },
     ],
   },
