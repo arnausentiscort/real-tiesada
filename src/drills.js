@@ -372,16 +372,18 @@ export const DRILLS = [
         ],
       },
       {
-        note: 'Els dos del mig *no es busquen*.',
+        note: 'Els dos del mig *poden rotar posicions* sense trepitjar-se.',
         dur: 500, hold: 3200,
         roles: ['POR', 'DFE', 'DFD', 'DE', 'MCE', 'MCD', 'DD'],
         own:    [[50,91.2],[13.3,78.8],[84.1,80.3],[8.6,18],[34.3,51.6],[65.7,51.1],[81.6,20.2]],
         rivals: [[49.9,5.9],[82,13.6],[8.6,11.7],[36,45.6],[64.6,44.7],[15.9,72.2],[82.1,74.4]],
         ball:   [50,94],
         highlight: [4,5],
+        // Un puja i l'altre baixa, cadascú pel seu costat: es canvien l'altura
+        // sense creuar-se ni ocupar el mateix espai
         arrows: [
-          { from: [38,51.6], to: [47,51.6], type: 'no' },
-          { from: [62,54], to: [53,54], type: 'no' },
+          { from: [34.3,48.5], to: [37,39], type: 'opt', label: 'puja' },
+          { from: [65.7,54.5], to: [63,64], type: 'opt', label: 'baixa' },
         ],
       },
       {
