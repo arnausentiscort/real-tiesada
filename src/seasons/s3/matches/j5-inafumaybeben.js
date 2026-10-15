@@ -17,7 +17,7 @@ export default {
   youtubeId: "E-5-KSM_zqs",
   vimeoId: null,
   idealMinutesPerPlayer: 26,
-  savesManual: { "Joan Ribes": 3 },
+  savesManual: { "Joan Ribes": 5 },
   shots: {
     "Serginho":      [{ time: "05:08", onTarget: false }, { time: "28:58", onTarget: true }, { time: "48:09", onTarget: false }],
     "Marc Farreras": [{ time: "12:35", onTarget: false }],
@@ -109,9 +109,14 @@ export default {
     ],
     retransmissio: [
       { time: "01:44", type: "clip", text: "Intenten un xut des del mig del camp", players: ["Roi Seoane", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=101s", photo: null, photoHover: null },
+      { time: "05:27", type: "bona", text: "Aturada d'en Ribes", players: ["Joan Ribes"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=324s", photo: null, photoHover: null },
+      { time: "15:42", type: "bona", text: "Aturada d'en Ribes", players: ["Joan Ribes"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=939s", photo: null, photoHover: null },
+      { time: "17:09", type: "bona", text: "Aturada d'en Ribes", players: ["Joan Ribes"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=1026s", photo: null, photoHover: null },
       { time: "25:45", type: "clip", text: "PENAAAL", players: ["Paco Montero"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=1542s", photo: null, photoHover: null },
+      { time: "33:22", type: "bona", text: "Aturada d'en Ribes", players: ["Joan Ribes"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=1999s", photo: null, photoHover: null },
       { time: "33:39", type: "bona", text: "Es mata sol", players: ["Serginho"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=2016s", photo: null, photoHover: null },
       { time: "36:59", type: "dolenta", text: "Penal a en Medina que no xiulen", players: ["Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=2216s", photo: null, photoHover: null },
+      { time: "37:03", type: "bona", text: "Aturada d'en Ribes", players: ["Joan Ribes"], videoUrl: "https://www.youtube.com/watch?v=E-5-KSM_zqs&t=2220s", photo: null, photoHover: null },
     ],
   },
 };
