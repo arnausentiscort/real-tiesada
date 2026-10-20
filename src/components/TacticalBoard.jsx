@@ -410,6 +410,19 @@ export default function TacticalBoard() {
     if (!d || d.type!=='own' || d.pid!==e.pointerId) return;
     const { idx } = d;
     fieldDrag.current = null;
+    // Tocar sense arrossegar: surt del camp (si tenia suplent, entra ell)
+    const { x: ux, y: uy } = toSvg(e.clientX, e.clientY);
+    if (!recording && Math.hypot(ux - d.ox - d.from.x, uy - d.oy - d.from.y) < 3) {
+      setFieldPlayers(prev => {
+        const out = prev[idx].name;
+        return prev
+          .map((p, i) => i === idx ? (p.sub && !prev.some(q => q.name === p.sub) ? { ...p, name: p.sub, sub: undefined, ...d.from } : null) : p)
+          .filter(Boolean)
+          .map(p => p.sub === out ? { ...p, sub: undefined } : p)
+          .filter(p => p.name || p.sub);
+      });
+      return;
+    }
     if (subMode) {
       setFieldPlayers(prev => {
         const me = prev[idx];
@@ -427,7 +440,7 @@ export default function TacticalBoard() {
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
     });
-  }, [rivalPos, adaptiveR, subMode]);
+  }, [rivalPos, adaptiveR, subMode, recording, toSvg]);
 
   // ── Drag rivals ──────────────────────────────────────────────────
   const onRivDown = useCallback((idx, e) => {
