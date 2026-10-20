@@ -394,10 +394,13 @@ export default function TacticalBoard() {
     return next.map((p, i) => !prev[i].sub && p.name && moved.has(p.name) ? { ...p, name: null, sub: p.name } : p);
   });
   const resolveDrop = asSub => {
-    const { name, idx } = pendingDrop;
-    setFieldPlayers(prev => prev.map((p, i) => i !== idx ? p
-      : asSub ? { ...p, sub: name }
-      : { ...p, name, sub: p.sub === name ? undefined : p.sub }));
+    const { name, idx, fromIdx } = pendingDrop;
+    setFieldPlayers(prev => {
+      if (asSub) return prev.map((p, i) => i === idx ? { ...p, sub: name } : p);
+      // Dos del camp: es canvien de posició (cada suplent es queda a la seva casella)
+      if (fromIdx != null) return prev.map((p, i) => i === idx ? { ...p, name } : i === fromIdx ? { ...p, name: prev[idx].name } : p);
+      return prev.map((p, i) => i === idx ? { ...p, name, sub: p.sub === name ? undefined : p.sub } : p);
+    });
     setPendingDrop(null);
   };
   const removeSub = idx => setFieldPlayers(prev => prev[idx].name
@@ -502,6 +505,16 @@ export default function TacticalBoard() {
       });
       return;
     }
+    {
+      const me = fieldPlayers[idx];
+      let ti = -1, td = adaptiveR * 2.2;
+      fieldPlayers.forEach((p, i) => { const dd = Math.hypot(p.x - me.x, p.y - me.y); if (i !== idx && p.name && dd < td) { td = dd; ti = i; } });
+      if (ti !== -1 && me.name) {
+        setFieldPlayers(prev => prev.map((p, i) => i === idx ? { ...p, ...d.from } : p));
+        setPendingDrop({ name: me.name, idx: ti, fromIdx: idx, cx: e.clientX, cy: e.clientY });
+        return;
+      }
+    }
     setFieldPlayers(prev => {
       const others = [...prev.filter((_,i) => i!==idx), ...rivalPos];
       const moved = resolveCollisions(prev[idx], others, minDist);
@@ -509,7 +522,7 @@ export default function TacticalBoard() {
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
     });
-  }, [rivalPos, adaptiveR, subMode, recording, toSvg]);
+  }, [rivalPos, adaptiveR, subMode, recording, toSvg, fieldPlayers]);
 
   // ── Drag rivals ──────────────────────────────────────────────────
   const onRivDown = useCallback((idx, e) => {
@@ -974,13 +987,26 @@ export default function TacticalBoard() {
               </p>
               <button onClick={() => resolveDrop(false)}
                 className="w-full mb-1.5 px-3 py-2 rounded-xl bg-[#E5C07B]/15 border border-[#E5C07B]/40 text-left hover:bg-[#E5C07B]/25 transition-colors">
-                <span className="block text-sm font-black text-[#E5C07B]">🔁 Substituir</span>
-                <span className="block text-[10px] text-gray-400">Entra {short(pendingDrop.name)}, {short(target)} va a la banqueta</span>
+                {pendingDrop.fromIdx != null ? (
+                  <>
+                    <span className="block text-sm font-black text-[#E5C07B]">⇄ Intercanviar posicions</span>
+                    <span className="block text-[10px] text-gray-400">{short(pendingDrop.name)} i {short(target)} es canvien de lloc</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="block text-sm font-black text-[#E5C07B]">🔁 Substituir</span>
+                    <span className="block text-[10px] text-gray-400">Entra {short(pendingDrop.name)}, {short(target)} va a la banqueta</span>
+                  </>
+                )}
               </button>
               <button onClick={() => resolveDrop(true)}
                 className="w-full px-3 py-2 rounded-xl bg-[#6FA8FF]/10 border border-[#6FA8FF]/40 text-left hover:bg-[#6FA8FF]/20 transition-colors">
                 <span className="block text-sm font-black text-[#6FA8FF]">🔵 Suplent</span>
-                <span className="block text-[10px] text-gray-400">{short(pendingDrop.name)} queda de suplent de {short(target)}</span>
+                <span className="block text-[10px] text-gray-400">
+                  {pendingDrop.fromIdx != null
+                    ? `Quan surti ${short(target)}, ${short(pendingDrop.name)} passa a la seva posició`
+                    : `${short(pendingDrop.name)} queda de suplent de ${short(target)}`}
+                </span>
               </button>
             </div>
           </div>

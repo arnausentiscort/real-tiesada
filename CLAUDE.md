@@ -325,7 +325,7 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 - Repartiment per rols: `position` + `altPositions` del roster (Split 3). Canviar atac/defensa
   usa `assignSlots` (rol + proximitat; el porter sempre a porteria)
 - Deixar anar un de la banqueta damunt d'un titular (o amb el camp ple) obre la tria
-  **Substituir / Suplent** amb el titular marcat
+  **Substituir / Suplent** amb el titular marcat. Titular damunt d'un altre titular (sense mode 🔵): **Intercanviar posicions / Suplent**
 
 ---
 
