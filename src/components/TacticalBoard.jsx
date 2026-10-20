@@ -130,7 +130,7 @@ const Ball = memo(({ ball, onDown, onMove, onUp }) => {
 });
 
 const SUB_COLOR = '#6FA8FF';
-const SubToken = ({ p, info, adaptiveR, others, onRemove }) => {
+const SubToken = ({ p, info, adaptiveR, others, moves, onRemove }) => {
   const r = adaptiveR * 0.62;
   // Sota del titular; si hi ha algú o surt del camp, dalt o a un costat
   const spots = [
@@ -140,7 +140,7 @@ const SubToken = ({ p, info, adaptiveR, others, onRemove }) => {
   const free = ([x, y]) => y + r + 2 < F.y + F.h && y - r > F.y && x - r > F.x && x + r + 40 < F.x + F.w + 30
     && others.every(o => Math.hypot(o.x - x, o.y - y) > adaptiveR + r + 12);
   const [cx, cy] = spots.find(free) || spots[0];
-  const label = (info?.shirtName || p.sub.split(' ')[0]).slice(0, 9);
+  const label = (moves ? '↕ ' : '') + (info?.shirtName || p.sub.split(' ')[0]).slice(0, 9);
   const clipId = `sub-${p.sub.replace(/\W/g, '')}`;
   return (
     <g style={{ cursor: 'pointer' }} onClick={onRemove}>
@@ -264,10 +264,10 @@ export default function TacticalBoard() {
   const captureFrame = () => {
     setFrames(prev => [...prev, {
       note: '',
-      own:    fieldPlayers.map(p => svg2pct(p)),
+      own:    fieldPlayers.filter(p => p.name).map(p => svg2pct(p)),
       rivals: showRivals ? rivalPos.map(p => svg2pct(p)) : [],
       ball:   svg2pct(ball),
-      names:  fieldPlayers.map(p => p.name),
+      names:  fieldPlayers.filter(p => p.name).map(p => p.name),
     }]);
   };
 
@@ -335,8 +335,14 @@ export default function TacticalBoard() {
   const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name || fp.sub === p.name) && !unavailable.includes(p.name));
   const hasSubs = fieldPlayers.some(p => p.sub);
   // Els suplents passen a titulars i els titulars a suplents
-  const swapSubs = () => setFieldPlayers(prev => prev.map(p => p.sub ? { ...p, name: p.sub, sub: p.name } : p));
-  const removeSub = idx => setFieldPlayers(prev => prev.map((p, i) => i === idx ? { ...p, sub: undefined } : p));
+  const swapSubs = () => setFieldPlayers(prev => {
+    const next = prev.map(p => p.sub ? { ...p, name: p.sub, sub: p.name || undefined } : p);
+    const moved = new Set(next.filter((p, i) => prev[i].sub).map(p => p.name));
+    return next.map((p, i) => !prev[i].sub && p.name && moved.has(p.name) ? { ...p, name: null, sub: p.name } : p);
+  });
+  const removeSub = idx => setFieldPlayers(prev => prev[idx].name
+    ? prev.map((p, i) => i === idx ? { ...p, sub: undefined } : p)
+    : prev.filter((_, i) => i !== idx));
 
   const toSvg = useCallback((cx, cy) => {
     const rect = svgRef.current.getBoundingClientRect();
@@ -387,7 +393,7 @@ export default function TacticalBoard() {
     e.currentTarget.setPointerCapture(e.pointerId);
     const { x, y } = toSvg(e.clientX, e.clientY);
     const p = fieldPlayers[idx];
-    fieldDrag.current = { type:'own', idx, pid:e.pointerId, ox:x-p.x, oy:y-p.y };
+    fieldDrag.current = { type:'own', idx, pid:e.pointerId, ox:x-p.x, oy:y-p.y, from: { x: p.x, y: p.y } };
   }, [fieldPlayers, toSvg]);
   
   const onOwnMove = useCallback((idx, e) => {
@@ -404,6 +410,16 @@ export default function TacticalBoard() {
     if (!d || d.type!=='own' || d.pid!==e.pointerId) return;
     const { idx } = d;
     fieldDrag.current = null;
+    if (subMode) {
+      setFieldPlayers(prev => {
+        const me = prev[idx];
+        let ti = -1, td = adaptiveR * 2.2;
+        prev.forEach((p, i) => { const dd = Math.hypot(p.x - me.x, p.y - me.y); if (i !== idx && p.name && dd < td) { td = dd; ti = i; } });
+        if (ti === -1) return prev;
+        return prev.map((p, i) => i === idx ? { ...p, ...d.from } : i === ti ? { ...p, sub: me.name } : p);
+      });
+      return;
+    }
     setFieldPlayers(prev => {
       const others = [...prev.filter((_,i) => i!==idx), ...rivalPos];
       const moved = resolveCollisions(prev[idx], others, minDist);
@@ -411,7 +427,7 @@ export default function TacticalBoard() {
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
     });
-  }, [rivalPos, adaptiveR]);
+  }, [rivalPos, adaptiveR, subMode]);
 
   // ── Drag rivals ──────────────────────────────────────────────────
   const onRivDown = useCallback((idx, e) => {
@@ -625,7 +641,10 @@ export default function TacticalBoard() {
                 <RivalToken key={`r-${i}`} pos={pos} idx={i} onDown={onRivDown} onMove={onRivMove} onUp={onRivUp} adaptiveR={adaptiveR}/>
               ))}
 
-              {fieldPlayers.map((p, i) => (
+              {fieldPlayers.map((p, i) => !p.name ? (
+                <circle key={`e-${i}`} cx={p.x} cy={p.y} r={adaptiveR} fill="rgba(0,0,0,0.25)"
+                  stroke={SUB_COLOR} strokeWidth={1.5} strokeDasharray="3 3"/>
+              ) : (
                 <OwnToken key={`o-${i}-${p.name}`} p={p} idx={i} info={getInfo(p.name)}
                   onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} adaptiveR={adaptiveR} />
               ))}
@@ -633,6 +652,7 @@ export default function TacticalBoard() {
               {fieldPlayers.map((p, i) => p.sub && (
                 <SubToken key={`s-${i}-${p.sub}`} p={p} info={getInfo(p.sub)} adaptiveR={adaptiveR}
                   others={[...fieldPlayers.filter((_, j) => j !== i), ...(showRivals ? rivalPos : [])]}
+                  moves={fieldPlayers.some(fp => fp.name === p.sub)}
                   onRemove={() => removeSub(i)}/>
               ))}
 
@@ -647,7 +667,7 @@ export default function TacticalBoard() {
             </p>
             {subMode && (
               <p className="text-[10px] text-[#6FA8FF] font-bold mb-1.5 leading-tight">
-                Arrossega'l damunt d'un titular: serà el seu suplent. Toca un suplent per treure'l.
+                Arrossega'l (de la banqueta o del camp) damunt d'un titular: serà el seu suplent. Toca un suplent per treure'l.
               </p>
             )}
             <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 overflow-y-auto`}

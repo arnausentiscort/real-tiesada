@@ -316,8 +316,9 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 - Drag banquillo: pointer capture → ghost `position:fixed` → detecta drop sobre SVG via `getBoundingClientRect()`
 - Conversió coords: `((clientX - rect.left) / rect.width) * VB_W`
 - Bottom = nosaltres (y≈630), Top = rival (y≈30)
-- **Suplents** (botó 🔵): arrossegar de la banqueta damunt d'un titular → `sub` del jugador,
+- **Suplents** (botó 🔵): arrossegar de la banqueta (o un altre titular) damunt d'un titular → `sub` del jugador,
   fitxa blava petita al costat. ⇄ Canviar intercanvia titulars i suplents. Tocar un suplent el treu
+  Si el suplent és titular, es mou de casella i la seva queda buida (cercle discontinu) per poder desfer
 
 ---
 
