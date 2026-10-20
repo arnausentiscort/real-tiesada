@@ -60,14 +60,42 @@ const SLOTS_F7 = {
   '3-2-1': ['Porter','Defensa','Defensa','Defensa','Migcampista','Migcampista','Davanter'],
 };
 
-// Cada jugador a una casella de la seva posició; els que sobren omplen la resta
-function arrangeBySlots(names, slots, posOf) {
-  const left = [...names];
-  const out = slots.map(pos => {
-    const i = left.findIndex(n => posOf(n) === pos);
-    return i === -1 ? null : left.splice(i, 1)[0];
+// Cada casella amb algú de la seva posició: primer els del primer grup (els que ja
+// són al camp), per posició principal i després per la que també poden fer
+function arrangeBySlots(groups, slots, rolesOf) {
+  const out = slots.map(() => null);
+  const left = groups.map(g => [...g]);
+  const fill = (group, test) => slots.forEach((pos, si) => {
+    if (out[si]) return;
+    const i = group.findIndex(n => test(rolesOf(n), pos));
+    if (i !== -1) out[si] = group.splice(i, 1)[0];
   });
-  return out.map(n => n ?? left.shift()).filter(Boolean);
+  left.forEach(g => {
+    fill(g, (r, pos) => r[0] === pos);
+    fill(g, (r, pos) => r.includes(pos) && pos !== 'Porter');
+  });
+  const rest = left.flat().filter(n => rolesOf(n)[0] !== 'Porter');
+  return out.map((n, si) => n ?? (slots[si] === 'Porter' ? null : rest.shift()) ?? null);
+}
+
+// Atac / defensa: cada jugador a la casella que li toca pel rol i que té més a prop.
+// El porter mai surt de porteria ni ningú de camp hi entra si hi ha porter
+function assignSlots(players, slots, positions, rolesOf) {
+  const target = positions.map(pct2svg);
+  const cost = (p, si) => {
+    let c = Math.hypot(p.x - target[si].x, p.y - target[si].y) * 0.15;
+    if (!p.name) return c;
+    const [main, ...alt] = rolesOf(p.name);
+    if ((main === 'Porter') !== (slots[si] === 'Porter')) return c + 1000;
+    if (main !== slots[si]) c += alt.includes(slots[si]) ? 40 : 200;
+    return c;
+  };
+  const pairs = [];
+  players.forEach((p, pi) => slots.forEach((_, si) => pairs.push([cost(p, si), pi, si])));
+  pairs.sort((a, b) => a[0] - b[0]);
+  const slotOf = new Map(), used = new Set();
+  pairs.forEach(([, pi, si]) => { if (!slotOf.has(pi) && !used.has(si)) { slotOf.set(pi, si); used.add(si); } });
+  return players.map((p, pi) => slotOf.has(pi) ? { ...p, ...target[slotOf.get(pi)] } : p);
 }
 
 // Atac: tenim la pilota al nostre porter i el rival ens marca damunt (com un 2-2-2)
@@ -79,6 +107,7 @@ const PHASE_F7 = {
     ball: [50,88.5],
   },
   defensa: {
+    slots:  ['Porter','Defensa','Defensa','Migcampista','Migcampista','Davanter','Davanter'],
     own:    [[50,93],[15,55.5],[51,81],[51,54.5],[88,58],[25,26],[75,26]],
     rivals: [[50,5.8],[25,18],[75,18],[14.5,47.5],[51,46.5],[90.6,50.1],[51,73.3]],
     ball: [50,11.5],
@@ -257,14 +286,18 @@ export default function TacticalBoard() {
 
   const fieldPct = m => (m === 'f7' ? FORMATIONS_F7[formation] : DEF_PCT[m]);
 
-  const posOf = name => DATABASE.roster.find(p => p.name === name)?.position;
+  const rolesOf = name => {
+    const p = DATABASE.roster.find(r => r.name === name);
+    return p ? [p.position, ...(p.altPositions || [])] : [];
+  };
   const posF7 = (f, ph = phase) => (ph === 'defensa' ? PHASE_F7.defensa.own : FORMATIONS_F7[f]);
-  const placeF7 = (names, f, ph) => arrangeBySlots(names, SLOTS_F7[f], posOf)
-    .slice(0, 7).map((name, i) => ({ name, ...pct2svg(posF7(f, ph)[i]) }));
+  const slotsF7 = (f, ph = phase) => (ph === 'defensa' ? PHASE_F7.defensa.slots : SLOTS_F7[f]);
+  const placeF7 = (groups, f, ph) => arrangeBySlots(groups, slotsF7(f, ph), rolesOf)
+    .map((name, i) => name && { name, ...pct2svg(posF7(f, ph)[i]) }).filter(Boolean);
   const rivalsFor = (m, ph = phase) => (m === 'f7' ? PHASE_F7[ph].rivals.map(pct2svg) : mkRivals(m));
   const ballFor = (m, ph = phase) => (m === 'f7' ? pct2svg(PHASE_F7[ph].ball) : { x: F.x + F.w / 2, y: F.y + F.h / 2 });
   const buildField = (m, out = []) => m === 'f7'
-    ? placeF7(roster.filter(p => p.status === 'actiu' && !out.includes(p.name)).map(p => p.name), formation)
+    ? placeF7([roster.filter(p => p.status === 'actiu' && !out.includes(p.name)).map(p => p.name)], formation)
     : mkField(m, fieldPct(m)).filter(p => !out.includes(p.name) && !baixaNames.has(p.name));
 
   const [fieldPlayers, setFieldPlayers] = useState(() => buildField(format.id));
@@ -275,6 +308,7 @@ export default function TacticalBoard() {
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
   const [subMode, setSubMode] = useState(false);
+  const [pendingDrop, setPendingDrop] = useState(null);
   const [frames, setFrames]       = useState([]);
   const [showSave, setShowSave]   = useState(false);
   const [preview, setPreview]     = useState(null);
@@ -359,6 +393,13 @@ export default function TacticalBoard() {
     const moved = new Set(next.filter((p, i) => prev[i].sub).map(p => p.name));
     return next.map((p, i) => !prev[i].sub && p.name && moved.has(p.name) ? { ...p, name: null, sub: p.name } : p);
   });
+  const resolveDrop = asSub => {
+    const { name, idx } = pendingDrop;
+    setFieldPlayers(prev => prev.map((p, i) => i !== idx ? p
+      : asSub ? { ...p, sub: name }
+      : { ...p, name, sub: p.sub === name ? undefined : p.sub }));
+    setPendingDrop(null);
+  };
   const removeSub = idx => setFieldPlayers(prev => prev[idx].name
     ? prev.map((p, i) => i === idx ? { ...p, sub: undefined } : p)
     : prev.filter((_, i) => i !== idx));
@@ -386,7 +427,7 @@ export default function TacticalBoard() {
   // Atac ↔ defensa: cada jugador conserva la seva casella i canvia de lloc
   const switchPhase = ph => {
     setPhase(ph);
-    setFieldPlayers(prev => prev.map((p, i) => posF7(formation, ph)[i] ? { ...p, ...pct2svg(posF7(formation, ph)[i]) } : p));
+    setFieldPlayers(prev => assignSlots(prev, slotsF7(formation, ph), posF7(formation, ph), rolesOf));
     setRivalPos(rivalsFor('f7', ph));
     setBall(ballFor('f7', ph));
   };
@@ -396,11 +437,11 @@ export default function TacticalBoard() {
     if (phase !== 'atac') { setPhase('atac'); setRivalPos(rivalsFor('f7', 'atac')); setBall(ballFor('f7', 'atac')); }
     // Primer els que ja són al camp; si falta algú d'una posició, surt de la banqueta
     setFieldPlayers(prev => {
-      const onField = prev.map(p => p.name);
+      const onField = prev.map(p => p.name).filter(Boolean);
       const bench = roster.filter(p => p.status === 'actiu' && !onField.includes(p.name) && !unavailable.includes(p.name)).map(p => p.name);
       const subOf = Object.fromEntries(prev.filter(p => p.sub).map(p => [p.name, p.sub]));
       const subs = Object.values(subOf);
-      return placeF7([...onField, ...bench.filter(n => !subs.includes(n))], f, 'atac')
+      return placeF7([onField, bench.filter(n => !subs.includes(n))], f, 'atac')
         .map(p => subOf[p.name] ? { ...p, sub: subOf[p.name] } : p);
     });
   };
@@ -566,15 +607,16 @@ export default function TacticalBoard() {
       return;
     }
 
-    if (nearIdx !== -1) {
-      setFieldPlayers(prev => prev.map((p,i) => i===nearIdx ? {...p, name} : p));
-    } else if (fieldPlayers.length < MODES[mode].n) {
+    const full = fieldPlayers.filter(p => p.name).length >= MODES[mode].n;
+    if (nearIdx === -1 && !full) {
       setFieldPlayers(prev => [...prev, { name, x, y }]);
-    } else {
-      let ni = 0, nd = Infinity;
-      fieldPlayers.forEach((p,i) => { const dist=Math.hypot(p.x-x,p.y-y); if(dist<nd){nd=dist;ni=i;} });
-      setFieldPlayers(prev => prev.map((p,i) => i===ni ? {...p, name} : p));
+      return;
     }
+    if (nearIdx === -1 || !fieldPlayers[nearIdx].name) {
+      let nd = Infinity;
+      fieldPlayers.forEach((p,i) => { const dist=Math.hypot(p.x-x,p.y-y); if(p.name && dist<nd){nd=dist;nearIdx=i;} });
+    }
+    if (nearIdx !== -1) setPendingDrop({ name, idx: nearIdx, cx: e.clientX, cy: e.clientY });
   };
 
   return (
@@ -707,6 +749,11 @@ export default function TacticalBoard() {
                   moves={fieldPlayers.some(fp => fp.name === p.sub)}
                   onRemove={() => removeSub(i)}/>
               ))}
+
+              {pendingDrop && fieldPlayers[pendingDrop.idx] && (
+                <circle cx={fieldPlayers[pendingDrop.idx].x} cy={fieldPlayers[pendingDrop.idx].y} r={adaptiveR + 7}
+                  fill="none" stroke="#fff" strokeWidth={2.5} strokeDasharray="5 4" className="animate-pulse"/>
+              )}
 
               <Ball ball={ball} onDown={onBallDown} onMove={onBallMove} onUp={onBallUp}/>
             </svg>
@@ -909,6 +956,36 @@ export default function TacticalBoard() {
           </div>
         </div>
       )}
+
+      {pendingDrop && (() => {
+        const target = fieldPlayers[pendingDrop.idx]?.name;
+        const short = n => getInfo(n)?.shirtName || n.split(' ')[0];
+        const left = Math.min(Math.max(pendingDrop.cx - 130, 8), window.innerWidth - 268);
+        // Que no tapi el titular: a sota si és a dalt de la pantalla, a sobre si és a baix
+        const top = pendingDrop.cy < window.innerHeight / 2
+          ? Math.min(pendingDrop.cy + 34, window.innerHeight - 190)
+          : Math.max(pendingDrop.cy - 34 - 175, 8);
+        return (
+          <div className="fixed inset-0 z-[9998]" onClick={() => setPendingDrop(null)}>
+            <div className="absolute w-[260px] bg-[#1E1E1E] border border-white/15 rounded-2xl p-3 shadow-2xl animate-fade-in"
+              style={{ left, top }} onClick={e => e.stopPropagation()}>
+              <p className="text-[11px] text-gray-400 font-bold mb-2 text-center">
+                <span className="text-white">{short(pendingDrop.name)}</span> i <span className="text-white">{short(target)}</span>: què vols fer?
+              </p>
+              <button onClick={() => resolveDrop(false)}
+                className="w-full mb-1.5 px-3 py-2 rounded-xl bg-[#E5C07B]/15 border border-[#E5C07B]/40 text-left hover:bg-[#E5C07B]/25 transition-colors">
+                <span className="block text-sm font-black text-[#E5C07B]">🔁 Substituir</span>
+                <span className="block text-[10px] text-gray-400">Entra {short(pendingDrop.name)}, {short(target)} va a la banqueta</span>
+              </button>
+              <button onClick={() => resolveDrop(true)}
+                className="w-full px-3 py-2 rounded-xl bg-[#6FA8FF]/10 border border-[#6FA8FF]/40 text-left hover:bg-[#6FA8FF]/20 transition-colors">
+                <span className="block text-sm font-black text-[#6FA8FF]">🔵 Suplent</span>
+                <span className="block text-[10px] text-gray-400">{short(pendingDrop.name)} queda de suplent de {short(target)}</span>
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Ghost banquillo */}
       {ghost && (() => {

@@ -322,6 +322,10 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
   Tocar un titular (sense arrossegar) el treu del camp; si tenia suplent, entra ell
 - Futbol 7 arrenca en **2-2-2**. Botó **Atac / Defensa** (`PHASE_F7`): atac = pilota al nostre porter i
   rivals marcant-nos; defensa = sacada del porter rival, ells en 2-3-1 i nosaltres home a home en 2-3-1
+- Repartiment per rols: `position` + `altPositions` del roster (Split 3). Canviar atac/defensa
+  usa `assignSlots` (rol + proximitat; el porter sempre a porteria)
+- Deixar anar un de la banqueta damunt d'un titular (o amb el camp ple) obre la tria
+  **Substituir / Suplent** amb el titular marcat
 
 ---
 
