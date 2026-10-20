@@ -12,7 +12,7 @@ export const HASH_FOR = {
   mvp:           '/mvp',
   heatmap:       '/mapa',
   galeria:       '/galeria',
-  pissarra:      '/tactica',
+  pissarra:      '/tactica/pissarra',
 };
 
 const VIEW_FOR = {

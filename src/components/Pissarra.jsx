@@ -4,8 +4,8 @@ import Entrenaments  from './Entrenaments.jsx';
 import { goTo }      from '../router.js';
 
 const TABS = [
-  { id: 'jugades',  icon: '🎬', label: 'Jugades',  hash: '/tactica'          },
   { id: 'pissarra', icon: '🎯', label: 'Pissarra', hash: '/tactica/pissarra' },
+  { id: 'jugades',  icon: '🎬', label: 'Jugades',  hash: '/tactica'          },
 ];
 
 export default function Pissarra({ tab = 'jugades', drillId = null }) {
