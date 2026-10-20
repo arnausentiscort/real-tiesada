@@ -70,6 +70,21 @@ function arrangeBySlots(names, slots, posOf) {
   return out.map(n => n ?? left.shift()).filter(Boolean);
 }
 
+// Atac: tenim la pilota al nostre porter i el rival ens marca damunt (com un 2-2-2)
+// Defensa: sacada del porter rival, ells en 2-3-1 i nosaltres home a home en 2-3-1:
+// el defensa esquerre del 2-2-2 puja a tapar el seu mig (com la jugada de pressió)
+const PHASE_F7 = {
+  atac: {
+    rivals: [[50,6],[8,15],[92,15],[34,46],[66,46],[14,71],[86,71]],
+    ball: [50,88.5],
+  },
+  defensa: {
+    own:    [[50,93],[15,55.5],[51,81],[51,54.5],[88,58],[25,26],[75,26]],
+    rivals: [[50,5.8],[25,18],[75,18],[14.5,47.5],[51,46.5],[90.6,50.1],[51,73.3]],
+    ball: [50,11.5],
+  },
+};
+
 const DEF_PCT = {
   fs5: [[50,92],[25,75],[75,75],[25,55],[75,55]],
   f7:  FORMATIONS_F7['2-3-1'],
@@ -234,7 +249,8 @@ export default function TacticalBoard() {
   // Mode per defecte derivat de la temporada activa (fs5 a S1/S2, f7 a
   // S3) — ara que consumim useSeason() ja no cal el TODO de la Fase 1c.
   const [mode, setMode] = useState(format.id);
-  const [formation, setFormation] = useState('2-3-1');
+  const [formation, setFormation] = useState('2-2-2');
+  const [phase, setPhase] = useState('atac');
   const [unavailable, setUnavailable] = useState([]);
   const [showConv, setShowConv] = useState(false);
   const [showRivals, setShowRivals] = useState(false);
@@ -242,16 +258,19 @@ export default function TacticalBoard() {
   const fieldPct = m => (m === 'f7' ? FORMATIONS_F7[formation] : DEF_PCT[m]);
 
   const posOf = name => DATABASE.roster.find(p => p.name === name)?.position;
-  const placeF7 = (names, f) => arrangeBySlots(names, SLOTS_F7[f], posOf)
-    .slice(0, 7).map((name, i) => ({ name, ...pct2svg(FORMATIONS_F7[f][i]) }));
+  const posF7 = (f, ph = phase) => (ph === 'defensa' ? PHASE_F7.defensa.own : FORMATIONS_F7[f]);
+  const placeF7 = (names, f, ph) => arrangeBySlots(names, SLOTS_F7[f], posOf)
+    .slice(0, 7).map((name, i) => ({ name, ...pct2svg(posF7(f, ph)[i]) }));
+  const rivalsFor = (m, ph = phase) => (m === 'f7' ? PHASE_F7[ph].rivals.map(pct2svg) : mkRivals(m));
+  const ballFor = (m, ph = phase) => (m === 'f7' ? pct2svg(PHASE_F7[ph].ball) : { x: F.x + F.w / 2, y: F.y + F.h / 2 });
   const buildField = (m, out = []) => m === 'f7'
     ? placeF7(roster.filter(p => p.status === 'actiu' && !out.includes(p.name)).map(p => p.name), formation)
     : mkField(m, fieldPct(m)).filter(p => !out.includes(p.name) && !baixaNames.has(p.name));
 
   const [fieldPlayers, setFieldPlayers] = useState(() => buildField(format.id));
-  const [rivalPos, setRivalPos] = useState(() => mkRivals(format.id));
+  const [rivalPos, setRivalPos] = useState(() => rivalsFor(format.id));
   const [ghost, setGhost] = useState(null);
-  const [ball, setBall] = useState({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
+  const [ball, setBall] = useState(() => ballFor(format.id));
 
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
@@ -352,27 +371,36 @@ export default function TacticalBoard() {
   const switchMode = m => {
     setMode(m);
     setFieldPlayers(buildField(m, unavailable));
-    setRivalPos(mkRivals(m));
+    setRivalPos(rivalsFor(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
-    setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
+    setBall(ballFor(m));
   };
 
   const reset = () => {
     setFieldPlayers(buildField(mode, unavailable));
-    setRivalPos(mkRivals(mode));
+    setRivalPos(rivalsFor(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
-    setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
+    setBall(ballFor(mode));
+  };
+
+  // Atac ↔ defensa: cada jugador conserva la seva casella i canvia de lloc
+  const switchPhase = ph => {
+    setPhase(ph);
+    setFieldPlayers(prev => prev.map((p, i) => posF7(formation, ph)[i] ? { ...p, ...pct2svg(posF7(formation, ph)[i]) } : p));
+    setRivalPos(rivalsFor('f7', ph));
+    setBall(ballFor('f7', ph));
   };
 
   const switchFormation = f => {
     setFormation(f);
+    if (phase !== 'atac') { setPhase('atac'); setRivalPos(rivalsFor('f7', 'atac')); setBall(ballFor('f7', 'atac')); }
     // Primer els que ja són al camp; si falta algú d'una posició, surt de la banqueta
     setFieldPlayers(prev => {
       const onField = prev.map(p => p.name);
       const bench = roster.filter(p => p.status === 'actiu' && !onField.includes(p.name) && !unavailable.includes(p.name)).map(p => p.name);
       const subOf = Object.fromEntries(prev.filter(p => p.sub).map(p => [p.name, p.sub]));
       const subs = Object.values(subOf);
-      return placeF7([...onField, ...bench.filter(n => !subs.includes(n))], f)
+      return placeF7([...onField, ...bench.filter(n => !subs.includes(n))], f, 'atac')
         .map(p => subOf[p.name] ? { ...p, sub: subOf[p.name] } : p);
     });
   };
@@ -555,8 +583,8 @@ export default function TacticalBoard() {
 
         {/* Capçalera */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 mb-3 md:mb-4">
-          <h2 className="text-base md:text-lg font-black text-[#E5C07B]">🎯 Pissarra Tàctica</h2>
-          <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+          <h2 className="text-base md:text-lg font-black text-[#E5C07B] whitespace-nowrap shrink-0">🎯 Pissarra Tàctica</h2>
+          <div className="flex items-center gap-2 flex-wrap md:justify-end">
             <button onClick={() => setShowConv(true)}
               className="px-2.5 md:px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-[11px] md:text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1 flex-shrink-0">
               <span>👥</span> <span className="hidden sm:inline">Convocatòria</span>
@@ -589,6 +617,17 @@ export default function TacticalBoard() {
                 ))}
               </div>
             )}
+            {mode === 'f7' && (
+              <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
+                {[['atac', '⚔️ Atac'], ['defensa', '🛡️ Defensa']].map(([key, label]) => (
+                  <button key={key} onClick={() => switchPhase(key)}
+                    className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
+                      phase === key ? (key === 'atac' ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'bg-[#C0392B]/25 text-[#ff8f85]') : 'text-gray-500 hover:text-white'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <button onClick={() => setSubMode(v => !v)}
               className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
                 subMode
@@ -610,8 +649,8 @@ export default function TacticalBoard() {
               <span>{recording ? '⏺' : '🎥'}</span>
               <span className="hidden sm:inline">{recording ? 'Gravant' : 'Gravar jugada'}</span>
             </button>
-            <button onClick={reset}
-              className="px-2.5 md:px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-[10px] md:text-xs text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+            <button onClick={reset} title="Tornar a començar"
+              className="w-[30px] h-[30px] md:w-[34px] md:h-[34px] flex items-center justify-center bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-sm md:text-base leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
               ↺
             </button>
           </div>
