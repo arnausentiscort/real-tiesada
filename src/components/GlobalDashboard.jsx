@@ -564,9 +564,8 @@ function Sec({ id, title, collapsed, onToggle, children }) {
 export default function GlobalDashboard({ onSelectMatch }) {
   const { db: DATABASE, format, season } = useSeason();
   const stats = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
-  const keeperCounts = format.id === 'f7';
-  const gfList = keeperCounts ? stats.goalsForAll : stats.goalsFor;
-  const gaList = keeperCounts ? stats.goalsAgainstAll : stats.goalsAgainst;
+  const gfList = stats.goalsForAll;
+  const gaList = stats.goalsAgainstAll;
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activeMatchId, setActiveMatchId] = useState(null);
   // Al mòbil les barres per jugador (tres llistes de 13) obertes allargaven

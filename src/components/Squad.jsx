@@ -886,8 +886,7 @@ export default function Squad() {
   const { db: DATABASE, format } = useSeason();
   const stats   = useMemo(() => {
     const st = calcGlobalStats(DATABASE, format);
-    // A futbol 7 el porter també suma els gols a favor i en contra
-    return format.id === 'f7' ? { ...st, goalsFor: st.goalsForAll, goalsAgainst: st.goalsAgainstAll } : st;
+    return { ...st, goalsFor: st.goalsForAll, goalsAgainst: st.goalsAgainstAll };
   }, [DATABASE, format]);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter]     = useState('all');

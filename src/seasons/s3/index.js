@@ -11,6 +11,8 @@ import j5Inafumaybeben from './matches/j5-inafumaybeben.js';
 
 export const DATABASE_S3 = {
   teamName: 'Real Tiesada',
+  // Només el porter titular suma els gols a favor i en contra de quan és a porteria
+  startingKeeper: 'Joan Ribes',
 
   nextMatch: null,
 

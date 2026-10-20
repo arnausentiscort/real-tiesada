@@ -205,9 +205,8 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
     goalsAgainst:  sortDesc(goalsAgainst),
     goalsForGK:    sortDesc(goalsForGK),
     goalsAgainstGK: sortDesc(goalsAgainstGK),
-    // A futbol 7 el porter també suma els gols a favor i en contra de quan és al camp
-    goalsForAll:     sortDesc(Object.fromEntries(names.map(n => [n, goalsFor[n] + goalsForGK[n]]))),
-    goalsAgainstAll: sortDesc(Object.fromEntries(names.map(n => [n, goalsAgainst[n] + goalsAgainstGK[n]]))),
+    goalsForAll:     sortDesc(Object.fromEntries(names.map(n => [n, goalsFor[n] + (n === database.startingKeeper ? goalsForGK[n] : 0)]))),
+    goalsAgainstAll: sortDesc(Object.fromEntries(names.map(n => [n, goalsAgainst[n] + (n === database.startingKeeper ? goalsAgainstGK[n] : 0)]))),
     saves:         sortDesc(saves).filter(([,v]) => v > 0),
     yellowCards:   sortDesc(yellowCards).filter(([,v]) => v > 0),
     shotsTotal:    sortDesc(shotsTotal).filter(([,v]) => v > 0),
