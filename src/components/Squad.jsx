@@ -86,9 +86,12 @@ function calcRating(player, stats) {
 
   let base = 60;
   if (isGK) {
-    base += Math.min(saves * 4, 20);
-    base -= Math.min(conceded * 1.5, 15);
+    // Les aturades pesen més que els gols encaixats: un porter que fa paradones no pot sortir malparat
+    base += 2;
+    base += Math.min(saves * 3, 24);
+    base -= Math.min(conceded * 0.6, 10);
     base += Math.min(mins / 10, 8);
+    if (saves + conceded > 0) base += (saves / (saves + conceded)) * 10;
   } else {
     base += Math.min(goals * 6, 18);
     base += Math.min(assists * 4, 12);
