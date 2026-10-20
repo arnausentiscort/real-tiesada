@@ -129,6 +129,38 @@ const Ball = memo(({ ball, onDown, onMove, onUp }) => {
   );
 });
 
+const SUB_COLOR = '#6FA8FF';
+const SubToken = ({ p, info, adaptiveR, others, onRemove }) => {
+  const r = adaptiveR * 0.62;
+  // Sota del titular; si hi ha algú o surt del camp, dalt o a un costat
+  const spots = [
+    [p.x, p.y + adaptiveR + 14 + r], [p.x, p.y - adaptiveR - 6 - r],
+    [p.x + adaptiveR + r + 6, p.y + r], [p.x - adaptiveR - r - 6, p.y + r],
+  ];
+  const free = ([x, y]) => y + r + 2 < F.y + F.h && y - r > F.y && x - r > F.x && x + r + 40 < F.x + F.w + 30
+    && others.every(o => Math.hypot(o.x - x, o.y - y) > adaptiveR + r + 12);
+  const [cx, cy] = spots.find(free) || spots[0];
+  const label = (info?.shirtName || p.sub.split(' ')[0]).slice(0, 9);
+  const clipId = `sub-${p.sub.replace(/\W/g, '')}`;
+  return (
+    <g style={{ cursor: 'pointer' }} onClick={onRemove}>
+      <circle cx={cx} cy={cy} r={r + 1.5} fill="none" stroke={SUB_COLOR} strokeWidth={1.8}/>
+      <circle cx={cx} cy={cy} r={r} fill={info?.photo ? '#0a0a0a' : 'rgba(111,168,255,0.2)'}/>
+      {info?.photo ? (
+        <>
+          <clipPath id={clipId}><circle cx={cx} cy={cy} r={r}/></clipPath>
+          <image href={`${BASE}${info.photo}`} x={cx - r} y={cy - r} width={r * 2} height={r * 2}
+            clipPath={`url(#${clipId})`} preserveAspectRatio="xMidYMin slice" opacity={0.85}/>
+        </>
+      ) : (
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="bold" fill={SUB_COLOR}>{p.sub[0]}</text>
+      )}
+      <text x={cx + r + 3} y={cy} dominantBaseline="middle" fontSize={7} fontWeight="bold" fill={SUB_COLOR}
+        stroke="#0d1f0d" strokeWidth={2} paintOrder="stroke">{label}</text>
+    </g>
+  );
+};
+
 const OwnToken = memo(({ p, idx, info, onDown, onMove, onUp, adaptiveR }) => {
   const clipId = `cp-${idx}-${p.name.replace(/\s+/g, '')}`;
   return (
@@ -223,6 +255,7 @@ export default function TacticalBoard() {
 
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
+  const [subMode, setSubMode] = useState(false);
   const [frames, setFrames]       = useState([]);
   const [showSave, setShowSave]   = useState(false);
   const [preview, setPreview]     = useState(null);
@@ -299,7 +332,11 @@ export default function TacticalBoard() {
   const minDist = adaptiveR * 2 + 3;
 
   const getInfo = useCallback(name => roster.find(p => p.name === name), [roster]);
-  const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name) && !unavailable.includes(p.name));
+  const benchPlayers = roster.filter(p => !fieldPlayers.some(fp => fp.name === p.name || fp.sub === p.name) && !unavailable.includes(p.name));
+  const hasSubs = fieldPlayers.some(p => p.sub);
+  // Els suplents passen a titulars i els titulars a suplents
+  const swapSubs = () => setFieldPlayers(prev => prev.map(p => p.sub ? { ...p, name: p.sub, sub: p.name } : p));
+  const removeSub = idx => setFieldPlayers(prev => prev.map((p, i) => i === idx ? { ...p, sub: undefined } : p));
 
   const toSvg = useCallback((cx, cy) => {
     const rect = svgRef.current.getBoundingClientRect();
@@ -327,7 +364,10 @@ export default function TacticalBoard() {
     setFieldPlayers(prev => {
       const onField = prev.map(p => p.name);
       const bench = roster.filter(p => p.status === 'actiu' && !onField.includes(p.name) && !unavailable.includes(p.name)).map(p => p.name);
-      return placeF7([...onField, ...bench], f);
+      const subOf = Object.fromEntries(prev.filter(p => p.sub).map(p => [p.name, p.sub]));
+      const subs = Object.values(subOf);
+      return placeF7([...onField, ...bench.filter(n => !subs.includes(n))], f)
+        .map(p => subOf[p.name] ? { ...p, sub: subOf[p.name] } : p);
     });
   };
 
@@ -335,7 +375,7 @@ export default function TacticalBoard() {
     setUnavailable(prev => {
       const next = prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name];
       if (!prev.includes(name)) {
-        setFieldPlayers(fp => fp.filter(p => p.name !== name));
+        setFieldPlayers(fp => fp.filter(p => p.name !== name).map(p => p.sub === name ? { ...p, sub: undefined } : p));
       }
       return next;
     });
@@ -460,6 +500,15 @@ export default function TacticalBoard() {
       if (dist < nearDist) { nearDist=dist; nearIdx=i; }
     });
 
+    if (subMode) {
+      if (nearIdx === -1) {
+        let nd = Infinity;
+        fieldPlayers.forEach((p, i) => { const dist = Math.hypot(p.x-x, p.y-y); if (dist < nd) { nd = dist; nearIdx = i; } });
+      }
+      if (nearIdx !== -1) setFieldPlayers(prev => prev.map((p,i) => i===nearIdx ? {...p, sub: name} : p));
+      return;
+    }
+
     if (nearIdx !== -1) {
       setFieldPlayers(prev => prev.map((p,i) => i===nearIdx ? {...p, name} : p));
     } else if (fieldPlayers.length < MODES[mode].n) {
@@ -510,6 +559,19 @@ export default function TacticalBoard() {
                   </button>
                 ))}
               </div>
+            )}
+            <button onClick={() => setSubMode(v => !v)}
+              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
+                subMode
+                  ? 'bg-[#6FA8FF]/15 border-[#6FA8FF]/50 text-[#6FA8FF]'
+                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
+              <span>🔵</span> <span>Suplents</span>
+            </button>
+            {hasSubs && (
+              <button onClick={swapSubs}
+                className="px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border bg-[#6FA8FF]/10 border-[#6FA8FF]/40 text-[#6FA8FF] hover:bg-[#6FA8FF]/20">
+                <span>⇄</span> <span>Canviar</span>
+              </button>
             )}
             <button onClick={() => setRecording(v => !v)}
               className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
@@ -568,6 +630,12 @@ export default function TacticalBoard() {
                   onDown={onOwnDown} onMove={onOwnMove} onUp={onOwnUp} adaptiveR={adaptiveR} />
               ))}
 
+              {fieldPlayers.map((p, i) => p.sub && (
+                <SubToken key={`s-${i}-${p.sub}`} p={p} info={getInfo(p.sub)} adaptiveR={adaptiveR}
+                  others={[...fieldPlayers.filter((_, j) => j !== i), ...(showRivals ? rivalPos : [])]}
+                  onRemove={() => removeSub(i)}/>
+              ))}
+
               <Ball ball={ball} onDown={onBallDown} onMove={onBallMove} onUp={onBallUp}/>
             </svg>
           </div>
@@ -577,6 +645,11 @@ export default function TacticalBoard() {
             <p className="text-[9px] md:text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-1.5 md:mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
+            {subMode && (
+              <p className="text-[10px] text-[#6FA8FF] font-bold mb-1.5 leading-tight">
+                Arrossega'l damunt d'un titular: serà el seu suplent. Toca un suplent per treure'l.
+              </p>
+            )}
             <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 overflow-y-auto`}
               style={{ maxHeight: isMobile ? '32vh' : 'calc(100vh - 220px)' }}>
               {benchPlayers.map(p => (
