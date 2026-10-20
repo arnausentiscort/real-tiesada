@@ -564,6 +564,9 @@ function Sec({ id, title, collapsed, onToggle, children }) {
 export default function GlobalDashboard({ onSelectMatch }) {
   const { db: DATABASE, format, season } = useSeason();
   const stats = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
+  const keeperCounts = format.id === 'f7';
+  const gfList = keeperCounts ? stats.goalsForAll : stats.goalsFor;
+  const gaList = keeperCounts ? stats.goalsAgainstAll : stats.goalsAgainst;
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [activeMatchId, setActiveMatchId] = useState(null);
   // Al mòbil les barres per jugador (tres llistes de 13) obertes allargaven
@@ -589,8 +592,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
   const lastMatch = matchHistory[matchHistory.length - 1];
   const lastRS = lastMatch ? getRS(lastMatch.for, lastMatch.against) : null;
 
-  const maxGF = Math.max(...stats.goalsFor.map(([,v]) => v), 1);
-  const maxGA = Math.max(...stats.goalsAgainst.map(([,v]) => v), 1);
+  const maxGF = Math.max(...gfList.map(([,v]) => v), 1);
+  const maxGA = Math.max(...gaList.map(([,v]) => v), 1);
 
   const handleMatchSelect = (match) => {
     setActiveMatchId(match.id);
@@ -686,7 +689,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 <TrendingUp className="w-3.5 h-3.5"/> ⚽ Gols a Favor per Jugador
               </h4>
               <div className="space-y-2">
-                {stats.goalsFor.filter(([,v])=>v>0).map(([name,count],i) => (
+                {gfList.filter(([,v])=>v>0).map(([name,count],i) => (
                   <StatRow key={name} name={name} value={count} max={maxGF} color="#27AE60" delay={i*60} db={DATABASE}/>
                 ))}
               </div>
@@ -696,7 +699,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 <Shield className="w-3.5 h-3.5"/> ❌ Gols en Contra per Jugador
               </h4>
               <div className="space-y-2">
-                {stats.goalsAgainst.filter(([,v])=>v>0).map(([name,count],i) => (
+                {gaList.filter(([,v])=>v>0).map(([name,count],i) => (
                   <StatRow key={name} name={name} value={count} max={maxGA} color="#C0392B" delay={i*60} db={DATABASE}/>
                 ))}
               </div>
@@ -709,8 +712,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
               </h4>
               <div className="space-y-2">
                 {DATABASE.roster.map(p => {
-                  const gf = stats.goalsFor.find(([n])=>n===p.name)?.[1] ?? 0;
-                  const ga = stats.goalsAgainst.find(([n])=>n===p.name)?.[1] ?? 0;
+                  const gf = gfList.find(([n])=>n===p.name)?.[1] ?? 0;
+                  const ga = gaList.find(([n])=>n===p.name)?.[1] ?? 0;
                   if (gf===0&&ga===0) return null;
                   const maxV = Math.max(gf,ga,1);
                   return (

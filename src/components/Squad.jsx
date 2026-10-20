@@ -884,7 +884,11 @@ function PlayerProfile({ player, stats, onClose, db, format }) {
 // ── Component principal ───────────────────────────────────────────
 export default function Squad() {
   const { db: DATABASE, format } = useSeason();
-  const stats   = useMemo(() => calcGlobalStats(DATABASE, format), [DATABASE, format]);
+  const stats   = useMemo(() => {
+    const st = calcGlobalStats(DATABASE, format);
+    // A futbol 7 el porter també suma els gols a favor i en contra
+    return format.id === 'f7' ? { ...st, goalsFor: st.goalsForAll, goalsAgainst: st.goalsAgainstAll } : st;
+  }, [DATABASE, format]);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter]     = useState('all');
   const [showPast, setShowPast] = useState(false);
