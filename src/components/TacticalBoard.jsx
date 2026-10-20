@@ -52,6 +52,24 @@ const FORMATIONS_F7 = {
   '3-2-1': [[50,92],[20,78],[50,78],[80,78],[30,62],[70,62],[50,50]],
 };
 
+// Quina posició va a cada casella de la formació (mateix ordre que FORMATIONS_F7)
+const SLOTS_F7 = {
+  '2-3-1': ['Porter','Defensa','Defensa','Migcampista','Migcampista','Migcampista','Davanter'],
+  '2-2-2': ['Porter','Defensa','Defensa','Migcampista','Migcampista','Davanter','Davanter'],
+  '3-1-2': ['Porter','Defensa','Defensa','Defensa','Migcampista','Davanter','Davanter'],
+  '3-2-1': ['Porter','Defensa','Defensa','Defensa','Migcampista','Migcampista','Davanter'],
+};
+
+// Cada jugador a una casella de la seva posició; els que sobren omplen la resta
+function arrangeBySlots(names, slots, posOf) {
+  const left = [...names];
+  const out = slots.map(pos => {
+    const i = left.findIndex(n => posOf(n) === pos);
+    return i === -1 ? null : left.splice(i, 1)[0];
+  });
+  return out.map(n => n ?? left.shift()).filter(Boolean);
+}
+
 const DEF_PCT = {
   fs5: [[50,92],[25,75],[75,75],[25,55],[75,55]],
   f7:  FORMATIONS_F7['2-3-1'],
@@ -191,7 +209,14 @@ export default function TacticalBoard() {
 
   const fieldPct = m => (m === 'f7' ? FORMATIONS_F7[formation] : DEF_PCT[m]);
 
-  const [fieldPlayers, setFieldPlayers] = useState(() => mkField(format.id, fieldPct(format.id)).filter(p => !baixaNames.has(p.name)));
+  const posOf = name => DATABASE.roster.find(p => p.name === name)?.position;
+  const placeF7 = (names, f) => arrangeBySlots(names, SLOTS_F7[f], posOf)
+    .slice(0, 7).map((name, i) => ({ name, ...pct2svg(FORMATIONS_F7[f][i]) }));
+  const buildField = (m, out = []) => m === 'f7'
+    ? placeF7(roster.filter(p => p.status === 'actiu' && !out.includes(p.name)).map(p => p.name), formation)
+    : mkField(m, fieldPct(m)).filter(p => !out.includes(p.name) && !baixaNames.has(p.name));
+
+  const [fieldPlayers, setFieldPlayers] = useState(() => buildField(format.id));
   const [rivalPos, setRivalPos] = useState(() => mkRivals(format.id));
   const [ghost, setGhost] = useState(null);
   const [ball, setBall] = useState({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
@@ -283,14 +308,14 @@ export default function TacticalBoard() {
 
   const switchMode = m => {
     setMode(m);
-    setFieldPlayers(mkField(m, fieldPct(m)).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
+    setFieldPlayers(buildField(m, unavailable));
     setRivalPos(mkRivals(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
   };
 
   const reset = () => {
-    setFieldPlayers(mkField(mode, fieldPct(mode)).filter(p => !unavailable.includes(p.name) && !baixaNames.has(p.name)));
+    setFieldPlayers(buildField(mode, unavailable));
     setRivalPos(mkRivals(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall({ x: F.x + F.w / 2, y: F.y + F.h / 2 });
@@ -298,8 +323,12 @@ export default function TacticalBoard() {
 
   const switchFormation = f => {
     setFormation(f);
-    const pct = FORMATIONS_F7[f];
-    setFieldPlayers(prev => prev.map((p, i) => pct[i] ? { ...p, ...pct2svg(pct[i]) } : p));
+    // Primer els que ja són al camp; si falta algú d'una posició, surt de la banqueta
+    setFieldPlayers(prev => {
+      const onField = prev.map(p => p.name);
+      const bench = roster.filter(p => p.status === 'actiu' && !onField.includes(p.name) && !unavailable.includes(p.name)).map(p => p.name);
+      return placeF7([...onField, ...bench], f);
+    });
   };
 
   const toggleAvail = name => {
