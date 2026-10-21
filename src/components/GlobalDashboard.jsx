@@ -1051,7 +1051,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                   </button>
                 ))}
             </div>
-            <p className="text-[10px] text-gray-600 mt-2">Nota sobre 10: resultat, gols, ocasions i aturades. Toca un partit per veure'l.</p>
+            <p className="text-[10px] text-gray-600 mt-2">Nota sobre 10: resultat, atac, defensa (gols i xuts seus a porta) i porter. Toca un partit per veure'l.</p>
           </Sec>
 
           <Sec id="matches" title="🏟 Partits" collapsed={collapsed.matches} onToggle={toggle}>

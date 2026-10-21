@@ -174,7 +174,8 @@ export default function App() {
       <VictoryOverlay match={victory} first={firstWin} />
 
       {/* ── NAVBAR desktop (top) ── */}
-      <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
+      <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between h-14 gap-3">
 
           {/* Logo — triple clic obre admin */}

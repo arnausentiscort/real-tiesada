@@ -218,29 +218,44 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
 };
 
 // ── Nota del partit (sobre 10) ────────────────────────────────────
-// Quatre blocs: resultat (3), gols (3), ocasions (2,5) i porteria (1,5).
-// Si un partit no té tirs o aturades apuntats, aquell bloc no compta i la
-// nota es fa sobre la resta: no penalitza el que no es va apuntar.
+// Resultat (3), atac (3), defensa (3) i porter (1).
+// Les aturades NO són bones per a l'equip: cada aturada és una ocasió clara
+// del rival. Aturades + gols encaixats = xuts a porta del rival, i com més
+// n'hi ha, pitjor hem defensat. Al porter, en canvi, se li valora el % que atura.
+// El que no es va apuntar (tirs, aturades) no compta: la nota es fa sobre la resta.
 export const calcMatchRating = (match) => {
   const [gf, ga] = match.result.split('-').map(s => parseInt(s.trim(), 10));
   const shots = Object.values(match.shots || {}).flat();
   const keyPasses = Object.values(match.keyPasses || {}).flat().length;
   const saves = Object.values(match.savesManual || {}).reduce((a, b) => a + b, 0);
   const hasShots = shots.length > 0;
-  const hasSaves = match.savesManual && saves > 0;
+  const hasSaves = saves > 0;
 
   const diff = gf - ga;
   const resultat = diff > 0 ? 3 : diff === 0 ? 1.75 : diff === -1 ? 1 : diff === -2 ? 0.5 : 0;
-  const gols = Math.min(2, gf * 0.35) + Math.max(0, 1 - Math.max(0, ga - 2) * 0.2);
+
+  // Atac: gols i, si es van apuntar, les ocasions (a porta, pals, passades clau)
   const onTarget = shots.filter(s => s.onTarget).length + shots.filter(s => s.post).length * 0.7;
-  const ocasions = Math.min(1.5, onTarget * 0.2) + Math.min(0.5, shots.length * 0.04) + Math.min(0.5, keyPasses * 0.08);
-  const porteria = Math.min(1.5, saves * 0.25);
+  const atac = Math.min(hasShots ? 2 : 3, gf * (hasShots ? 0.3 : 0.45))
+    + (hasShots ? Math.min(1, onTarget * 0.1 + keyPasses * 0.05) : 0);
+
+  // Defensa: gols encaixats i, si hi ha aturades apuntades, totes les seves arribades a porta
+  const rivalOnTarget = ga + saves;
+  const defensa = hasSaves
+    ? Math.max(0, 3 - Math.max(0, ga - 1) * 0.3 - Math.max(0, rivalOnTarget - 6) * 0.12)
+    : Math.max(0, 3 - Math.max(0, ga - 1) * 0.4);
+
+  // Porter: quina part de les que li arriben atura
+  const porter = hasSaves ? saves / (saves + ga) : 0;
 
   const parts = [
     { key: 'resultat', label: 'Resultat', value: resultat, max: 3, on: true },
-    { key: 'gols',     label: 'Gols',     value: gols,     max: 3, on: true },
-    { key: 'ocasions', label: 'Ocasions', value: ocasions, max: 2.5, on: hasShots },
-    { key: 'porteria', label: 'Porteria', value: porteria, max: 1.5, on: !!hasSaves },
+    { key: 'atac',     label: 'Atac',     value: atac,     max: 3, on: true,
+      hint: hasShots ? `${gf} gols · ${shots.length} xuts (${Math.round(onTarget)} a porta) · ${keyPasses} pass. clau` : `${gf} gols` },
+    { key: 'defensa',  label: 'Defensa',  value: defensa,  max: 3, on: true,
+      hint: hasSaves ? `${ga} gols en contra · ${rivalOnTarget} xuts seus a porta` : `${ga} gols en contra` },
+    { key: 'porter',   label: 'Porter',   value: porter,   max: 1, on: hasSaves,
+      hint: hasSaves ? `${saves} aturades de ${rivalOnTarget} (${Math.round(porter * 100)}%)` : '' },
   ];
   const active = parts.filter(p => p.on);
   const got = active.reduce((a, p) => a + p.value, 0);

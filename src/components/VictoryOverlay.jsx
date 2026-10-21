@@ -25,20 +25,18 @@ export default function VictoryOverlay({ match, first }) {
 
   return (
     <div onClick={tancar}
-      className="fixed inset-0 z-[9990] flex flex-col items-center justify-center cursor-pointer select-none bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[9990] flex flex-col items-center justify-center cursor-pointer select-none bg-black/[0.88]"
       style={{ opacity: sortint ? 0 : 1, transition: 'opacity 0.45s ease' }}>
       <div className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(circle at 50% 42%, rgba(229,192,123,0.28) 0%, rgba(74,222,128,0.10) 30%, transparent 60%)' }}/>
 
-      <img src={`${BASE}escut.svg`} alt="" className="relative w-28 h-36 object-contain animate-crest-drop"
-        style={{ filter: 'drop-shadow(0 0 40px rgba(229,192,123,0.6))' }}/>
+      <img src={`${BASE}escut.svg`} alt="" className="relative w-28 h-36 object-contain animate-crest-drop"/>
 
       <p className="relative mt-5 text-[11px] font-black tracking-[0.4em] text-emerald-400 uppercase animate-letter-in"
         style={{ animationDelay: '450ms' }}>
         {first ? 'Primera de la temporada' : match.jornada}
       </p>
-      <h2 className="relative mt-1 text-5xl sm:text-6xl font-black tracking-[0.12em] text-[#E5C07B] animate-victory-pop"
-        style={{ textShadow: '0 0 30px rgba(229,192,123,0.55)' }}>
+      <h2 className="relative mt-1 text-5xl sm:text-6xl font-black tracking-[0.12em] text-[#E5C07B] animate-victory-pop">
         VICTÒRIA
       </h2>
 

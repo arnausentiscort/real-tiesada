@@ -406,18 +406,21 @@ function MatchRating({ match }) {
       {open && (
         <div className="mt-2 p-3 rounded-xl bg-black/30 border border-white/5 space-y-2 max-w-sm animate-fade-in">
           {r.parts.map(p => (
-            <div key={p.key} className={`flex items-center gap-2 ${p.on ? '' : 'opacity-35'}`}>
-              <span className="text-[11px] font-bold text-gray-400 w-16 shrink-0">{p.label}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${(p.value / p.max) * 100}%`, background: r.color }}/>
+            <div key={p.key} className={p.on ? '' : 'opacity-35'}>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-gray-400 w-16 shrink-0">{p.label}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${(p.value / p.max) * 100}%`, background: r.color }}/>
+                </div>
+                <span className="text-[10px] font-mono text-gray-500 w-14 text-right shrink-0">
+                  {p.on ? `${p.value.toFixed(1)}/${p.max}` : 'sense dades'}
+                </span>
               </div>
-              <span className="text-[10px] font-mono text-gray-500 w-14 text-right shrink-0">
-                {p.on ? `${p.value.toFixed(1)}/${p.max}` : 'sense dades'}
-              </span>
+              {p.on && p.hint && <p className="text-[10px] text-gray-600 pl-[72px] leading-tight mt-0.5">{p.hint}</p>}
             </div>
           ))}
           <p className="text-[10px] text-gray-600 leading-snug">
-            Resultat, gols marcats i encaixats, ocasions (tirs a porta, pals, passades clau) i aturades.
+            Les aturades són ocasions clares del rival: com més xuts seus a porta, pitjor hem defensat. Al porter se li valora el % que atura.
             {r.partial && ' El que no es va apuntar no compta: la nota es fa sobre la resta.'}
           </p>
         </div>
