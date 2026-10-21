@@ -157,3 +157,12 @@
   .animate-crest-glow, .animate-crest-shine, .animate-ball-roll { animation: none; }
   .animate-load-bar { width: 100%; animation: none; }
 }
+
+/* ── Victòria ── */
+@keyframes victoryPop {
+  0%   { opacity: 0; transform: scale(2.2); letter-spacing: 0.5em; filter: blur(8px); }
+  60%  { opacity: 1; transform: scale(0.94); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-victory-pop { opacity: 0; animation: victoryPop 0.7s cubic-bezier(0.2,0.9,0.3,1.2) 0.35s forwards; }
+@media (prefers-reduced-motion: reduce) { .animate-victory-pop { opacity: 1; animation: none; } }

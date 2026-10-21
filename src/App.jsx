@@ -11,6 +11,7 @@ import MvpPage          from './components/MvpPage.jsx';
 import Pissarra         from './components/Pissarra.jsx';
 import LoadingScreen    from './components/LoadingScreen.jsx';
 import Confetti         from './components/Confetti.jsx';
+import VictoryOverlay   from './components/VictoryOverlay.jsx';
 // Carrega diferida: nomes hi arriba qui fa triple clic al logo
 const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'));
 import { DATABASE }     from './data.js';
@@ -80,6 +81,13 @@ export default function App() {
     if (found && found.seasonId !== season) setSeason(found.seasonId);
   }, [found?.seasonId]);
 
+  const won = m => { const [f, a] = m.result.split('-').map(Number); return f > a; };
+  const victory = isMatch && won(view) ? view : null;
+  const firstWin = victory && (() => {
+    const ms = getSeason(found.seasonId)?.db.matches || [];
+    return !ms.slice(0, ms.findIndex(m => m.id === victory.id)).some(won);
+  })();
+
   useEffect(() => {
     if (!isMatch) return;
     const [f, a] = view.result.split('-').map(Number);
@@ -133,6 +141,7 @@ export default function App() {
         </svg>
       </div>
       <Confetti active={confetti} />
+      <VictoryOverlay match={victory} first={firstWin} />
 
       {/* ── NAVBAR desktop (top) ── */}
       <nav className="bg-[#1A1A1A] border-b border-[#E5C07B]/15 px-4 md:px-6 sticky top-0 z-50 shadow-xl shadow-black/60">
