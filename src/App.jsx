@@ -29,11 +29,14 @@ function SeasonToggle({ season, onChange }) {
           onClick={() => !s.disabled && onChange(s.id)}
           disabled={s.disabled}
           title={s.disabled ? 'Pròximament' : undefined}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+          className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition-all flex flex-col items-center leading-tight ${
             s.disabled
               ? 'text-gray-700 cursor-not-allowed'
-              : season === s.id ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>
-          {s.id === CURRENT_SEASON_ID ? 'Actual' : s.disabled ? `${s.label} · Pròximament` : s.label}
+              : season === s.id ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}>
+          <span className="text-xs whitespace-nowrap">{s.label}</span>
+          <span className={`text-[9px] font-semibold ${season === s.id ? 'text-white/75' : 'text-gray-500'}`}>
+            {s.disabled ? 'Pròximament' : s.id === CURRENT_SEASON_ID ? `${s.period} · ara` : s.period}
+          </span>
         </button>
       ))}
     </div>
