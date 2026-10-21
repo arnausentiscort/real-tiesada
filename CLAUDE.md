@@ -67,6 +67,17 @@ npm run build    # Build producció → dist/
 npm run deploy   # Build + deploy a GitHub Pages (gh-pages -d dist)
 ```
 
+### Importar un partit (apuntamelo + YouTube)
+```bash
+npm run importar              # l'últim partit jugat que encara no tenim
+npm run importar -- 7         # una jornada concreta
+npm run importar -- --prova   # ensenya què faria sense escriure
+```
+`scripts/importar-partit.mjs` llegeix l'API d'apuntamelo (`obtenerPartidosEquipo`, `obtenerInfoPartido`,
+`obtenerPlantillaEquipo`, `obtenerClasEquipo`; equip 32161) i el feed RSS del canal de YouTube.
+Golejadors pel dorsal del roster. Crea el fitxer del partit, el registra a l'índex i refà la classificació.
+`--força` sobreescriu un partit que ja hi és (es perden els canvis apuntats).
+
 ## Deploy complet (git + GitHub Pages)
 ```bash
 cd "c:/Users/arnau/OneDrive/Escritorio/real-tiesada/real-tiesada"
