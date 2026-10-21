@@ -110,6 +110,14 @@ function ratingColor(r) {
   return '#9CA3AF';
 }
 
+// Marc de la carta segons la valoració: or, plata, bronze o res
+function cardTier(r) {
+  if (r >= 85) return { color: '#FFD700', glow: 'rgba(255,215,0,0.35)', shine: true };
+  if (r >= 75) return { color: '#C8CCD2', glow: 'rgba(200,204,210,0.22)', shine: false };
+  if (r >= 65) return { color: '#CD7F32', glow: 'rgba(205,127,50,0.20)', shine: false };
+  return null;
+}
+
 // ── Mini barres de stats ──────────────────────────────────────────
 function StatBar({ label, value, max, color }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
@@ -163,6 +171,8 @@ function PlayerCard({ player, stats, onClick, db }) {
   const maxGA      = Math.max(...db.roster.map(p => stats.goalsAgainst.find(([n])=>n===p.name)?.[1]||0), 1);
   const maxMin     = Math.max(...db.roster.map(p => stats.totalMinutes.find(([n])=>n===p.name)?.[1]||0), 1);
   const isInjured  = player.status === 'lesionat';
+  const tier       = cardTier(rating);
+  const topScorer  = !isGK && goals > 0 && goals === maxGoals;
 
   return (
     <div className="relative cursor-pointer select-none group"
@@ -184,7 +194,9 @@ function PlayerCard({ player, stats, onClick, db }) {
         {/* ── CARA FRONTAL ── */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
           style={{backfaceVisibility:'hidden', WebkitBackfaceVisibility:'hidden', background: '#0a0a0a', pointerEvents: flipped ? 'none' : 'auto',
-            boxShadow: flipped ? 'none' : `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)`}}>
+            boxShadow: flipped ? 'none' : tier
+              ? `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1.5px ${tier.color}, 0 0 26px ${tier.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`
+              : `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.08)`}}>
 
           <div className={`absolute inset-0 bg-gradient-to-b ${pos.gradient} opacity-40`}/>
           <div className="absolute inset-0 opacity-5"
@@ -208,6 +220,13 @@ function PlayerCard({ player, stats, onClick, db }) {
             background:'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.8) 40%, transparent 100%)'
           }}/>
 
+          {tier?.shine && (
+            <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-2xl">
+              <div className="absolute inset-y-0 w-1/3 animate-card-shine"
+                style={{ background: 'linear-gradient(105deg, transparent, rgba(255,235,150,0.22), transparent)' }}/>
+            </div>
+          )}
+
           <div className="absolute top-3 left-3 flex flex-col items-center">
             <div className="text-2xl font-black leading-none" style={{color: rColor, textShadow:`0 0 20px ${rColor}60`}}>
               {rating}
@@ -221,6 +240,12 @@ function PlayerCard({ player, stats, onClick, db }) {
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-3">
+            {topScorer && (
+              <div className="inline-block mb-1.5 px-2 py-0.5 rounded-full text-[8px] font-black tracking-wider whitespace-nowrap"
+                style={{ background: 'linear-gradient(90deg, #C0392B, #E5C07B)', color: '#000', boxShadow: '0 2px 10px rgba(192,57,43,0.5)' }}>
+                ⚽ MÀXIM GOLEJADOR
+              </div>
+            )}
             <div className="text-base font-black tracking-wider leading-none mb-0.5 truncate" style={{color: pos.accent}}>
               {player.shirtName || player.name.toUpperCase()}
             </div>

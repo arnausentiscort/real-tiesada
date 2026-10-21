@@ -166,3 +166,8 @@
 }
 .animate-victory-pop { opacity: 0; animation: victoryPop 0.7s cubic-bezier(0.2,0.9,0.3,1.2) 0.35s forwards; }
 @media (prefers-reduced-motion: reduce) { .animate-victory-pop { opacity: 1; animation: none; } }
+
+/* ── Carta d'or de la plantilla ── */
+@keyframes cardShine { 0%, 55% { left: -40%; } 85%, 100% { left: 120%; } }
+.animate-card-shine { animation: cardShine 4.5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .animate-card-shine { animation: none; display: none; } }
