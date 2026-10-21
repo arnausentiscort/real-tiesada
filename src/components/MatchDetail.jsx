@@ -390,6 +390,57 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
 }
 
 // ── Gràfic de temps ───────────────────────────────────────────────
+// Gols a favor i en contra mentre cada jugador era al camp (sense el porter)
+function PlusMinus({ match, matchStats, db }) {
+  const goals = match.goals || match.events?.goals || [];
+  if (!goals.some(g => (g.onPitch || []).length)) return null;
+  const rows = {};
+  goals.forEach(g => (g.onPitch || []).forEach(p => {
+    rows[p] = rows[p] || { name: p, gf: 0, ga: 0 };
+    rows[p][g.type === 'favor' ? 'gf' : 'ga']++;
+  }));
+  const list = Object.values(rows)
+    .map(r => ({ ...r, diff: r.gf - r.ga, secs: matchStats?.totals?.[r.name] }))
+    .sort((a, b) => b.diff - a.diff || b.gf - a.gf);
+  const max = Math.max(...list.map(r => Math.max(r.gf, r.ga)), 1);
+  const diffColor = d => (d > 0 ? '#4ade80' : d < 0 ? '#f87171' : '#9ca3af');
+  return (
+    <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden">
+      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
+        <span className="text-base">±</span>
+        <h3 className="text-base font-bold text-[#E5C07B]">A favor vs en contra</h3>
+        <span className="text-[10px] text-gray-600 ml-auto text-right">gols amb ell al camp</span>
+      </div>
+      <div className="p-4 space-y-2">
+        {list.map((r, i) => (
+          <div key={r.name} className="flex items-center gap-2">
+            <span className={`text-[11px] font-bold w-20 sm:w-24 truncate shrink-0 ${i === 0 && r.diff > 0 ? 'text-[#E5C07B]' : 'text-gray-300'}`}>
+              {i === 0 && r.diff > 0 ? '★ ' : ''}{shirtName(db, r.name)}
+            </span>
+            <div className="flex-1 flex items-center gap-1 min-w-0">
+              <div className="flex-1 flex justify-end">
+                <div className="h-2 rounded-l-full bg-[#f87171]/70" style={{ width: `${(r.ga / max) * 100}%` }}/>
+              </div>
+              <div className="w-px h-3 bg-white/20 shrink-0"/>
+              <div className="flex-1">
+                <div className="h-2 rounded-r-full bg-[#4ade80]/70" style={{ width: `${(r.gf / max) * 100}%` }}/>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono text-gray-500 w-10 text-right shrink-0">{r.gf}-{r.ga}</span>
+            <span className="text-[11px] font-black font-mono w-7 text-right shrink-0" style={{ color: diffColor(r.diff) }}>
+              {r.diff > 0 ? '+' : ''}{r.diff}
+            </span>
+            {r.secs != null && (
+              <span className="hidden sm:inline text-[10px] font-mono text-gray-600 w-12 text-right shrink-0">{formatTime(r.secs)}</span>
+            )}
+          </div>
+        ))}
+        <p className="text-[10px] text-gray-600 pt-1">Vermell = en contra · verd = a favor{list.some(r => r.secs != null) && <span className="hidden sm:inline"> · a la dreta, minuts al camp</span>}</p>
+      </div>
+    </div>
+  );
+}
+
 function TimelineChart({ match, matchStats, db }) {
   if (!matchStats) return null;
   const { stints, playerStats, finalTime, idealSec } = matchStats;
@@ -776,6 +827,8 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
 
       {/* Estadístiques per jugador */}
       <MatchPlayerStats match={match} onJumpToVideo={hasVideo ? jumpToGoal : null} db={DATABASE} />
+
+      <PlusMinus match={match} matchStats={matchStats} db={DATABASE} />
 
       {/* Crònica — scroll natural de la pàgina, gran */}
       {cronica.length > 0 && (
