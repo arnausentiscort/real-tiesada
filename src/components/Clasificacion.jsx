@@ -3,12 +3,12 @@ import { useSeason } from '../SeasonContext.jsx';
 
 function FormaCircle({ r }) {
   const color = r === 'V' ? '#4ade80' : r === 'E' ? '#facc15' : '#f87171';
-  return <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:color, margin:'0 2px' }}/>;
+  return <span style={{ display:'inline-block', width:9, height:9, borderRadius:'50%', background:color, margin:'0 1.5px', flexShrink:0 }}/>;
 }
 
 // Al mòbil només Pts, PJ, DG i forma: amb les 8 columnes el nom de l'equip
 // es quedava en "I…" i no se sabia qui era qui
-const COLS = 'grid grid-cols-[22px_minmax(0,1fr)_30px_24px_34px_50px] sm:grid-cols-[28px_minmax(0,1fr)_36px_28px_28px_28px_28px_36px_36px_36px_60px] gap-x-1';
+const COLS = 'grid grid-cols-[22px_minmax(0,1fr)_30px_24px_34px_62px] sm:grid-cols-[28px_minmax(0,1fr)_36px_28px_28px_28px_28px_36px_36px_36px_66px] gap-x-1';
 const WIDE = 'hidden sm:block';
 
 export default function Clasificacion() {

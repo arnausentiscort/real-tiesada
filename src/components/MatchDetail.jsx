@@ -148,14 +148,13 @@ function GoalCard({ item, onJump, db }) {
               )}
             </div>
           </div>
-          {isFavor ? (
+          {isFavor && (
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <span className="text-white font-black text-xl">{shirtName(db, item.scorer)}</span>
-              {item.assist && <span className="text-gray-400 text-sm">· assist: <span className="text-gray-200">{shirtName(db, item.assist)}</span></span>}
+              {item.assist && <span className="text-gray-400 text-sm">· assistència de <span className="text-gray-200">{shirtName(db, item.assist)}</span></span>}
             </div>
-          ) : (
-            item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>
           )}
+          {item.notes && <p className="mt-1.5 text-sm text-gray-400 italic">{item.notes}</p>}
           {showLocalVideo && item.localVideoUrl && (
             <div className="mt-3">
               <video src={`${BASE}${item.localVideoUrl}`} controls className="w-full rounded-xl border border-white/10"/>
@@ -342,7 +341,7 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
 
         {kpStats.length > 0 && (
           <div>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🔑 Key Passes</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3">🔑 Passades clau</p>
             <div className="space-y-3">
               {kpStats.map(({ name, evs, count }) => (
                 <div key={name}>

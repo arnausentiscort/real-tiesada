@@ -570,7 +570,7 @@ function PlayerProfile({ player, stats, onClose, db, format }) {
                   {v:gf, l:'A favor (camp)', c:'#61AFEF'},
                 ] : [
                   {v:goals, l:'Gols', c:'#F59E0B'},
-                  {v:assists, l:'Assists', c:'#61AFEF'},
+                  {v:assists, l:'Assist.', c:'#61AFEF'},
                   {v:`${Math.floor(minSecs/60)}'`, l:'Minuts', c:pos.accent},
                   {v:gf, l:'A favor', c:'#10B981'},
                 ]).map(({v,l,c}) => (
@@ -904,7 +904,8 @@ export default function Squad() {
     return r.filter(p => p.position === filter);
   }, [activeRoster, filter]);
 
-  const positions = [...new Set(activeRoster.map(p=>p.position))];
+  const ORDER = ['Porter', 'Defensa', 'Migcampista', 'Davanter'];
+  const positions = [...new Set(activeRoster.map(p=>p.position))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
 
   return (
     <div className="animate-fade-in">

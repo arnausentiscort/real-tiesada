@@ -91,7 +91,7 @@ export default function ChanceCreationChart() {
       <div className="mb-4">
         <h3 className="text-sm font-black text-[#E5C07B]">⚡ Creació de Perill</h3>
         <p className="text-[10px] text-gray-600 mt-0.5">
-          Fantasies = Key passes + Regats (eix X) · Gols + Assists (eix Y) · Mida = minuts jugats
+          Fantasies = passades clau + regats (eix X) · gols + assistències (eix Y) · Mida = minuts jugats
         </p>
       </div>
 
@@ -265,7 +265,7 @@ export default function ChanceCreationChart() {
           const ty = Math.max(PAD.top + 2, Math.min(cy - 20, PAD.top + IH - TH - 2));
           const rows = [
             ['Gols',       hovered.goals],
-            ['Assists',    hovered.assists],
+            ['Assistències',    hovered.assists],
             ['Key passes', hovered.kp],
             ['Tirs porta', hovered.shotsOT],
             ['Regats',     hovered.dribs],

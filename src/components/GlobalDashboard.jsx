@@ -280,7 +280,7 @@ function PlayerCard({ rank, name, value, label, emoji, db }) {
       className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 cursor-default
         ${isTop ? 'bg-[#E5C07B]/8 border-[#E5C07B]/25' : 'bg-[#1a1a1a] border-white/5 hover:border-white/15'}
         ${inView ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-      style={{ transitionDelay: `${rank * 60}ms` }}>
+      style={{ transitionDelay: `${Math.min(rank, 3) * 60}ms` }}>
       <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-[#111]">
         {photoSrc ? (
           <img src={`${BASE}${photoSrc}`} alt={name} className="w-full h-full object-cover"
@@ -307,13 +307,14 @@ function PlayerCard({ rank, name, value, label, emoji, db }) {
 // El podi en targeta gran, la resta en files compactes: amb una targeta per
 // jugador, la llista de golejadors i la d'assistències feien la portada eterna al mòbil
 function RankList({ entries, label, emoji, db, onPick }) {
+  const rankOf = entries.map(([, v]) => entries.findIndex(([, w]) => w === v));
   const podium = entries.slice(0, 3);
   const rest = entries.slice(3);
   return (
     <div className="space-y-2">
       {podium.map(([name, count], idx) => (
         <div key={name} onClick={() => onPick(name)} className="cursor-pointer hover:scale-[1.01] transition-transform">
-          <PlayerCard rank={idx} name={name} value={count} emoji={emoji} label={label} db={db}/>
+          <PlayerCard rank={rankOf[idx]} name={name} value={count} emoji={emoji} label={label} db={db}/>
         </div>
       ))}
       {rest.length > 0 && (
@@ -323,7 +324,7 @@ function RankList({ entries, label, emoji, db, onPick }) {
             return (
               <button key={name} onClick={() => onPick(name)}
                 className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.03] transition-colors">
-                <span className="w-4 text-[11px] font-mono text-gray-600 text-right shrink-0">{i + 4}</span>
+                <span className="w-4 text-[11px] font-mono text-gray-600 text-right shrink-0">{rankOf[i + 3] + 1}</span>
                 <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#111] shrink-0">
                   {player?.photo
                     ? <img src={`${BASE}${player.photo}`} alt={name} className="w-full h-full object-cover" style={{ objectPosition: 'center 15%' }}/>
@@ -393,7 +394,7 @@ function PlayerModal({ player, stats, onClose, db }) {
           <div className="flex gap-4 mt-4 pt-4 border-t border-white/5">
             {[
               {v: totalGols, l:'Gols', c:'text-emerald-400'},
-              {v: totalAst,  l:'Assists', c:'text-blue-400'},
+              {v: totalAst,  l:'Assist.', c:'text-blue-400'},
               {v: totalGols+totalAst, l:'Participació', c:'text-[#E5C07B]'},
             ].map(({v,l,c}) => (
               <div key={l} className="text-center flex-1">
@@ -441,7 +442,7 @@ function PlayerModal({ player, stats, onClose, db }) {
 }
 
 // ── Timeline de temporada ─────────────────────────────────────────
-function SeasonTimeline({ matches, onSelectMatch }) {
+function SeasonTimeline({ matches, next, onSelectMatch }) {
   const scrollRef = useRef(null);
   const scroll = (dir) => {
     scrollRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
@@ -502,16 +503,17 @@ function SeasonTimeline({ matches, onSelectMatch }) {
               </div>
             );
           })}
-          {/* Proper partit placeholder */}
+          {next && (
           <div className="flex items-center">
             <div className="w-8 h-px bg-gradient-to-r from-white/10 to-transparent mx-1"/>
             <div className="flex flex-col items-center gap-1.5 opacity-40">
               <div className="w-14 h-14 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center bg-transparent">
-                <span className="text-[10px] text-gray-600 font-bold">J5?</span>
+                <span className="text-[10px] text-gray-500 font-bold">J{next.jornada.replace(/\D/g, '')}</span>
               </div>
-              <p className="text-[9px] text-gray-700">Proper</p>
+              <p className="text-[9px] text-gray-600 max-w-[64px] truncate">{next.opponent}</p>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
@@ -523,7 +525,10 @@ function MatchSideCard({ match, onSelect, isActive, db }) {
   const [f,a] = match.result.split('-').map(s=>parseInt(s.trim()));
   const rs = getRS(f,a);
   const goalsF = (match.events?.goals||[]).filter(g=>g.type==='favor');
-  const topScorer = goalsF.length > 0 ? sName(db, goalsF[0].scorer) : null;
+  const byScorer = {};
+  goalsF.forEach(g => { if (g.scorer) byScorer[g.scorer] = (byScorer[g.scorer] || 0) + 1; });
+  const scorers = Object.entries(byScorer).sort((x, y) => y[1] - x[1])
+    .map(([n, c]) => sName(db, n) + (c > 1 ? ` ×${c}` : '')).join(' · ');
 
   return (
     <div onClick={() => onSelect(match)}
@@ -539,8 +544,8 @@ function MatchSideCard({ match, onSelect, isActive, db }) {
         </div>
         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${rs.bg}`}>{rs.label}</span>
       </div>
-      {topScorer && (
-        <p className="text-[10px] text-gray-600 mt-1.5 pl-10">⚽ {topScorer}{goalsF.length>1?` +${goalsF.length-1}`:''}</p>
+      {scorers && (
+        <p className="text-[10px] text-gray-600 mt-1.5 pl-10 truncate">⚽ {scorers}</p>
       )}
     </div>
   );
@@ -643,7 +648,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
           <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex-1">📅 Temporada actual</span>
           <ChevronDown className={`w-3.5 h-3.5 text-gray-600 transition-transform duration-200 group-hover:text-gray-400 ${collapsed.timeline ? '-rotate-90' : ''}`}/>
         </button>
-        {!collapsed.timeline && <SeasonTimeline matches={DATABASE.matches} onSelectMatch={handleMatchSelect}/>}
+        {!collapsed.timeline && <SeasonTimeline matches={DATABASE.matches} onSelectMatch={handleMatchSelect}
+          next={(DATABASE.calendar || []).find(c => new Date(c.date) > new Date())}/>}
       </div>
 
       {/* ── LAYOUT DUES COLUMNES: STATS + PARTITS ── */}
@@ -673,7 +679,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Trophy className="w-3.5 h-3.5 text-[#E5C07B]"/> Assistències
                 </h3>
-                <RankList entries={stats.topAssists} label="Assists" emoji="👟" db={DATABASE}
+                <RankList entries={stats.topAssists} label="Assistències" emoji="👟" db={DATABASE}
                   onPick={name => setSelectedPlayer(DATABASE.roster.find(p => p.name === name))}/>
               </section>
             )}
