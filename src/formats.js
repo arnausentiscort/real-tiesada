@@ -17,7 +17,7 @@ export const FORMATS = {
     label: 'Futbol 7',
     playersOnPitch: 7,
     fieldPlayers: 6,
-    totalMinutes: 50, // TODO: confirmar amb el reglament de la lliga
+    totalMinutes: 50,
     periods: 2,
     pitch: { viewBox: '0 0 800 550', w: 800, h: 550, goalX: 782, goalY: 275 },
     goal:  { viewBox: '-18 -18 636 230', w: 600, h: 200 },

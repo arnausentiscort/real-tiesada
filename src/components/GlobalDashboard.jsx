@@ -801,7 +801,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
             })()}
           </Sec>
 
-          <Sec id="impact" title="⚡ Impacte Gols / 40 min" collapsed={collapsed.impact} onToggle={toggle}>
+          <Sec id="impact" title={`⚡ Impacte Gols / ${format.totalMinutes} min`} collapsed={collapsed.impact} onToggle={toggle}>
             {(() => {
               const [impactMode, setImpactMode] = React.useState('camp');
               const isGK = impactMode === 'porter';
@@ -818,8 +818,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
                 const gaGK   = stats.goalsAgainstGK.find(([n]) => n === p.name)?.[1] ?? 0;
                 const gf = isGK ? gfGK : isAll ? (gfCamp + gfGK) : gfCamp;
                 const ga = isGK ? gaGK : isAll ? (gaCamp + gaGK) : gaCamp;
-                const gf40 = (gf / secs) * 2400;
-                const gc40 = (ga / secs) * 2400;
+                const gf40 = (gf / secs) * format.totalMinutes * 60;
+                const gc40 = (ga / secs) * format.totalMinutes * 60;
                 return { p, secs, gf40, gc40, net40: gf40 - gc40 };
               }).filter(Boolean).sort((a, b) => b.net40 - a.net40);
 
@@ -871,8 +871,8 @@ export default function GlobalDashboard({ onSelectMatch }) {
                     </div>
                   ))}
                   <div className="flex gap-4 pt-2 border-t border-white/5 text-[9px] text-gray-600">
-                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-emerald-500/60"/>GF/40</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-[#C0392B]/60"/>GC/40</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-emerald-500/60"/>GF/{format.totalMinutes}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded inline-block bg-[#C0392B]/60"/>GC/{format.totalMinutes}</span>
                     <span className="text-gray-700 ml-auto">{isGK ? 'Mín. 10 min de porter' : 'Mín. 30 min totals'} · ordenat per net</span>
                   </div>
                 </div>
