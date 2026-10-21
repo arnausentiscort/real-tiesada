@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist",
-    "importar": "node scripts/importar-partit.mjs"
+    "importar": "node scripts/importar-partit.mjs",
+    "og": "node scripts/og.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.1",

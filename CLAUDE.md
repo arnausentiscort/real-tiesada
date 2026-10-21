@@ -78,6 +78,11 @@ npm run importar -- --prova   # ensenya què faria sense escriure
 Golejadors pel dorsal del roster. Crea el fitxer del partit, el registra a l'índex i refà la classificació.
 `--força` sobreescriu un partit que ja hi és (es perden els canvis apuntats).
 
+### Vista prèvia per compartir jugades
+`npm run og` (`scripts/og.mjs`, fa servir l'Edge) genera `public/og/<jugada>.png` + `public/og/web.png`
+i `public/j/<jugada>/index.html` (etiquetes og: i redirecció a `#/tactica/<jugada>`).
+El botó «Enviar al grup» comparteix `/j/<jugada>/`. **Cal tornar-lo a passar si es canvia o s'afegeix una jugada.**
+
 ## Deploy complet (git + GitHub Pages)
 ```bash
 cd "c:/Users/arnau/OneDrive/Escritorio/real-tiesada/real-tiesada"

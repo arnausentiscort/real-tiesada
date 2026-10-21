@@ -4,6 +4,8 @@ import { DRILLS, DRILL_CATEGORIES } from '../drills.js';
 import { loadCustomDrills, deleteCustomDrill } from '../drillStore.js';
 import { goTo } from '../router.js';
 
+const BASE = import.meta.env.BASE_URL;
+
 const MODE_LABEL = { fs5: 'Sala 5v5', f7: 'Futbol 7', f11: 'Futbol 11' };
 
 const SECTIONS = [
@@ -69,12 +71,20 @@ export default function Entrenaments({ drillId = null }) {
   const openDrill  = (drill) => goTo('/tactica/' + encodeURIComponent(drill.id));
   const closeDrill = ()      => goTo('/tactica');
 
+  // Les jugades publicades tenen una pàgina amb vista prèvia (npm run og): al
+  // WhatsApp surt la imatge del camp. Al mòbil s'obre el menú de compartir
   const copyLink = async () => {
+    const url = DRILLS.some(d => d.id === open?.id)
+      ? `${window.location.origin}${BASE}j/${encodeURIComponent(open.id)}/`
+      : window.location.href;
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      try { await navigator.share({ title: open?.title, url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch { window.prompt('Copia l’enllaç:', window.location.href); }
+    } catch { window.prompt('Copia l’enllaç:', url); }
   };
 
   const handleDelete = (drill) => {
