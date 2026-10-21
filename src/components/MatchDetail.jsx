@@ -221,6 +221,9 @@ function MomentCard({ item, onJump, db }) {
         <span className="text-xl leading-none shrink-0 mt-0.5">{item.emoji}</span>
         <div className="flex-1 min-w-0">
           {!hasPhoto && <span className="font-mono text-[10px] text-gray-600 mr-2">{item.time}</span>}
+          {item.emoji === '🧤' && (
+            <span className="mr-2 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-300">Ocasió seva</span>
+          )}
           <span className="text-sm text-gray-200 leading-relaxed">{item.text}</span>
           {item.players?.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">

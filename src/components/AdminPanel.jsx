@@ -605,7 +605,14 @@ function buildMatchCode(match, originalId) {
   const goalsCode   = match.goals.map(goalToCode).join('\n');
   const subsCode    = subsToCode(match.subs || []);
   const cardsCode   = cardsToCode(match.cards || []);
-  const momentsCode = match.moments.map(m => {
+  // Les aturades apuntades al mode partit també van a la crònica, amb el seu minut:
+  // així es veuen les ocasions clares del rival
+  const nomCurt = n => n.split(' ').slice(-1)[0];
+  const saveMoments = (match._saveLog || []).map(sv => ({
+    time: sv.time, type: 'bona', text: `Aturada d'en ${nomCurt(sv.gk)}`, players: [sv.gk],
+  }));
+  const momentsCode = [...match.moments, ...saveMoments]
+    .sort((x, y) => (toSec(x.time) ?? 0) - (toSec(y.time) ?? 0)).map(m => {
     const secs = Math.max(0, (toSec(m.time) ?? 0) + (match.videoOffset || 0) - 3);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
