@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
-import { parseTime, formatTime, calcMatchStats } from '../utils.js';
+import { parseTime, formatTime, calcMatchStats, calcMatchRating } from '../utils.js';
 import { useSeason } from '../SeasonContext.jsx';
 import MvpVoting from './MvpVoting.jsx';
 
@@ -390,6 +390,42 @@ function MatchPlayerStats({ match, onJumpToVideo, db }) {
 
 // ── Gràfic de temps ───────────────────────────────────────────────
 // Gols a favor i en contra mentre cada jugador era al camp (sense el porter)
+// Nota del partit: la xifra gran i, si es toca, d'on surt
+function MatchRating({ match }) {
+  const [open, setOpen] = useState(false);
+  const r = useMemo(() => calcMatchRating(match), [match]);
+  return (
+    <div className="mt-3 flex flex-col items-start md:items-end">
+      <button onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-3 px-3 py-2 rounded-xl bg-black/30 border border-white/10 hover:border-white/25 transition-colors">
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nota</span>
+        <span className="text-2xl font-black font-mono leading-none" style={{ color: r.color }}>{r.nota.toFixed(1)}</span>
+        <span className="text-xs font-bold" style={{ color: r.color }}>{r.label}</span>
+        <span className="text-[10px] text-gray-600">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="mt-2 p-3 rounded-xl bg-black/30 border border-white/5 space-y-2 max-w-sm animate-fade-in">
+          {r.parts.map(p => (
+            <div key={p.key} className={`flex items-center gap-2 ${p.on ? '' : 'opacity-35'}`}>
+              <span className="text-[11px] font-bold text-gray-400 w-16 shrink-0">{p.label}</span>
+              <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${(p.value / p.max) * 100}%`, background: r.color }}/>
+              </div>
+              <span className="text-[10px] font-mono text-gray-500 w-14 text-right shrink-0">
+                {p.on ? `${p.value.toFixed(1)}/${p.max}` : 'sense dades'}
+              </span>
+            </div>
+          ))}
+          <p className="text-[10px] text-gray-600 leading-snug">
+            Resultat, gols marcats i encaixats, ocasions (tirs a porta, pals, passades clau) i aturades.
+            {r.partial && ' El que no es va apuntar no compta: la nota es fa sobre la resta.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlusMinus({ match, matchStats, db }) {
   const goals = match.goals || match.events?.goals || [];
   if (!goals.some(g => (g.onPitch || []).length)) return null;
@@ -784,7 +820,10 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
             </h2>
           </div>
           {/* Marcador animat */}
-          <AnimatedScore home={home} away={away} resultColor={resultColor}/>
+          <div className="flex flex-col items-start md:items-end">
+            <AnimatedScore home={home} away={away} resultColor={resultColor}/>
+            <MatchRating match={match}/>
+          </div>
         </div>
       </div>
 

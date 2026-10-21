@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Trophy, Target, Shield, TrendingUp, Users, X, ChevronRight, ChevronLeft, ChevronDown, Clock, Calendar } from 'lucide-react';
-import { calcGlobalStats, formatTime } from '../utils.js';
+import { calcGlobalStats, formatTime, calcMatchRating } from '../utils.js';
 import { useSeason } from '../SeasonContext.jsx';
 import ExportExcelButton from './ExportExcel.jsx';
 import DuoStats from './DuoStats.jsx';
@@ -524,6 +524,7 @@ function SeasonTimeline({ matches, next, onSelectMatch }) {
 function MatchSideCard({ match, onSelect, isActive, db }) {
   const [f,a] = match.result.split('-').map(s=>parseInt(s.trim()));
   const rs = getRS(f,a);
+  const rating = calcMatchRating(match);
   const goalsF = (match.events?.goals||[]).filter(g=>g.type==='favor');
   const byScorer = {};
   goalsF.forEach(g => { if (g.scorer) byScorer[g.scorer] = (byScorer[g.scorer] || 0) + 1; });
@@ -542,6 +543,7 @@ function MatchSideCard({ match, onSelect, isActive, db }) {
           <p className="text-white text-xs font-bold truncate">{match.opponent}</p>
           <p className="text-gray-600 text-[10px]">{match.jornada} · {match.date}</p>
         </div>
+        <span className="text-[11px] font-black font-mono shrink-0" style={{ color: rating.color }} title={`Nota: ${rating.label}`}>{rating.nota.toFixed(1)}</span>
         <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${rs.bg}`}>{rs.label}</span>
       </div>
       {scorers && (
@@ -579,7 +581,7 @@ export default function GlobalDashboard({ onSelectMatch }) {
     timeline: false, rankings: false,
     barres: typeof window !== 'undefined' && window.matchMedia?.('(max-width: 767px)').matches,
     tirs: true, chances: true, lineup: true, impact: true,
-    minutsCamp: true, porter: true, targetes: false, matches: false,
+    minutsCamp: true, porter: true, targetes: false, matches: false, notes: false,
   }));
   const toggle = k => setCollapsed(p => ({ ...p, [k]: !p[k] }));
 
@@ -1028,6 +1030,30 @@ export default function GlobalDashboard({ onSelectMatch }) {
 
         {/* Columna dreta — Partits */}
         <div className="xl:sticky xl:top-20">
+          <Sec id="notes" title="⭐ Millors partits" collapsed={collapsed.notes} onToggle={toggle}>
+            <div className="rounded-xl border border-white/5 bg-[#1a1a1a] divide-y divide-white/5 overflow-hidden">
+              {DATABASE.matches.map(m => ({ m, r: calcMatchRating(m) }))
+                .sort((x, y) => y.r.nota - x.r.nota)
+                .map(({ m, r }, i) => (
+                  <button key={m.id} onClick={() => handleMatchSelect(m)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.03] transition-colors">
+                    <span className="w-4 text-[11px] font-mono text-gray-600 text-right shrink-0">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold text-gray-200 truncate">{m.opponent} <span className="text-gray-500 font-mono">{m.result.replace(/\s/g, '')}</span></p>
+                      <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${r.nota * 10}%`, background: r.color }}/>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 w-16">
+                      <p className="text-sm font-black font-mono leading-none" style={{ color: r.color }}>{r.nota.toFixed(1)}</p>
+                      <p className="text-[9px] text-gray-500 mt-0.5">{r.label}</p>
+                    </div>
+                  </button>
+                ))}
+            </div>
+            <p className="text-[10px] text-gray-600 mt-2">Nota sobre 10: resultat, gols, ocasions i aturades. Toca un partit per veure'l.</p>
+          </Sec>
+
           <Sec id="matches" title="🏟 Partits" collapsed={collapsed.matches} onToggle={toggle}>
             <div className="space-y-2">
               {[...DATABASE.matches].reverse().map(match => (

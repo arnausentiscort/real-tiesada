@@ -216,3 +216,37 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
     dribbles:      sortDesc(dribblesMap).filter(([,v]) => v > 0),
   };
 };
+
+// ── Nota del partit (sobre 10) ────────────────────────────────────
+// Quatre blocs: resultat (3), gols (3), ocasions (2,5) i porteria (1,5).
+// Si un partit no té tirs o aturades apuntats, aquell bloc no compta i la
+// nota es fa sobre la resta: no penalitza el que no es va apuntar.
+export const calcMatchRating = (match) => {
+  const [gf, ga] = match.result.split('-').map(s => parseInt(s.trim(), 10));
+  const shots = Object.values(match.shots || {}).flat();
+  const keyPasses = Object.values(match.keyPasses || {}).flat().length;
+  const saves = Object.values(match.savesManual || {}).reduce((a, b) => a + b, 0);
+  const hasShots = shots.length > 0;
+  const hasSaves = match.savesManual && saves > 0;
+
+  const diff = gf - ga;
+  const resultat = diff > 0 ? 3 : diff === 0 ? 1.75 : diff === -1 ? 1 : diff === -2 ? 0.5 : 0;
+  const gols = Math.min(2, gf * 0.35) + Math.max(0, 1 - Math.max(0, ga - 2) * 0.2);
+  const onTarget = shots.filter(s => s.onTarget).length + shots.filter(s => s.post).length * 0.7;
+  const ocasions = Math.min(1.5, onTarget * 0.2) + Math.min(0.5, shots.length * 0.04) + Math.min(0.5, keyPasses * 0.08);
+  const porteria = Math.min(1.5, saves * 0.25);
+
+  const parts = [
+    { key: 'resultat', label: 'Resultat', value: resultat, max: 3, on: true },
+    { key: 'gols',     label: 'Gols',     value: gols,     max: 3, on: true },
+    { key: 'ocasions', label: 'Ocasions', value: ocasions, max: 2.5, on: hasShots },
+    { key: 'porteria', label: 'Porteria', value: porteria, max: 1.5, on: !!hasSaves },
+  ];
+  const active = parts.filter(p => p.on);
+  const got = active.reduce((a, p) => a + p.value, 0);
+  const max = active.reduce((a, p) => a + p.max, 0);
+  const nota = Math.round((got / max) * 100) / 10;
+  const label = nota >= 8 ? 'Partidàs' : nota >= 6.5 ? 'Bon partit' : nota >= 5 ? 'Correcte' : nota >= 3.5 ? 'Fluix' : 'Per oblidar';
+  const color = nota >= 6.5 ? '#4ade80' : nota >= 5 ? '#E5C07B' : nota >= 3.5 ? '#fb923c' : '#f87171';
+  return { nota, label, color, parts, partial: active.length < parts.length };
+};

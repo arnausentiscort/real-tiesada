@@ -122,7 +122,7 @@ real-tiesada/
 ├── src/
 │   ├── data.js                    ← TOTES les dades estàtiques
 │   ├── data_s1.js                 ← Dades Split 1 (temporada anterior 24/25)
-│   ├── utils.js                   ← calcGlobalStats, calcMatchStats, calcGoalkeeperStints, formatTime
+│   ├── utils.js                   ← calcGlobalStats, calcMatchStats, calcGoalkeeperStints, formatTime, calcMatchRating (nota del partit /10)
 │   ├── index.css                  ← Animacions globals (fadeIn, slideUp, goalPop, bigRipple, netBurst...)
 │   ├── main.jsx
 │   ├── App.jsx                    ← Navegació principal (view state, SeasonToggle, navs)
