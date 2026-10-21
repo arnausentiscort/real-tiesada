@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import GlobalDashboard  from './components/GlobalDashboard.jsx';
 import MatchDetail      from './components/MatchDetail.jsx';
 import Squad            from './components/Squad.jsx';
@@ -124,6 +124,36 @@ export default function App() {
 
   const activeNavId = isMatch ? 'dashboard' : (typeof view === 'string' ? view : 'dashboard');
 
+  // Al mòbil, lliscar el dit d'un costat a l'altre canvia de pantalla com a una app.
+  // No a la pissarra ni als partits, ni si el dit comença damunt d'alguna cosa que ja llisca
+  const swipe = useRef(null);
+  const [swipeDir, setSwipeDir] = useState(null);
+  const blocksSwipe = el => {
+    if (el.closest?.('svg, input, textarea, select, [data-noswipe], .fixed')) return true;
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const ox = getComputedStyle(n).overflowX;
+      if ((ox === 'auto' || ox === 'scroll') && n.scrollWidth > n.clientWidth + 2) return true;
+    }
+    return false;
+  };
+  const onTouchStart = e => {
+    swipe.current = null;
+    if (isMatch || view === 'pissarra' || e.touches.length > 1 || blocksSwipe(e.target)) return;
+    const t = e.touches[0];
+    swipe.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onTouchEnd = e => {
+    const st = swipe.current; swipe.current = null;
+    if (!st) return;
+    const t = e.changedTouches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+    if (Math.abs(dx) < 70 || Math.abs(dx) < 1.8 * Math.abs(dy) || Date.now() - st.t > 700) return;
+    const ids = navCurrent.map(n => n.id), i = ids.indexOf(view), j = i + (dx < 0 ? 1 : -1);
+    if (i === -1 || j < 0 || j >= ids.length) return;
+    setSwipeDir(dx < 0 ? 'left' : 'right');
+    navTo(ids[j]);
+  };
+  useEffect(() => { if (swipeDir) { const t = setTimeout(() => setSwipeDir(null), 400); return () => clearTimeout(t); } }, [swipeDir]);
+
   if (loading) return <LoadingScreen onDone={() => setLoading(false)} />;
 
   return (
@@ -204,7 +234,9 @@ export default function App() {
           )}
           {!getSeason(season)?.legacy && (
             // La clau canvia amb la pantalla: el fos d'entrada es torna a fer a cada navegació
-            <div key={[route.view, route.matchId, route.tacticTab, route.drillId].join('|')} className="animate-page">
+            <div key={[route.view, route.matchId, route.tacticTab, route.drillId].join('|')}
+              className={`animate-page${swipeDir ? ' animate-page-' + swipeDir : ''}`}
+              onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
               {view === 'dashboard'     && <GlobalDashboard onSelectMatch={handleSelectMatch} />}
               {view === 'squad'         && <Squad />}
               {view === 'clasificacion' && <Clasificacion />}

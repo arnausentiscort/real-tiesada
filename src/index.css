@@ -83,8 +83,12 @@
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes pageFromRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pageFromLeft  { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+.animate-page.animate-page-left  { animation: pageFromRight 0.28s ease-out backwards; }
+.animate-page.animate-page-right { animation: pageFromLeft 0.28s ease-out backwards; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-page { animation: none; }
+  .animate-page, .animate-page.animate-page-left, .animate-page.animate-page-right { animation: none; }
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
