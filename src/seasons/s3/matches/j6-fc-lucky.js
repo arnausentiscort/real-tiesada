@@ -23,7 +23,11 @@ export default {
     "Roger Miro":   [{ time: "15:50", onTarget: true }],
     "Arnau Sentis": [{ time: "32:27", onTarget: true }],
   },
-  keyPasses: {},
+  keyPasses: {
+    "Pau Ibañez": [{ time: "07:50" }, { time: "12:23" }],
+    "Coro":       [{ time: "08:00" }],
+    "Ivan Mico":  [{ time: "32:27" }],
+  },
   dribbles: {},
   events: {
     substitutions: [
@@ -139,7 +143,10 @@ export default {
         notes: "De falta." },
     ],
     retransmissio: [
-      { time: "07:55", type: "bona", text: "Molt bona jugada que acaba amb en Medina xutant a l'aire", players: ["Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=472s", photo: null, photoHover: null },
+      { time: "07:55", type: "bona", text: "Molt bona jugada: pas clau d'en Pau i en Medina xuta a l'aire", players: ["Pau Ibañez", "Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=467s", photo: null, photoHover: null },
+      { time: "08:00", type: "bona", text: "Pas clau d'en Coro i xut a porta d'en Serginho", players: ["Coro", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=477s", photo: null, photoHover: null },
+      { time: "12:22", type: "bona", text: "Pas clau d'en Pau i xut a porta d'en Ivan", players: ["Pau Ibañez", "Ivan Mico"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=739s", photo: null, photoHover: null },
+      { time: "32:27", type: "bona", text: "Pas clau d'en Ivan i xut a porta d'en Sentis", players: ["Ivan Mico", "Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=1944s", photo: null, photoHover: null },
     ],
   },
 };
