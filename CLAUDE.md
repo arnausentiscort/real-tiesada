@@ -387,6 +387,8 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
   Clicar un canvi, un gol o el final de la llista l'edita **sobre si mateix** (no
   n'afegeix un altre): minut ("on és el vídeo"), golejador, assistència i alineació.
   Franja sota el vídeo amb els gols i canvis al seu minut; vora taronja = gol sense alineació
+  Cada línia del registre té ✎ (editar) i ✕ (esborrar) sempre visibles. Avisa en taronja dels
+  canvis que es desfan en menys d'un minut (clic equivocat?) i dels gols amb el golejador fora del camp
 - `videoOffset` (opcional, en segons) = on comença el partit dins del vídeo. Els salts
   de la crònica el tenen en compte. Sense el camp, el vídeo i el partit van junts
 - Funcions de temps compartides a `admin/matchTime.js` (`normTime`, `toSec`, `lineupAt`)

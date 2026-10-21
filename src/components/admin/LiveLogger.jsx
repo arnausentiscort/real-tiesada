@@ -651,15 +651,21 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
       if (!prev) { out.push({ t: s.time, icon: '📋', text: `Alineació: 🧤 ${sn(s.goalkeeper)} · ${field.map(sn).join(', ')}`, del, edit }); return; }
       const pf = prev.onPitch.filter(x => x !== prev.goalkeeper);
       const inn = field.filter(x => !pf.includes(x)), outp = pf.filter(x => !field.includes(x));
+      const next = ss.slice(i + 1).find(x => !x._isBreak);
+      const quick = next && toSec(next.time) - toSec(s.time) < 60 && (
+        inn.some(x => !next.onPitch.includes(x)) || outp.some(x => next.onPitch.includes(x)));
       const gkTxt = prev.goalkeeper !== s.goalkeeper ? ` · 🧤 ${sn(s.goalkeeper)}` : '';
-      out.push({ t: s.time, icon: '🔄', text: `${inn.length ? 'Entra ' + inn.map(sn).join(', ') : ''}${inn.length && outp.length ? ' · ' : ''}${outp.length ? 'surt ' + outp.map(sn).join(', ') : ''}${gkTxt}` || 'Canvi', del, edit });
+      out.push({ t: s.time, icon: '🔄', text: `${inn.length ? 'Entra ' + inn.map(sn).join(', ') : ''}${inn.length && outp.length ? ' · ' : ''}${outp.length ? 'surt ' + outp.map(sn).join(', ') : ''}${gkTxt}` || 'Canvi', del, edit,
+        warn: quick && "torna a canviar en menys d'un minut: clic equivocat?" });
     });
     (match.goals || []).forEach(g => out.push({
       t: g.time, icon: g.type === 'favor' ? '⚽' : '❌',
       text: g.type === 'favor' ? `Gol d'en ${sn(g.scorer)}${g.assist ? ` · assist. ${sn(g.assist)}` : ''}` : `Gol en contra${g.notes ? ' · ' + g.notes : ''}`,
       del: () => upd(m => ({ ...m, goals: m.goals.filter(x => x !== g) })),
       edit: () => openEdit('editGol', g),
-      warn: !(g.onPitch || []).length,
+      warn: !(g.onPitch || []).length ? 'sense alineació'
+        : g.type === 'favor' && g.scorer && !g.onPitch.includes(g.scorer) ? `${sn(g.scorer)} no és al camp`
+        : g.assist && !g.onPitch.includes(g.assist) ? `${sn(g.assist)} no és al camp` : null,
     }));
     const evDel = (key, pl, ev) => () => upd(m => {
       const map = { ...m[key] };
@@ -768,19 +774,20 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
             </p>
             <ul className="divide-y divide-white/5">
               {items.map((it, i) => (
-                <li key={i} className="flex items-center gap-2 px-3 py-1.5 group">
+                <li key={i} className={`flex items-center gap-2 px-3 py-1.5 group ${it.warn ? 'bg-amber-500/5' : ''}`}>
                   <button onClick={() => seekTo((toSec(it.t) ?? 0) + offset - 3)}
                     className="font-mono text-[11px] text-[#E5C07B] hover:underline w-11 shrink-0 text-left">{normTime(it.t) || it.t}</button>
                   <span className="shrink-0">{it.icon}</span>
                   {it.edit
                     ? <button onClick={it.edit} title="Editar"
                         className="text-xs text-gray-300 truncate flex-1 text-left hover:text-white">
-                        {it.text}{it.warn && <span className="ml-1.5 text-amber-400">· sense alineació</span>}
-                        <span className="ml-1.5 text-gray-600 opacity-0 group-hover:opacity-100">✎</span>
+                        {it.text}{it.warn && <span className="ml-1.5 text-amber-400">· ⚠ {it.warn}</span>}
                       </button>
                     : <span className="text-xs text-gray-300 truncate flex-1">{it.text}</span>}
+                  {it.edit && <button onClick={it.edit} title="Editar"
+                    className="text-gray-500 hover:text-[#E5C07B] text-xs px-1">✎</button>}
                   <button onClick={it.del} title="Esborrar"
-                    className="text-gray-700 hover:text-[#E06B5E] text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                    className="text-gray-600 hover:text-[#E06B5E] text-xs px-1">✕</button>
                 </li>
               ))}
               {!items.length && <li className="px-3 py-4 text-xs text-gray-600 text-center">Encara no hi ha res apuntat.</li>}
