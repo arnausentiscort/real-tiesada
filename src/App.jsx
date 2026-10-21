@@ -35,7 +35,7 @@ function SeasonToggle({ season, onChange }) {
               : season === s.id ? 'bg-[#C0392B] text-white shadow-lg' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}>
           <span className="text-xs whitespace-nowrap">{s.label}</span>
           <span className={`text-[9px] font-semibold ${season === s.id ? 'text-white/75' : 'text-gray-500'}`}>
-            {s.disabled ? 'Pròximament' : s.id === CURRENT_SEASON_ID ? `${s.period} · ara` : s.period}
+            {s.disabled ? 'Pròximament' : s.period}
           </span>
         </button>
       ))}

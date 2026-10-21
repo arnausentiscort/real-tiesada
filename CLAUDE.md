@@ -2,7 +2,7 @@
 
 ## Qui som
 App d'estadístiques internes per a l'equip amateur **Real Tiesada FC**.
-- Temporada activa: **Split 3 · 26/27** — *Dimarts 1a Lliga* al Velòdrom, format **futbol 7**
+- Temporada activa: **Split 3 (set 2026 – feb 2027)**. Els splits duren uns 6 mesos: S1 oct–des 2025, S2 feb–jul 2026 — *Dimarts 1a Lliga* al Velòdrom, format **futbol 7**
 - Lliga de 18 jornades, en juguem 16 (descansem la J4 i la J13)
 - Font de dades oficials: https://apuntamelo.com/grupo/9/26/0/910/0/4414/0
 - Splits anteriors (futbol sala, 2a Lliga Sant Ignasi): Split 1 24/25, Split 2 25/26

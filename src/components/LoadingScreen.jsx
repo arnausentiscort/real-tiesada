@@ -71,7 +71,7 @@ export default function LoadingScreen({ onDone }) {
       </h1>
       <p className="relative mt-2 text-[11px] text-gray-500 tracking-[0.35em] uppercase animate-letter-in"
         style={{ animationDelay: '1350ms' }}>
-        Futbol 7 · Velòdrom · 26/27
+        Futbol 7 · Velòdrom · Split 3
       </p>
 
       {/* Barra amb la pilota */}
