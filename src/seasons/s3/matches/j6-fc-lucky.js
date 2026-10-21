@@ -1,5 +1,5 @@
 // Jornada 6 · 20/10/2026 · Real Tiesada 8-9 FC Lucky
-// Marcador i golejadors d'apuntamelo.com (partit 381627), només amb el minut.
+// Marcador d'apuntamelo.com (partit 381627); minut exacte i assistències de l'Arnau.
 // Golejadors nostres pel dorsal: #2 Marti C. → Coro, #18 Sergi M. → Serginho,
 // #10 Pau I. → Pau Ibañez. Canvis, tirs i aturades de l'Arnau amb el mode partit.
 // Corregit el 21/10: en Chengzhi no va jugar. Era en Serginho (15:37-15:38 era
@@ -53,90 +53,90 @@ export default {
     ],
     cards: [],
     goals: [
-      { time: "01:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "00:21", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Arnau Sentis","Paco Montero","Serginho","Ivan Mico","Roger Miro","Joan Medina"],
-        notes: "Matias L. #10." },
+        notes: "Matias L. #10, des del mig del camp." },
 
-      { time: "02:00", type: "favor", scorer: "Serginho", assist: null, goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+      { time: "01:55", type: "favor", scorer: "Serginho", assist: "Paco Montero", goalkeeper: "Joan Ribes",
+        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: { x: 402, y: 150 },
         onPitch: ["Arnau Sentis","Paco Montero","Serginho","Ivan Mico","Roger Miro","Joan Medina"],
         notes: "" },
 
-      { time: "09:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+      { time: "08:25", type: "favor", scorer: "Coro", assist: "Serginho", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Paco Montero","Serginho","Ivan Mico","Coro","Pau Ibañez","Arnau Sentis"],
         notes: "" },
 
-      { time: "09:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "08:45", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Paco Montero","Serginho","Ivan Mico","Coro","Pau Ibañez","Arnau Sentis"],
-        notes: "Matias L. #10." },
+        notes: "Matias L. #10, des del mig del camp." },
 
-      { time: "13:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+      { time: "12:55", type: "favor", scorer: "Coro", assist: "Arnau Sentis", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Paco Montero","Ivan Mico","Coro","Pau Ibañez","Arnau Sentis","Roger Miro"],
         notes: "" },
 
-      { time: "15:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "14:30", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Ivan Mico","Coro","Pau Ibañez","Arnau Sentis","Roger Miro","Joan Medina"],
-        notes: "Matias L. #10." },
+        onPitch: ["Paco Montero","Ivan Mico","Coro","Pau Ibañez","Arnau Sentis","Roger Miro"],
+        notes: "Matias L. #10. Recuperen i no saltem." },
 
-      { time: "18:00", type: "favor", scorer: "Serginho", assist: null, goalkeeper: "Joan Ribes",
+      { time: "17:17", type: "favor", scorer: "Serginho", assist: "Coro", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Coro","Arnau Sentis","Roger Miro","Joan Medina","Serginho","Paco Montero"],
+        onPitch: ["Coro","Pau Ibañez","Arnau Sentis","Roger Miro","Joan Medina","Serginho"],
         notes: "" },
 
-      { time: "23:00", type: "favor", scorer: "Pau Ibañez", assist: null, goalkeeper: "Joan Ribes",
+      { time: "22:25", type: "favor", scorer: "Pau Ibañez", assist: null, goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Coro","Roger Miro","Serginho","Paco Montero","Ivan Mico","Pau Ibañez"],
-        notes: "" },
+        notes: "De penal." },
 
-      { time: "30:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+      { time: "29:33", type: "favor", scorer: "Coro", assist: "Serginho", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Paco Montero","Serginho","Arnau Sentis","Roger Miro","Coro","Ivan Mico"],
-        notes: "" },
+        onPitch: ["Paco Montero","Serginho","Arnau Sentis","Joan Medina","Roger Miro","Coro"],
+        notes: "De cap. No surt al vídeo de YouTube; n'hi ha clips a Instagram." },
 
-      { time: "30:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "29:35", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Paco Montero","Serginho","Arnau Sentis","Roger Miro","Coro","Ivan Mico"],
-        notes: "Matias L. #10." },
+        onPitch: ["Paco Montero","Serginho","Arnau Sentis","Joan Medina","Roger Miro","Coro"],
+        notes: "Matias L. #10, des del mig del camp." },
 
-      { time: "31:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "30:09", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Paco Montero","Serginho","Arnau Sentis","Roger Miro","Coro","Ivan Mico"],
         notes: "Mirko L. #9." },
 
-      { time: "33:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+      { time: "31:50", type: "favor", scorer: "Coro", assist: "Serginho", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Serginho","Arnau Sentis","Roger Miro","Coro","Ivan Mico","Pau Ibañez"],
-        notes: "" },
+        onPitch: ["Paco Montero","Serginho","Arnau Sentis","Roger Miro","Coro","Ivan Mico"],
+        notes: "Jugada assajada." },
 
-      { time: "39:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "38:20", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Roger Miro","Coro","Ivan Mico","Pau Ibañez","Joan Medina","Paco Montero"],
         notes: "Matias L. #10, el cinquè seu." },
 
-      { time: "40:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "39:14", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Ivan Mico","Pau Ibañez","Joan Medina","Paco Montero","Arnau Sentis","Serginho"],
+        onPitch: ["Coro","Ivan Mico","Pau Ibañez","Joan Medina","Paco Montero","Arnau Sentis"],
         notes: "Mirko L. #9." },
 
-      { time: "43:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "41:30", type: "contra", goalkeeper: "Joan Ribes",
+        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+        onPitch: ["Ivan Mico","Pau Ibañez","Joan Medina","Paco Montero","Arnau Sentis","Serginho"],
+        notes: "Franco I. #91." },
+
+      { time: "42:50", type: "contra", goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Pau Ibañez","Joan Medina","Paco Montero","Arnau Sentis","Serginho","Coro"],
         notes: "Franco I. #91." },
 
-      { time: "44:00", type: "contra", goalkeeper: "Joan Ribes",
+      { time: "44:56", type: "favor", scorer: "Serginho", assist: null, goalkeeper: "Joan Ribes",
         zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
         onPitch: ["Pau Ibañez","Paco Montero","Arnau Sentis","Serginho","Coro","Ivan Mico"],
-        notes: "Franco I. #91." },
-
-      { time: "46:00", type: "favor", scorer: "Serginho", assist: null, goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: ["Pau Ibañez","Paco Montero","Arnau Sentis","Serginho","Coro","Ivan Mico"],
-        notes: "" },
+        notes: "De falta." },
     ],
     retransmissio: [
       { time: "07:55", type: "bona", text: "Molt bona jugada que acaba amb en Medina xutant a l'aire", players: ["Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=472s", photo: null, photoHover: null },
