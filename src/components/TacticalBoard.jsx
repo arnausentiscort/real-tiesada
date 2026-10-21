@@ -309,6 +309,7 @@ export default function TacticalBoard() {
   const [recording, setRecording] = useState(false);
   const [subMode, setSubMode] = useState(false);
   const [pendingDrop, setPendingDrop] = useState(null);
+  const lastTap = useRef(null);
   const [frames, setFrames]       = useState([]);
   const [showSave, setShowSave]   = useState(false);
   const [preview, setPreview]     = useState(null);
@@ -482,9 +483,19 @@ export default function TacticalBoard() {
     if (!d || d.type!=='own' || d.pid!==e.pointerId) return;
     const { idx } = d;
     fieldDrag.current = null;
-    // Tocar sense arrossegar: surt del camp (si tenia suplent, entra ell)
+    // Doble toc sense arrossegar: surt del camp (si tenia suplent, entra ell).
+    // Un sol toc no fa res: així no se'n treu cap sense voler
     const { x: ux, y: uy } = toSvg(e.clientX, e.clientY);
-    if (!recording && Math.hypot(ux - d.ox - d.from.x, uy - d.oy - d.from.y) < 3) {
+    const tap = Math.hypot(ux - d.ox - d.from.x, uy - d.oy - d.from.y) < 3;
+    const prevTap = lastTap.current;
+    lastTap.current = tap ? { idx, t: Date.now() } : null;
+    const doubleTap = tap && prevTap && prevTap.idx === idx && Date.now() - prevTap.t < 400;
+    if (tap && !doubleTap) {
+      setFieldPlayers(prev => prev.map((p, i) => i === idx ? { ...p, ...d.from } : p));
+      return;
+    }
+    if (!recording && doubleTap) {
+      lastTap.current = null;
       setFieldPlayers(prev => {
         const out = prev[idx].name;
         return prev

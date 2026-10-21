@@ -119,7 +119,19 @@ export default function App() {
   if (loading) return <LoadingScreen onDone={() => setLoading(false)} />;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-[#E2E8F0] font-sans pb-24 md:pb-8">
+    <div className="min-h-screen text-[#E2E8F0] font-sans pb-24 md:pb-8">
+      {/* Fons: llums de l'estadi i un camp molt suau, per no ser negre pla */}
+      <div aria-hidden className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[30vh] left-1/2 -translate-x-1/2 w-[160vw] h-[70vh]"
+          style={{ background: 'radial-gradient(ellipse at center top, rgba(192,57,43,0.13) 0%, transparent 62%)' }}/>
+        <div className="absolute -bottom-[25vh] -right-[20vw] w-[90vw] h-[70vh]"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(229,192,123,0.07) 0%, transparent 65%)' }}/>
+        <svg viewBox="0 0 200 320" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full"
+          fill="none" stroke="#E5C07B" strokeOpacity="0.045" strokeWidth="0.6">
+          <path d="M10 10 H190 V310 H10 Z M10 160 H190 M60 10 V52 H140 V10 M60 310 V268 H140 V310 M82 10 V24 H118 V10 M82 310 V296 H118 V310"/>
+          <circle cx="100" cy="160" r="30"/>
+        </svg>
+      </div>
       <Confetti active={confetti} />
 
       {/* ── NAVBAR desktop (top) ── */}

@@ -330,7 +330,7 @@ Coro i Lluc del Split 1. Baixa: Andreu Cases. Lesionat: Oriol Tomas.
 - **Suplents** (botó 🔵): arrossegar de la banqueta (o un altre titular) damunt d'un titular → `sub` del jugador,
   fitxa blava petita al costat. ⇄ Canviar intercanvia titulars i suplents. Tocar un suplent el treu
   Si el suplent és titular, es mou de casella i la seva queda buida (cercle discontinu) per poder desfer
-  Tocar un titular (sense arrossegar) el treu del camp; si tenia suplent, entra ell
+  Doble toc a un titular (sense arrossegar) el treu del camp; si tenia suplent, entra ell
 - Futbol 7 arrenca en **2-2-2**. Botó **Atac / Defensa** (`PHASE_F7`): atac = pilota al nostre porter i
   rivals marcant-nos; defensa = sacada del porter rival, ells en 2-3-1 i nosaltres home a home en 2-3-1
 - Repartiment per rols: `position` + `altPositions` del roster (Split 3). Canviar atac/defensa
