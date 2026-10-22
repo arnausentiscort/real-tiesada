@@ -12,7 +12,7 @@ export default {
   opponent: "FC Lucky",
   result: "8 - 9",
   date: "20 Oct 2026",
-  youtubeId: "_4OKL5z8_mQ",
+  youtubeId: "9F-I6H1qegk",
   altVideos: [{ youtubeId: "NUW8lv3oouo", label: "El de l'FC Lucky" }],
   vimeoId: null,
   idealMinutesPerPlayer: 37,
@@ -144,10 +144,10 @@ export default {
         notes: "De falta." },
     ],
     retransmissio: [
-      { time: "07:55", type: "bona", text: "Molt bona jugada: pas clau d'en Pau i en Medina xuta a l'aire", players: ["Pau Ibañez", "Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=467s", photo: null, photoHover: null },
-      { time: "08:00", type: "bona", text: "Pas clau d'en Coro i xut a porta d'en Serginho", players: ["Coro", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=477s", photo: null, photoHover: null },
-      { time: "12:22", type: "bona", text: "Pas clau d'en Pau i xut a porta d'en Ivan", players: ["Pau Ibañez", "Ivan Mico"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=739s", photo: null, photoHover: null },
-      { time: "32:27", type: "bona", text: "Pas clau d'en Ivan i xut a porta d'en Sentis", players: ["Ivan Mico", "Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=_4OKL5z8_mQ&t=1944s", photo: null, photoHover: null },
+      { time: "07:55", type: "bona", text: "Molt bona jugada: pas clau d'en Pau i en Medina xuta a l'aire", players: ["Pau Ibañez", "Joan Medina"], videoUrl: "https://www.youtube.com/watch?v=9F-I6H1qegk&t=467s", photo: null, photoHover: null },
+      { time: "08:00", type: "bona", text: "Pas clau d'en Coro i xut a porta d'en Serginho", players: ["Coro", "Serginho"], videoUrl: "https://www.youtube.com/watch?v=9F-I6H1qegk&t=477s", photo: null, photoHover: null },
+      { time: "12:22", type: "bona", text: "Pas clau d'en Pau i xut a porta d'en Ivan", players: ["Pau Ibañez", "Ivan Mico"], videoUrl: "https://www.youtube.com/watch?v=9F-I6H1qegk&t=739s", photo: null, photoHover: null },
+      { time: "32:27", type: "bona", text: "Pas clau d'en Ivan i xut a porta d'en Sentis", players: ["Ivan Mico", "Arnau Sentis"], videoUrl: "https://www.youtube.com/watch?v=9F-I6H1qegk&t=1944s", photo: null, photoHover: null },
     ],
   },
 };
