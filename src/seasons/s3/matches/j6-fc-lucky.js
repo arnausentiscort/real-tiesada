@@ -13,6 +13,7 @@ export default {
   result: "8 - 9",
   date: "20 Oct 2026",
   youtubeId: "_4OKL5z8_mQ",
+  altVideos: [{ youtubeId: "NUW8lv3oouo", label: "El de l'FC Lucky" }],
   vimeoId: null,
   idealMinutesPerPlayer: 37,
   savesManual: { "Joan Ribes": 5 },

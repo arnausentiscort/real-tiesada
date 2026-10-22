@@ -635,6 +635,8 @@ export default {
   result: "${match.result || ''}",
   date: "${match.date || ''}",
   youtubeId: ${ytStr},
+${(match.altVideos || []).length ? `  altVideos: ${JSON.stringify(match.altVideos.map(v => ({ youtubeId: v.youtubeId, label: v.label })))},
+` : ''}
   vimeoId: null,
 ${match.videoOffset ? `  videoOffset: ${match.videoOffset},
 ` : ''}  idealMinutesPerPlayer: ${ideal},
@@ -741,6 +743,7 @@ function matchToForm(m) {
     date: m.date,
     result: m.result,
     youtubeUrl: ytUrl,
+    altVideos: m.altVideos || [],
     videoOffset: m.videoOffset || 0,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer ?? null,
     // Un gol desat amb una alineació diferent de la del canvi és una decisió

@@ -762,8 +762,18 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   const hasVideo = !!(match.youtubeId || match.vimeoId);
   const cronica  = useMemo(() => buildCronica(match), [match]);
 
+  // Altres vídeos del mateix partit (p. ex. el del rival). Els salts de la crònica
+  // van sempre al nostre: els minuts són els del nostre vídeo
+  const [videoSel, setVideoSel] = useState(0);
+  const videos = [
+    ...(match.youtubeId ? [{ youtubeId: match.youtubeId, label: 'El nostre' }] : []),
+    ...(match.altVideos || []),
+  ];
+  const curVideo = videos[videoSel] || videos[0];
+
   const jumpToGoal = (timeStr) => {
     if (!hasVideo) return;
+    setVideoSel(0);
     const secs = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 3);
     setVideoStart(secs);
     setVideoOpen(true);
@@ -847,13 +857,23 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           ) : (
             <div className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-xl">
               <div className="flex items-center justify-between px-3 py-2 bg-[#111] border-b border-white/5">
-                <span className="text-xs text-gray-500">▶ Vídeo del Partit</span>
+                {videos.length > 1 ? (
+                  <div className="flex gap-1">
+                    {videos.map((v, i) => (
+                      <button key={v.youtubeId} onClick={() => { setVideoSel(i); setVideoStart(0); }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+                          i === videoSel ? 'bg-[#E5C07B]/15 text-[#E5C07B]' : 'text-gray-500 hover:text-white'}`}>
+                        ▶ {v.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : <span className="text-xs text-gray-500">▶ Vídeo del Partit</span>}
                 <button onClick={() => setVideoOpen(false)} className="text-gray-600 hover:text-gray-300 text-xs transition-colors">✕ Tancar</button>
               </div>
               <div className="aspect-video w-full">
-                {match.youtubeId && (
-                  <iframe width="100%" height="100%"
-                    src={`https://www.youtube.com/embed/${match.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart>0?1:0}`}
+                {curVideo && (
+                  <iframe key={curVideo.youtubeId} width="100%" height="100%"
+                    src={`https://www.youtube.com/embed/${curVideo.youtubeId}?rel=0&start=${videoStart}&autoplay=${videoStart>0?1:0}`}
                     title={`${DATABASE.teamName} vs ${match.opponent}`}
                     frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
                 )}
