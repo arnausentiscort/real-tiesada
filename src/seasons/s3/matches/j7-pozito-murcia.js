@@ -11,7 +11,7 @@ export default {
   idealMinutesPerPlayer: 26,
   savesManual: { "Joan Ribes": 9 },
   shots: { "Pau Ibañez": [{ time: "01:25", onTarget: true }, { time: "47:23", onTarget: false }, { time: "49:23", onTarget: false }], "Roger Miro": [{ time: "03:15", onTarget: false }, { time: "05:14", onTarget: true }], "Chengzhi Li": [{ time: "07:02", onTarget: true }, { time: "27:02", onTarget: false }], "Lluc": [{ time: "07:11", onTarget: false }, { time: "17:07", onTarget: false }], "Coro": [{ time: "08:02", onTarget: false }, { time: "10:34", onTarget: true }], "Paco Montero": [{ time: "12:39", onTarget: false }, { time: "36:37", onTarget: true }], "Arnau Sentis": [{ time: "17:18", onTarget: false }, { time: "19:09", onTarget: false }, { time: "42:39", onTarget: false }], "Serginho": [{ time: "25:03", onTarget: true }] },
-  keyPasses: { "Marc Farreras": [{ time: "01:25" }, { time: "27:02" }], "Coro": [{ time: "12:39" }, { time: "47:23" }, { time: "49:23" }], "Chengzhi Li": [{ time: "17:18" }], "Paco Montero": [{ time: "19:09" }], "Serginho": [{ time: "36:37" }] },
+  keyPasses: { "Arnau Sentis": [{ time: "05:14" }], "Marc Farreras": [{ time: "01:25" }, { time: "27:02" }], "Coro": [{ time: "12:39" }, { time: "47:23" }, { time: "49:23" }], "Chengzhi Li": [{ time: "17:18" }], "Paco Montero": [{ time: "19:09" }], "Serginho": [{ time: "36:37" }] },
   dribbles: { "Coro": [{ time: "07:54" }] },
   events: {
     substitutions: [
