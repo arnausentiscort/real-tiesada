@@ -608,7 +608,8 @@ function buildMatchCode(match, originalId) {
   // Les aturades apuntades al mode partit també van a la crònica, amb el seu minut:
   // així es veuen les ocasions clares del rival
   const nomCurt = n => n.split(' ').slice(-1)[0];
-  const saveMoments = (match._saveLog || []).map(sv => ({
+  const jaHiEs = sv => match.moments.some(m => T(m.time) === T(sv.time) && /^Aturada d'en/.test(m.text || ''));
+  const saveMoments = (match._saveLog || []).filter(sv => !jaHiEs(sv)).map(sv => ({
     time: sv.time, type: 'bona', text: `Aturada d'en ${nomCurt(sv.gk)}`, players: [sv.gk],
   }));
   const momentsCode = [...match.moments, ...saveMoments]
