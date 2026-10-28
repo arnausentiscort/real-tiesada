@@ -67,7 +67,7 @@ function buildCronica(match) {
   const items = [];
   const makeUrl = (timeStr) => {
     // videoOffset: segon del vídeo on comença el partit (0 si comença amb el vídeo)
-    const s = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 3);
+    const s = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 1);
     if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${s}s`;
     if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${s}s`;
     return null;
@@ -774,7 +774,7 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
   const jumpToGoal = (timeStr) => {
     if (!hasVideo) return;
     setVideoSel(0);
-    const secs = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 3);
+    const secs = Math.max(0, parseTime(timeStr) + (match.videoOffset || 0) - 1);
     setVideoStart(secs);
     setVideoOpen(true);
     setTimeout(() => document.getElementById('match-video')?.scrollIntoView({ behavior:'smooth', block:'start' }), 50);

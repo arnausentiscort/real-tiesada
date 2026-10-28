@@ -228,7 +228,7 @@ function MatchDetailPanel({ match, onBack }) {
             <p className="text-xs font-bold text-emerald-400 mb-2">⚽ A favor ({goalsF.length})</p>
             <div className="space-y-2">
               {goalsF.map((g,i) => {
-                const link = match.youtubeId ? `https://www.youtube.com/watch?v=${match.youtubeId}&t=${(() => { const [m,s]=(g.time||'0:0').split(':').map(Number); return Math.max(0,m*60+(s||0)-3); })()}s` : null;
+                const link = match.youtubeId ? `https://www.youtube.com/watch?v=${match.youtubeId}&t=${(() => { const [m,s]=(g.time||'0:0').split(':').map(Number); return Math.max(0,m*60+(s||0)-1); })()}s` : null;
                 return (
                   <div key={i} className="bg-[#1a1a1a] rounded-xl p-3 border border-emerald-500/15">
                     <div className="flex items-center justify-between">

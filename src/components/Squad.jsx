@@ -9,7 +9,7 @@ function getVideoUrl(db, matchId, time) {
   const match = db.matches.find(m => m.id === matchId);
   if (!match || !time) return null;
   const [min, sec] = time.split(':').map(Number);
-  const secs = Math.max(0, (min * 60 + (sec || 0)) - 5);
+  const secs = Math.max(0, (min * 60 + (sec || 0)) - 1);
   if (match.vimeoId)   return `https://vimeo.com/${match.vimeoId}#t=${secs}s`;
   if (match.youtubeId) return `https://www.youtube.com/watch?v=${match.youtubeId}&t=${secs}s`;
   return null;

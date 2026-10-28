@@ -614,7 +614,7 @@ function buildMatchCode(match, originalId) {
   }));
   const momentsCode = [...match.moments, ...saveMoments]
     .sort((x, y) => (toSec(x.time) ?? 0) - (toSec(y.time) ?? 0)).map(m => {
-    const secs = Math.max(0, (toSec(m.time) ?? 0) + (match.videoOffset || 0) - 3);
+    const secs = Math.max(0, (toSec(m.time) ?? 0) + (match.videoOffset || 0) - 1);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
     const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
     const pls = (m.players || []).map(n => `"${n}"`).join(', ');
