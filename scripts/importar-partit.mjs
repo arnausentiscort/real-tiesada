@@ -39,6 +39,11 @@ index = index.replace(/\r\n/g, '\n');
 
 // ── Plantilla i calendari de la temporada ──
 const roster = [...index.matchAll(/name: '([^']+)',\s*number: (\d+)/g)].map(m => ({ name: m[1], number: +m[2] }));
+// El nom que surt a apuntamelo quan no coincideix ni el dorsal ni el nom (camp `apuntamelo` de la plantilla)
+for (const m of index.matchAll(/name: '([^']+)'[^\n]*apuntamelo: '([^']+)'/g)) {
+  const r = roster.find(x => x.name === m[1]);
+  if (r) r.apuntamelo = m[2];
+}
 const calendari = [...index.matchAll(/date: "([^"]+)",[^\n]*jornada: "Jornada (\d+)",\s*opponent: "([^"]+)"/g)]
   .map(m => ({ date: m[1], jornada: +m[2], opponent: m[3] }));
 const jaTenim = new Set([...index.matchAll(/from '\.\/matches\/j(\d+)-/g)].map(m => +m[1]));
@@ -83,6 +88,8 @@ const jugador = id => {
   if (!id) return null;
   const j = nostra.get(id);
   if (!j) return null;
+  const perAlias = roster.find(r => r.apuntamelo && norm(r.apuntamelo) === norm(j.Nombre));
+  if (perAlias) return perAlias.name;
   const perDorsal = roster.find(r => r.number === j.Dorsal);
   if (perDorsal) return perDorsal.name;
   const perNom = roster.find(r => norm(j.Nombre).split(' ').some(w => w.length > 2 && norm(r.name).split(' ').includes(w)));
