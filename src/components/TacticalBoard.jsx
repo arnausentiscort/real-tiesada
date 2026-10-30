@@ -264,6 +264,9 @@ const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
 // ── Component principal ───────────────────────────────────────────
 const BOARD_KEY = 'rt:pissarra:v1';
 const SHARE_PREFIX = '#/tactica/pissarra/';
+// La pissarra de l'equip: un fitxer al repo que tothom llegeix en obrir la pissarra
+const TEAM_BOARD_PATH = 'public/pissarra.json';
+const TEAM_BOARD_API = `https://api.github.com/repos/arnausentiscort/real-tiesada/contents/${TEAM_BOARD_PATH}`;
 
 const toB64 = str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromB64 = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
@@ -274,7 +277,7 @@ function readSharedBoard() {
   const h = window.location.hash;
   if (!h.startsWith(SHARE_PREFIX) || h.length <= SHARE_PREFIX.length) return null;
   try {
-    const st = JSON.parse(fromB64(h.slice(SHARE_PREFIX.length)));
+    const st = { ...JSON.parse(fromB64(h.slice(SHARE_PREFIX.length))), fromLink: true };
     history.replaceState(null, '', '#/tactica/pissarra');
     return st;
   } catch { return null; }
@@ -336,9 +339,67 @@ export default function TacticalBoard() {
     try {
       localStorage.setItem(BOARD_KEY, JSON.stringify({
         mode, formation, phase, unavailable, showRivals, fieldPlayers, rivalPos, ball, phases: phaseMemo.current,
+        teamAt: teamAt.current,
       }));
     } catch {}
   }, [mode, formation, phase, unavailable, showRivals, fieldPlayers, rivalPos, ball]);
+
+  const applyBoard = st => {
+    phaseMemo.current = st.phases || {};
+    setFormation(st.formation || '2-2-2');
+    setPhase(st.phase || 'atac');
+    setUnavailable(st.unavailable || []);
+    setShowRivals(!!st.showRivals);
+    setFieldPlayers(st.fieldPlayers);
+    setRivalPos(st.rivalPos);
+    setBall(st.ball);
+  };
+
+  // Si hi ha una pissarra de l'equip més nova que l'última que vam veure, es posa
+  const teamAt = useRef(sv.teamAt || 0);
+  const [teamMsg, setTeamMsg] = useState(null);
+  useEffect(() => {
+    if (sv.fromLink) return;
+    fetch(`${import.meta.env.BASE_URL}pissarra.json?t=${Date.now()}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(st => {
+        if (!st || st.mode !== format.id || !(st.savedAt > teamAt.current)) return;
+        teamAt.current = st.savedAt;
+        applyBoard(st);
+        setTeamMsg("Pissarra de l'equip actualitzada");
+        setTimeout(() => setTeamMsg(null), 2500);
+      })
+      .catch(() => {});
+  }, []);
+
+  const [publishing, setPublishing] = useState(false);
+  const publishBoard = async () => {
+    let tk = localStorage.getItem('gh_token');
+    if (!tk) {
+      tk = window.prompt("Token de GitHub (el mateix de l'Admin):");
+      if (!tk) return;
+      localStorage.setItem('gh_token', tk.trim());
+    }
+    if (!window.confirm('Guardar aquesta pissarra per a tothom?')) return;
+    setPublishing(true);
+    try {
+      const phases = { ...phaseMemo.current, [phase]: { fieldPlayers, rivalPos, ball } };
+      const st = { mode, formation, phase, unavailable, showRivals, fieldPlayers, rivalPos, ball, phases, savedAt: Date.now() };
+      const headers = { Authorization: `Bearer ${tk}`, Accept: 'application/vnd.github+json' };
+      const cur = await fetch(TEAM_BOARD_API, { headers });
+      const sha = cur.ok ? (await cur.json()).sha : undefined;
+      const body = { message: "Pissarra de l'equip", content: toB64(JSON.stringify(st, null, 1)).replace(/-/g, '+').replace(/_/g, '/'), sha };
+      body.content += '='.repeat((4 - body.content.length % 4) % 4);
+      const r = await fetch(TEAM_BOARD_API, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error((await r.json()).message || r.status);
+      teamAt.current = st.savedAt;
+      window.alert("Desada per a tothom. En un parell de minuts la veurà tot l'equip.");
+    } catch (e) {
+      if (/credentials|401/i.test(String(e.message))) localStorage.removeItem('gh_token');
+      window.alert(`No s'ha pogut desar: ${e.message}`);
+    }
+    setPublishing(false);
+  };
 
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
@@ -703,6 +764,11 @@ export default function TacticalBoard() {
 
   return (
     <div className="space-y-3">
+      {teamMsg && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-[#1E1E1E] border border-[#E5C07B]/40 text-[#E5C07B] text-sm font-bold shadow-lg">
+          📌 {teamMsg}
+        </div>
+      )}
       <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 md:p-4">
 
         {/* Capçalera */}
@@ -772,6 +838,10 @@ export default function TacticalBoard() {
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
               <span>{recording ? '⏺' : '🎥'}</span>
               <span className="hidden sm:inline">{recording ? 'Gravant' : 'Gravar jugada'}</span>
+            </button>
+            <button onClick={publishBoard} disabled={publishing} title="Que tot l'equip vegi aquesta pissarra"
+              className="h-[30px] md:h-[34px] px-2.5 flex items-center justify-center gap-1 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-xs md:text-sm leading-none text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex-shrink-0 disabled:opacity-50">
+              {publishing ? '…' : '📌 Per a tothom'}
             </button>
             <button onClick={shareBoard} title="Enviar aquesta pissarra (enllaç)"
               className="h-[30px] md:h-[34px] px-2.5 flex items-center justify-center gap-1 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-xs md:text-sm leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
