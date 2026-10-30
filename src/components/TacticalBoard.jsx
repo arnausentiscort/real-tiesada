@@ -403,7 +403,7 @@ export default function TacticalBoard() {
 
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
-  const [subMode, setSubMode] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [pendingDrop, setPendingDrop] = useState(null);
   const lastTap = useRef(null);
   const [frames, setFrames]       = useState([]);
@@ -625,16 +625,6 @@ export default function TacticalBoard() {
       });
       return;
     }
-    if (subMode) {
-      setFieldPlayers(prev => {
-        const me = prev[idx];
-        let ti = -1, td = adaptiveR * 2.2;
-        prev.forEach((p, i) => { const dd = Math.hypot(p.x - me.x, p.y - me.y); if (i !== idx && p.name && dd < td) { td = dd; ti = i; } });
-        if (ti === -1) return prev;
-        return prev.map((p, i) => i === idx ? { ...p, ...d.from } : i === ti ? { ...p, sub: me.name } : p);
-      });
-      return;
-    }
     {
       const me = fieldPlayers[idx];
       let ti = -1, td = adaptiveR * 2.2;
@@ -652,7 +642,7 @@ export default function TacticalBoard() {
       const ny = clamp(moved.y, F.y+adaptiveR, F.y+F.h-adaptiveR);
       return prev.map((p,i) => i===idx ? {...p, x:nx, y:ny} : p);
     });
-  }, [rivalPos, adaptiveR, subMode, recording, toSvg, fieldPlayers]);
+  }, [rivalPos, adaptiveR, recording, toSvg, fieldPlayers]);
 
   // ── Drag rivals ──────────────────────────────────────────────────
   const onRivDown = useCallback((idx, e) => {
@@ -741,15 +731,6 @@ export default function TacticalBoard() {
       if (dist < nearDist) { nearDist=dist; nearIdx=i; }
     });
 
-    if (subMode) {
-      if (nearIdx === -1) {
-        let nd = Infinity;
-        fieldPlayers.forEach((p, i) => { const dist = Math.hypot(p.x-x, p.y-y); if (dist < nd) { nd = dist; nearIdx = i; } });
-      }
-      if (nearIdx !== -1) setFieldPlayers(prev => prev.map((p,i) => i===nearIdx ? {...p, sub: name} : p));
-      return;
-    }
-
     const full = fieldPlayers.filter(p => p.name).length >= MODES[mode].n;
     if (nearIdx === -1 && !full) {
       setFieldPlayers(prev => [...prev, { name, x, y }]);
@@ -771,86 +752,72 @@ export default function TacticalBoard() {
       )}
       <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-3 md:p-4">
 
-        {/* Capçalera */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 mb-3 md:mb-4">
-          <h2 className="text-base md:text-lg font-black text-[#E5C07B] whitespace-nowrap shrink-0">🎯 Pissarra Tàctica</h2>
-          <div className="flex items-center gap-2 flex-wrap md:justify-end">
-            <button onClick={() => setShowConv(true)}
-              className="px-2.5 md:px-3 py-1.5 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-[11px] md:text-xs text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex items-center gap-1 flex-shrink-0">
-              <span>👥</span> <span className="hidden sm:inline">Convocatòria</span>
-            </button>
-            <button onClick={() => setShowRivals(v => !v)}
-              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
-                showRivals
-                  ? 'bg-[#C0392B]/15 border-[#C0392B]/40 text-[#C0392B] hover:bg-[#C0392B]/25'
-                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
-              <span>{showRivals ? '🙈' : '👁️'}</span>
-              <span className="hidden sm:inline">{showRivals ? 'Amagar rivals' : 'Mostrar rivals'}</span>
-            </button>
-            <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
-              {Object.entries(MODES).map(([key, {label}]) => (
-                <button key={key} onClick={() => switchMode(key)}
-                  className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
-                    mode===key ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'text-gray-500 hover:text-white'}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-            {mode === 'f7' && (
-              <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
-                {Object.keys(FORMATIONS_F7).map(key => (
-                  <button key={key} onClick={() => switchFormation(key)}
-                    className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
-                      formation===key ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'text-gray-500 hover:text-white'}`}>
-                    {key}
-                  </button>
-                ))}
-              </div>
-            )}
+        {/* Capçalera: el que es fa servir sempre a la vista, la resta a «Més» */}
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <h2 className="hidden md:block text-lg font-black text-[#E5C07B] whitespace-nowrap shrink-0 mr-auto">🎯 Pissarra Tàctica</h2>
+          <div className="flex items-center gap-1.5 md:gap-2 flex-wrap flex-1 md:flex-none">
             {mode === 'f7' && (
               <div className="flex bg-[#121212] border border-white/10 rounded-lg md:rounded-xl p-0.5 gap-0.5 flex-shrink-0">
                 {[['atac', '⚔️ Atac'], ['defensa', '🛡️ Defensa']].map(([key, label]) => (
                   <button key={key} onClick={() => switchPhase(key)}
-                    className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold transition-all ${
+                    className={`px-2 md:px-3 py-1.5 rounded-md md:rounded-lg text-[11px] md:text-xs font-bold transition-all ${
                       phase === key ? (key === 'atac' ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'bg-[#C0392B]/25 text-[#ff8f85]') : 'text-gray-500 hover:text-white'}`}>
                     {label}
                   </button>
                 ))}
               </div>
             )}
-            <button onClick={() => setSubMode(v => !v)}
-              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
-                subMode
-                  ? 'bg-[#6FA8FF]/15 border-[#6FA8FF]/50 text-[#6FA8FF]'
+            {mode === 'f7' && (
+              <select value={formation} onChange={e => switchFormation(e.target.value)}
+                className="bg-[#121212] border border-white/10 rounded-lg md:rounded-xl px-2 py-1.5 text-[11px] md:text-xs font-bold text-[#E5C07B] flex-shrink-0">
+                {Object.keys(FORMATIONS_F7).map(key => <option key={key} value={key}>{key}</option>)}
+              </select>
+            )}
+            <button onClick={() => setShowConv(true)} title="Convocatòria"
+              className="px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border bg-[#E5C07B]/10 border-[#E5C07B]/30 text-[#E5C07B] hover:bg-[#E5C07B]/20">
+              <span>👥</span> <span className="hidden sm:inline">Convocats</span>
+            </button>
+            <button onClick={() => setShowRivals(v => !v)} title={showRivals ? 'Amagar rivals' : 'Mostrar rivals'}
+              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${showRivals
+                  ? 'bg-[#C0392B]/15 border-[#C0392B]/40 text-[#ff8f85] hover:bg-[#C0392B]/25'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
-              <span>🔵</span> <span>Suplents</span>
+              <span>🔴</span> <span className="hidden sm:inline">Rivals</span>
             </button>
             {hasSubs && (
-              <button onClick={swapSubs}
+              <button onClick={swapSubs} title="Els suplents entren i els titulars surten"
                 className="px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border bg-[#6FA8FF]/10 border-[#6FA8FF]/40 text-[#6FA8FF] hover:bg-[#6FA8FF]/20">
                 <span>⇄</span> <span>Canviar</span>
               </button>
             )}
-            <button onClick={() => setRecording(v => !v)}
-              className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${
-                recording
-                  ? 'bg-[#C0392B]/20 border-[#C0392B]/50 text-[#ff8f85]'
-                  : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
-              <span>{recording ? '⏺' : '🎥'}</span>
-              <span className="hidden sm:inline">{recording ? 'Gravant' : 'Gravar jugada'}</span>
-            </button>
-            <button onClick={publishBoard} disabled={publishing} title="Que tot l'equip vegi aquesta pissarra"
-              className="h-[30px] md:h-[34px] px-2.5 flex items-center justify-center gap-1 bg-[#E5C07B]/10 border border-[#E5C07B]/30 rounded-lg md:rounded-xl text-xs md:text-sm leading-none text-[#E5C07B] font-bold hover:bg-[#E5C07B]/20 transition-all flex-shrink-0 disabled:opacity-50">
-              {publishing ? '…' : '📌 Per a tothom'}
-            </button>
-            <button onClick={shareBoard} title="Enviar aquesta pissarra (enllaç)"
-              className="h-[30px] md:h-[34px] px-2.5 flex items-center justify-center gap-1 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-xs md:text-sm leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
-              🔗 Enviar
-            </button>
-            <button onClick={reset} title="Tornar a començar"
-              className="w-[30px] h-[30px] md:w-[34px] md:h-[34px] flex items-center justify-center bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-sm md:text-base leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
-              ↺
-            </button>
+            <div className="relative ml-auto md:ml-0 flex-shrink-0">
+              <button onClick={() => setShowMore(v => !v)}
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center gap-1 flex-shrink-0 border ${showMore ? 'bg-white/15 border-white/30 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
+                ⋯ <span className="hidden sm:inline">Més</span>
+              </button>
+              {showMore && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowMore(false)}/>
+                  <div className="absolute right-0 top-full mt-1.5 z-40 w-56 bg-[#1A1A1A] border border-white/10 rounded-xl p-1.5 shadow-2xl space-y-0.5"
+                    onClick={() => setShowMore(false)}>
+                    <button onClick={publishBoard} disabled={publishing} className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/10 flex items-center gap-2 text-[#E5C07B]">📌 Desar per a tot l'equip</button>
+                    <button onClick={shareBoard} className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/10 flex items-center gap-2">🔗 Enviar enllaç</button>
+                    <button onClick={() => setRecording(v => !v)} className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/10 flex items-center gap-2">{recording ? '⏹ Parar de gravar' : '🎥 Gravar jugada'}</button>
+                    <button onClick={reset} className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/10 flex items-center gap-2">↺ Tornar a començar</button>
+                    <div className="border-t border-white/10 my-1"/>
+                    <p className="px-3 pt-1 text-[9px] text-gray-600 font-bold uppercase tracking-wider">Camp</p>
+                    <div className="flex gap-1 px-1.5 pb-1" onClick={e => e.stopPropagation()}>
+                      {Object.entries(MODES).map(([key, { label }]) => (
+                        <button key={key} onClick={() => switchMode(key)}
+                          className={`flex-1 py-1.5 rounded-md text-[11px] font-bold ${mode === key ? 'bg-[#E5C07B]/20 text-[#E5C07B]' : 'text-gray-500 hover:text-white bg-white/5'}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            {publishing && <span className="text-[11px] text-[#E5C07B] font-bold">Desant…</span>}
           </div>
         </div>
 
@@ -913,6 +880,9 @@ export default function TacticalBoard() {
 
               <Ball ball={ball} onDown={onBallDown} onMove={onBallMove} onUp={onBallUp}/>
             </svg>
+            <p className="mt-1.5 text-[10px] text-gray-600 text-center leading-tight">
+              Arrossega un jugador damunt d'un altre per canviar-lo o fer-lo suplent · doble toc per treure'l
+            </p>
           </div>
 
           {/* Banquillo */}
@@ -920,13 +890,8 @@ export default function TacticalBoard() {
             <p className="text-[9px] md:text-[10px] text-gray-600 font-bold uppercase tracking-wider mb-1.5 md:mb-2">
               Banquillo {benchPlayers.length > 0 && `(${benchPlayers.length})`}
             </p>
-            {subMode && (
-              <p className="text-[10px] text-[#6FA8FF] font-bold mb-1.5 leading-tight">
-                Arrossega'l (de la banqueta o del camp) damunt d'un titular: serà el seu suplent. Toca un suplent per treure'l.
-              </p>
-            )}
-            <div className={`flex ${isMobile ? 'flex-row flex-wrap' : 'flex-col'} gap-1.5 md:gap-2 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0 overflow-y-auto`}
-              style={{ maxHeight: isMobile ? '32vh' : 'calc(100vh - 220px)' }}>
+            <div className={`flex ${isMobile ? 'flex-row overflow-x-auto no-scrollbar' : 'flex-col overflow-y-auto'} gap-2 pb-1 md:pb-0`}
+              style={{ maxHeight: isMobile ? undefined : 'calc(100vh - 220px)' }}>
               {benchPlayers.map(p => (
                 <div key={p.name}
                   className="flex flex-col items-center gap-0.5 cursor-grab select-none flex-shrink-0"
