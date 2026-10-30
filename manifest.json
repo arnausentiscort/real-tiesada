@@ -1,0 +1,31 @@
+{
+  "name": "Real Tiesada FC",
+  "short_name": "R. Tiesada",
+  "description": "Estadístiques i anàlisi del Real Tiesada FC",
+  "start_url": "/real-tiesada/",
+  "scope": "/real-tiesada/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "/real-tiesada/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/real-tiesada/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/real-tiesada/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
