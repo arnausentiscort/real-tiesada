@@ -262,6 +262,8 @@ const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
 ));
 
 // ── Component principal ───────────────────────────────────────────
+const BOARD_KEY = 'rt:pissarra:v1';
+
 export default function TacticalBoard() {
   const { db: DATABASE, format } = useSeason();
   // Els 'baixa' ja no formen part de l'equip — no surten enlloc de la
@@ -277,12 +279,20 @@ export default function TacticalBoard() {
 
   // Mode per defecte derivat de la temporada activa (fs5 a S1/S2, f7 a
   // S3) — ara que consumim useSeason() ja no cal el TODO de la Fase 1c.
+  // L'última pissarra es queda desada: alineació, suplents, convocats i atac/defensa
+  const saved = useRef(null);
+  if (saved.current === null) {
+    try { saved.current = JSON.parse(localStorage.getItem(BOARD_KEY)) || false; } catch { saved.current = false; }
+    if (saved.current && saved.current.mode !== format.id) saved.current = false;
+  }
+  const sv = saved.current || {};
   const [mode, setMode] = useState(format.id);
-  const [formation, setFormation] = useState('2-2-2');
-  const [phase, setPhase] = useState('atac');
-  const [unavailable, setUnavailable] = useState([]);
+  const [formation, setFormation] = useState(sv.formation || '2-2-2');
+  const [phase, setPhase] = useState(sv.phase || 'atac');
+  const [unavailable, setUnavailable] = useState(sv.unavailable || []);
   const [showConv, setShowConv] = useState(false);
-  const [showRivals, setShowRivals] = useState(false);
+  const [showRivals, setShowRivals] = useState(!!sv.showRivals);
+  const phaseMemo = useRef(sv.phases || {});
 
   const fieldPct = m => (m === 'f7' ? FORMATIONS_F7[formation] : DEF_PCT[m]);
 
@@ -300,10 +310,18 @@ export default function TacticalBoard() {
     ? placeF7([roster.filter(p => p.status === 'actiu' && !out.includes(p.name)).map(p => p.name)], formation)
     : mkField(m, fieldPct(m)).filter(p => !out.includes(p.name) && !baixaNames.has(p.name));
 
-  const [fieldPlayers, setFieldPlayers] = useState(() => buildField(format.id));
-  const [rivalPos, setRivalPos] = useState(() => rivalsFor(format.id));
+  const [fieldPlayers, setFieldPlayers] = useState(() => sv.fieldPlayers || buildField(format.id));
+  const [rivalPos, setRivalPos] = useState(() => sv.rivalPos || rivalsFor(format.id));
   const [ghost, setGhost] = useState(null);
-  const [ball, setBall] = useState(() => ballFor(format.id));
+  const [ball, setBall] = useState(() => sv.ball || ballFor(format.id));
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(BOARD_KEY, JSON.stringify({
+        mode, formation, phase, unavailable, showRivals, fieldPlayers, rivalPos, ball, phases: phaseMemo.current,
+      }));
+    } catch {}
+  }, [mode, formation, phase, unavailable, showRivals, fieldPlayers, rivalPos, ball]);
 
   // ── Gravadora de jugades ─────────────────────────────────────────
   const [recording, setRecording] = useState(false);
@@ -422,6 +440,7 @@ export default function TacticalBoard() {
   };
 
   const reset = () => {
+    phaseMemo.current = {};
     setFieldPlayers(buildField(mode, unavailable));
     setRivalPos(rivalsFor(mode));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
@@ -429,9 +448,20 @@ export default function TacticalBoard() {
   };
 
   // Atac ↔ defensa: cada jugador conserva la seva casella i canvia de lloc
+  // Si a l'altra fase ja hi havia una disposició amb els mateixos jugadors, es recupera tal qual
+  const lineupKey = fp => fp.map(p => `${p.name || ''}/${p.sub || ''}`).sort().join('|');
   const switchPhase = ph => {
+    if (ph === phase) return;
+    phaseMemo.current = { ...phaseMemo.current, [phase]: { fieldPlayers, rivalPos, ball } };
+    const prev = phaseMemo.current[ph];
     setPhase(ph);
-    setFieldPlayers(prev => assignSlots(prev, slotsF7(formation, ph), posF7(formation, ph), rolesOf));
+    if (prev && lineupKey(prev.fieldPlayers) === lineupKey(fieldPlayers)) {
+      setFieldPlayers(prev.fieldPlayers);
+      setRivalPos(prev.rivalPos);
+      setBall(prev.ball);
+      return;
+    }
+    setFieldPlayers(cur => assignSlots(cur, slotsF7(formation, ph), posF7(formation, ph), rolesOf));
     setRivalPos(rivalsFor('f7', ph));
     setBall(ballFor('f7', ph));
   };
