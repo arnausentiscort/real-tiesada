@@ -263,6 +263,22 @@ const RivalToken = memo(({ pos, idx, onDown, onMove, onUp, adaptiveR }) => (
 
 // ── Component principal ───────────────────────────────────────────
 const BOARD_KEY = 'rt:pissarra:v1';
+const SHARE_PREFIX = '#/tactica/pissarra/';
+
+const toB64 = str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const fromB64 = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
+const rnd = o => o && { ...o, x: Math.round(o.x), y: Math.round(o.y) };
+
+// Un enllaç #/tactica/pissarra/<alineació> obre la pissarra tal com la va deixar qui l'envia
+function readSharedBoard() {
+  const h = window.location.hash;
+  if (!h.startsWith(SHARE_PREFIX) || h.length <= SHARE_PREFIX.length) return null;
+  try {
+    const st = JSON.parse(fromB64(h.slice(SHARE_PREFIX.length)));
+    history.replaceState(null, '', '#/tactica/pissarra');
+    return st;
+  } catch { return null; }
+}
 
 export default function TacticalBoard() {
   const { db: DATABASE, format } = useSeason();
@@ -282,7 +298,8 @@ export default function TacticalBoard() {
   // L'última pissarra es queda desada: alineació, suplents, convocats i atac/defensa
   const saved = useRef(null);
   if (saved.current === null) {
-    try { saved.current = JSON.parse(localStorage.getItem(BOARD_KEY)) || false; } catch { saved.current = false; }
+    saved.current = readSharedBoard();
+    if (!saved.current) try { saved.current = JSON.parse(localStorage.getItem(BOARD_KEY)) || false; } catch { saved.current = false; }
     if (saved.current && saved.current.mode !== format.id) saved.current = false;
   }
   const sv = saved.current || {};
@@ -437,6 +454,17 @@ export default function TacticalBoard() {
     setRivalPos(rivalsFor(m));
     setGhost(null); fieldDrag.current = null; benchDrag.current = null;
     setBall(ballFor(m));
+  };
+
+  const shareBoard = async () => {
+    const st = { mode, formation, phase, unavailable, showRivals,
+      fieldPlayers: fieldPlayers.map(rnd), rivalPos: rivalPos.map(rnd), ball: rnd(ball) };
+    const url = `${window.location.origin}${window.location.pathname}${SHARE_PREFIX}${toB64(JSON.stringify(st))}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Alineació · Real Tiesada', url }); return; } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); window.alert("Enllaç copiat. Obre'l al mòbil i tindràs aquesta pissarra."); }
+    catch { window.prompt('Copia aquest enllaç:', url); }
   };
 
   const reset = () => {
@@ -744,6 +772,10 @@ export default function TacticalBoard() {
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'}`}>
               <span>{recording ? '⏺' : '🎥'}</span>
               <span className="hidden sm:inline">{recording ? 'Gravant' : 'Gravar jugada'}</span>
+            </button>
+            <button onClick={shareBoard} title="Enviar aquesta pissarra (enllaç)"
+              className="h-[30px] md:h-[34px] px-2.5 flex items-center justify-center gap-1 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-xs md:text-sm leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
+              🔗 Enviar
             </button>
             <button onClick={reset} title="Tornar a començar"
               className="w-[30px] h-[30px] md:w-[34px] md:h-[34px] flex items-center justify-center bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-sm md:text-base leading-none text-gray-400 font-bold hover:text-white hover:bg-white/10 transition-all flex-shrink-0">
