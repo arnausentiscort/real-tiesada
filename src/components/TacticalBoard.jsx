@@ -395,7 +395,7 @@ export default function TacticalBoard() {
       teamAt.current = st.savedAt;
       window.alert("Desada per a tothom. En un parell de minuts la veurà tot l'equip.");
     } catch (e) {
-      if (/credentials|401/i.test(String(e.message))) localStorage.removeItem('gh_token');
+      if (/credentials|not accessible|401|403/i.test(String(e.message))) localStorage.removeItem('gh_token');
       window.alert(`No s'ha pogut desar: ${e.message}`);
     }
     setPublishing(false);
