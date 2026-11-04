@@ -33,7 +33,7 @@ export default {
       { time: "32:34", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Serginho","Marc Farreras","Roger Miro","Ivan Mico","Chengzhi Li"] },
       { time: "34:18", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Marc Farreras","Ivan Mico","Chengzhi Li","Coro","Roi Seoane"] },
       { time: "35:13", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc"] },
-      { time: "37:27", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc"] },
+      { time: "37:27", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc","Joan Medina"] },
       { time: "39:39", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Lluc","Joan Medina","Arnau Sentis"] },
       { time: "40:12", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Lluc","Arnau Sentis","Roger Miro"] },
       { time: "42:39", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Coro","Lluc","Arnau Sentis","Roger Miro","Serginho"] },
