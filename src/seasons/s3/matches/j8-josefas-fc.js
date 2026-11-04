@@ -1,6 +1,4 @@
-// Jornada 8 · 03 Nov/2026 · Real Tiesada 2-4 Josefas FC
-// Importat d'apuntamelo.com (partit 384215) amb `npm run importar`: marcador, golejadors,
-// assistències i tipus de gol, només amb el minut. Falten els canvis, les accions i les aturades.
+// Jornada 8 · 03 Nov 2026 · Real Tiesada 2 - 4 Josefas FC
 export default {
   id: "s3-j8-josefas-fc",
   jornada: "Jornada 8",
@@ -8,39 +6,63 @@ export default {
   result: "2 - 4",
   date: "03 Nov 2026",
   youtubeId: "XxEBc1_7Y8k",
+
   vimeoId: null,
   idealMinutesPerPlayer: 26,
-  shots: {},
-  keyPasses: {},
-  dribbles: {},
+  savesManual: { "Joan Ribes": 4 },
+  shots: { "Coro": [{ time: "02:02", onTarget: false }], "Marc Farreras": [{ time: "08:41", onTarget: false }], "Serginho": [{ time: "09:49", onTarget: true }, { time: "09:57", onTarget: true }, { time: "29:42", onTarget: true }], "Ivan Mico": [{ time: "21:05", onTarget: true }], "Lluc": [{ time: "26:34", onTarget: true }], "Joan Medina": [{ time: "26:34", onTarget: false }], "Roger Miro": [{ time: "29:45", onTarget: false }], "Pau Ibañez": [{ time: "47:38", onTarget: false }] },
+  keyPasses: { "Arnau Sentis": [{ time: "02:02" }, { time: "29:45" }], "Serginho": [{ time: "47:38" }] },
+  dribbles: { "Marc Farreras": [{ time: "09:06" }], "Serginho": [{ time: "47:38" }] },
   events: {
-    substitutions: [],
-    cards: [],
-    goals: [
-      { time: "09:00", type: "contra", goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Felipe H. #7." },
-
-      { time: "19:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Des de fora de l'àrea." },
-
-      { time: "23:00", type: "contra", goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Ivan V. #10." },
-
-      { time: "38:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "" },
-
-      { time: "46:00", type: "contra", goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Eric M. #95. Des de fora de l'àrea." },
-
-      { time: "47:00", type: "contra", goalkeeper: "Joan Ribes",
-        zone: null, shotPos: null, assistPos: null, conductPos: null, goalPos: null,
-        onPitch: [], notes: "Ivan V. #10." },
+    substitutions: [
+      { time: "00:00", goalkeeper: "Joan Ribes", onPitch: ["Coro","Pau Ibañez","Arnau Sentis","Roi Seoane","Roger Miro","Ivan Mico"] },
+      { time: "04:50", goalkeeper: "Joan Ribes", onPitch: ["Coro","Pau Ibañez","Roi Seoane","Roger Miro","Ivan Mico","Chengzhi Li"] },
+      { time: "07:08", goalkeeper: "Joan Ribes", onPitch: ["Coro","Pau Ibañez","Roi Seoane","Roger Miro","Chengzhi Li","Lluc"] },
+      { time: "07:12", goalkeeper: "Joan Ribes", onPitch: ["Coro","Roi Seoane","Roger Miro","Chengzhi Li","Lluc","Marc Farreras"] },
+      { time: "07:13", goalkeeper: "Joan Ribes", onPitch: ["Coro","Roger Miro","Chengzhi Li","Lluc","Marc Farreras","Serginho"] },
+      { time: "08:24", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Chengzhi Li","Lluc","Marc Farreras","Serginho","Joan Medina"] },
+      { time: "08:50", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Lluc","Marc Farreras","Serginho","Joan Medina","Arnau Sentis"] },
+      { time: "09:42", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Marc Farreras","Serginho","Joan Medina","Arnau Sentis","Pau Ibañez"] },
+      { time: "15:45", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Marc Farreras","Joan Medina","Pau Ibañez","Serginho","Chengzhi Li"] },
+      { time: "16:38", goalkeeper: "Joan Ribes", onPitch: ["Joan Medina","Pau Ibañez","Serginho","Chengzhi Li","Ivan Mico","Roger Miro"] },
+      { time: "17:24", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Chengzhi Li","Ivan Mico","Roger Miro","Coro","Roi Seoane"] },
+      { time: "18:35", goalkeeper: "Joan Ribes", onPitch: ["Chengzhi Li","Ivan Mico","Roger Miro","Coro","Roi Seoane","Lluc"] },
+      { time: "25:00", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Joan Medina","Pau Ibañez","Serginho","Marc Farreras","Arnau Sentis"] },
+      { time: "29:20", goalkeeper: "Joan Ribes", onPitch: ["Lluc","Pau Ibañez","Serginho","Marc Farreras","Arnau Sentis","Roger Miro"] },
+      { time: "31:29", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Serginho","Marc Farreras","Arnau Sentis","Roger Miro","Ivan Mico"] },
+      { time: "32:34", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Serginho","Marc Farreras","Roger Miro","Ivan Mico","Chengzhi Li"] },
+      { time: "34:18", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Marc Farreras","Ivan Mico","Chengzhi Li","Coro","Roi Seoane"] },
+      { time: "35:13", goalkeeper: "Joan Ribes", onPitch: ["Marc Farreras","Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc"] },
+      { time: "37:27", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc","Joan Medina"] },
+      { time: "39:39", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Lluc","Joan Medina","Arnau Sentis"] },
+      { time: "40:12", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Chengzhi Li","Coro","Lluc","Arnau Sentis","Roger Miro"] },
+      { time: "42:39", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Coro","Lluc","Arnau Sentis","Roger Miro","Serginho"] },
+      { time: "44:03", goalkeeper: "Joan Ribes", onPitch: ["Coro","Lluc","Arnau Sentis","Roger Miro","Serginho","Pau Ibañez"] },
+      { time: "44:17", goalkeeper: "Joan Ribes", onPitch: ["Coro","Arnau Sentis","Roger Miro","Serginho","Pau Ibañez","Marc Farreras"] },
+      { time: "49:21", goalkeeper: null, onPitch: [], _isBreak: true },
     ],
-    retransmissio: [],
+    cards: [
+
+    ],
+    goals: [
+      { time: "09:00", type: "contra", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Lluc","Marc Farreras","Serginho","Joan Medina","Arnau Sentis"], notes: "Felipe H. #7." },
+      { time: "19:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+        zone: "", shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+        onPitch: ["Chengzhi Li","Ivan Mico","Roger Miro","Coro","Roi Seoane","Lluc"], notes: "Des de fora de l'àrea." },
+      { time: "23:00", type: "contra", goalkeeper: "Joan Ribes", onPitch: ["Chengzhi Li","Ivan Mico","Roger Miro","Coro","Roi Seoane","Lluc"], notes: "Ivan V. #10." },
+      { time: "38:00", type: "favor", scorer: "Coro", assist: null, goalkeeper: "Joan Ribes",
+        zone: "", shotPos: null, assistPos: null, conductPos: null, goalPos: null,
+        onPitch: ["Ivan Mico","Chengzhi Li","Coro","Roi Seoane","Lluc","Joan Medina"] },
+      { time: "46:00", type: "contra", goalkeeper: "Joan Ribes", onPitch: ["Coro","Arnau Sentis","Roger Miro","Serginho","Pau Ibañez","Marc Farreras"], notes: "Eric M. #95. Des de fora de l'àrea." },
+      { time: "47:00", type: "contra", goalkeeper: "Joan Ribes", onPitch: ["Coro","Arnau Sentis","Roger Miro","Serginho","Pau Ibañez","Marc Farreras"], notes: "Ivan V. #10." },
+    ],
+    retransmissio: [
+      { time:"21:49", type:"bona", text:"Li fan falta a Roi", players:["Roi Seoane"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=1308s" },
+      { time:"27:09", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=1628s" },
+      { time:"30:01", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=1800s" },
+      { time:"33:53", type:"bona", text:"Falta a Serginho", players:["Serginho"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=2032s" },
+      { time:"38:00", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=2279s" },
+      { time:"44:22", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=XxEBc1_7Y8k&t=2661s" },
+    ],
   },
 };

@@ -560,7 +560,7 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
         m.savesManual = { ...(m.savesManual || {}), [d.gk]: ((m.savesManual || {})[d.gk] || 0) + 1 };
         m._saveLog = [...(m._saveLog || []), { time: t, gk: d.gk }];
         if (d.chronicle)
-          m.moments = [...(m.moments || []), { time: t, type: 'bona', text: `Aturada d'en ${sn(d.gk)}`, players: [d.gk] }].sort(bySec);
+          m.moments = [...(m.moments || []), { time: t, type: 'bona', text: `Aturada d'en ${d.gk.split(' ').slice(-1)[0]}`, players: [d.gk] }].sort(bySec);
       } else if (kind === 'targeta') {
         m.cards = [...(m.cards || []), { time: t, color: d.color, player: d.player }].sort(bySec);
       } else if (kind === 'moment') {
