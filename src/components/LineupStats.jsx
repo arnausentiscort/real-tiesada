@@ -280,6 +280,8 @@ const SORTS = {
   net:     { label: 'Millor net',          fn: (a, b) => b.net - a.net },
   atac:    { label: 'Més gols a favor',    fn: (a, b) => b.gf - a.gf },
   defensa: { label: 'Menys gols en contra', fn: (a, b) => a.gc - b.gc },
+  contra:  { label: 'Més gols en contra',  fn: (a, b) => b.gc - a.gc },
+  pitjor:  { label: 'Pitjor net',          fn: (a, b) => a.net - b.net },
 };
 
 function PerMinutes({ allPairs, allTrios, roster, total }) {
