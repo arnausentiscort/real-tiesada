@@ -7,7 +7,7 @@ export default {
   opponent: "Gola Seca FC",
   result: "5 - 2",
   date: "10 Nov 2026",
-  youtubeId: null,
+  youtubeId: "kzmP0HxY1Sk",
   vimeoId: null,
   idealMinutesPerPlayer: 26,
   shots: {},
