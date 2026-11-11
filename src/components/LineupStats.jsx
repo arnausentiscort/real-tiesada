@@ -99,31 +99,32 @@ function calcLineupStats(matches) {
     });
   });
 
-  // Ordena per gols marcats junts; desempat per menys gols encaixats
-  const pairs = Object.values(pairData)
-    .filter(p => p.goalsFor > 0 || p.goalsAgainst > 0 || p.secs > 0)
-    .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
-    .slice(0, 10);
+  const byFor = (a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst;
+  // Més gols encaixats junts; desempat pels que ho han fet en menys minuts
+  const byAgainst = (a, b) => b.goalsAgainst - a.goalsAgainst || a.secs - b.secs;
+  const allPairs = Object.values(pairData).filter(p => p.goalsFor > 0 || p.goalsAgainst > 0 || p.secs > 0);
+  const allTrios = Object.values(trioData).filter(t => t.goalsFor > 0 || t.goalsAgainst > 0 || t.secs > 0);
 
-  const trios = Object.values(trioData)
-    .filter(t => t.goalsFor > 0 || t.secs > 0)
-    .sort((a, b) => b.goalsFor - a.goalsFor || a.goalsAgainst - b.goalsAgainst)
-    .slice(0, 5);
-
-  return { pairs, trios };
+  return {
+    pairs: [...allPairs].filter(p => p.goalsFor > 0 || p.goalsAgainst > 0 || p.secs > 0).sort(byFor).slice(0, 10),
+    trios: [...allTrios].filter(t => t.goalsFor > 0 || t.secs > 0).sort(byFor).slice(0, 5),
+    pairsAgainst: allPairs.filter(p => p.goalsAgainst > 0).sort(byAgainst).slice(0, 10),
+    triosAgainst: allTrios.filter(t => t.goalsAgainst > 0).sort(byAgainst).slice(0, 5),
+  };
 }
 
 // ── Secció 1: Top Parelles ────────────────────────────────────────
-function TopPairs({ pairs, roster }) {
-  const maxFor = Math.max(...pairs.map(p => p.goalsFor), 1);
+function TopPairs({ pairs, roster, against = false }) {
+  const val = p => (against ? p.goalsAgainst : p.goalsFor);
+  const maxFor = Math.max(...pairs.map(val), 1);
 
   return (
     <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5">
       <div className="mb-4">
         <h3 className="text-sm font-black text-[#E5C07B] flex items-center gap-2">
-          🤝 Top Parelles
+          {against ? '🧱 Parelles amb més gols en contra' : '🤝 Top Parelles'}
         </h3>
-        <p className="text-[10px] text-gray-600 mt-0.5">Ordenat per gols marcats junts</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">{against ? 'Gols encaixats mentre jugaven junts' : 'Ordenat per gols marcats junts'}</p>
       </div>
 
       <div className="space-y-3">
@@ -131,7 +132,7 @@ function TopPairs({ pairs, roster }) {
           const [nameA, nameB] = players;
           const mins   = secs > 0 ? Math.round(secs / 60) : null;
           const isTop3 = i < 3;
-          const pct    = (goalsFor / maxFor) * 100;
+          const pct    = ((against ? goalsAgainst : goalsFor) / maxFor) * 100;
 
           return (
             <div key={i}>
@@ -164,19 +165,19 @@ function TopPairs({ pairs, roster }) {
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{width:`${pct}%`, background:'rgba(39,174,96,0.6)'}}/>
+                      style={{width:`${pct}%`, background: against ? 'rgba(192,57,43,0.65)' : 'rgba(39,174,96,0.6)'}}/>
                   </div>
                 </div>
 
                 {/* Gols — prominents */}
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`font-black font-mono ${isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600'}`}>
-                      {goalsFor}
+                    <span className={`font-black font-mono ${against ? (isTop3 ? 'text-xl text-[#e8574a]' : 'text-base text-[#C0392B]') : (isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600')}`}>
+                      {against ? goalsAgainst : goalsFor}
                     </span>
-                    <span className="text-[10px]">⚽</span>
+                    <span className="text-[10px]">{against ? '🥅' : '⚽'}</span>
                   </div>
-                  {goalsAgainst > 0 && (
+                  {!against && goalsAgainst > 0 && (
                     <span className="text-xs font-mono text-[#C0392B]">-{goalsAgainst}</span>
                   )}
                   {mins !== null && (
@@ -193,8 +194,9 @@ function TopPairs({ pairs, roster }) {
 }
 
 // ── Secció 2: Top Trios (3 jugadors de camp) ─────────────────────
-function TopTrios({ trios, roster }) {
-  const maxFor = Math.max(...trios.map(t => t.goalsFor), 1);
+function TopTrios({ trios, roster, against = false }) {
+  const val = t => (against ? t.goalsAgainst : t.goalsFor);
+  const maxFor = Math.max(...trios.map(val), 1);
 
   if (!trios.length) return null;
 
@@ -202,16 +204,16 @@ function TopTrios({ trios, roster }) {
     <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 p-5">
       <div className="mb-4">
         <h3 className="text-sm font-black text-[#E5C07B] flex items-center gap-2">
-          ⚡ Top Trios
+          {against ? '🧱 Trios amb més gols en contra' : '⚡ Top Trios'}
         </h3>
-        <p className="text-[10px] text-gray-600 mt-0.5">3 jugadors de camp · ordenat per gols marcats junts</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">3 jugadors de camp · {against ? 'gols encaixats junts' : 'ordenat per gols marcats junts'}</p>
       </div>
 
       <div className="space-y-4">
         {trios.map(({ players, secs, goalsFor, goalsAgainst }, i) => {
           const mins   = secs > 0 ? Math.round(secs / 60) : null;
           const isTop3 = i < 3;
-          const pct    = (goalsFor / maxFor) * 100;
+          const pct    = ((against ? goalsAgainst : goalsFor) / maxFor) * 100;
 
           return (
             <div key={i}>
@@ -242,20 +244,20 @@ function TopTrios({ trios, roster }) {
                   </div>
                   <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.05)'}}>
                     <div className="h-full rounded-full transition-all duration-700"
-                      style={{width:`${pct}%`, background:'rgba(39,174,96,0.6)'}}/>
+                      style={{width:`${pct}%`, background: against ? 'rgba(192,57,43,0.65)' : 'rgba(39,174,96,0.6)'}}/>
                   </div>
                 </div>
 
                 {/* Gols — prominents */}
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`font-black font-mono ${isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600'}`}>
-                      {goalsFor}
+                    <span className={`font-black font-mono ${against ? (isTop3 ? 'text-xl text-[#e8574a]' : 'text-base text-[#C0392B]') : (isTop3 ? 'text-xl text-emerald-400' : 'text-base text-emerald-600')}`}>
+                      {against ? goalsAgainst : goalsFor}
                     </span>
-                    <span className="text-[10px]">⚽</span>
+                    <span className="text-[10px]">{against ? '🥅' : '⚽'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {goalsAgainst > 0 && (
+                    {!against && goalsAgainst > 0 && (
                       <span className="text-[10px] font-mono text-[#C0392B]">-{goalsAgainst}</span>
                     )}
                     {mins !== null && (
@@ -275,13 +277,21 @@ function TopTrios({ trios, roster }) {
 // ── Component principal ───────────────────────────────────────────
 export default function LineupStats() {
   const { db } = useSeason();
-  const { pairs, trios } = useMemo(() => calcLineupStats(db.matches), [db]);
+  const { pairs, trios, pairsAgainst, triosAgainst } = useMemo(() => calcLineupStats(db.matches), [db]);
   if (!pairs.length && !trios.length) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <TopPairs pairs={pairs} roster={db.roster}/>
-      <TopTrios trios={trios} roster={db.roster}/>
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <TopPairs pairs={pairs} roster={db.roster}/>
+        <TopTrios trios={trios} roster={db.roster}/>
+      </div>
+      {(pairsAgainst.length > 0 || triosAgainst.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {pairsAgainst.length > 0 && <TopPairs pairs={pairsAgainst} roster={db.roster} against/>}
+          {triosAgainst.length > 0 && <TopTrios trios={triosAgainst} roster={db.roster} against/>}
+        </div>
+      )}
     </div>
   );
 }
