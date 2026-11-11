@@ -96,7 +96,7 @@ export default function App() {
     const [f, a] = view.result.split('-').map(Number);
     if (f > a) {
       setConfetti(true);
-      const t = setTimeout(() => setConfetti(false), 4000);
+      const t = setTimeout(() => setConfetti(false), 6500);
       return () => clearTimeout(t);
     }
   }, [view]);
@@ -173,7 +173,7 @@ export default function App() {
           <circle cx="100" cy="160" r="30"/>
         </svg>
       </div>
-      <Confetti active={confetti} />
+      <Confetti active={confetti} delay={500} />
       <VictoryOverlay match={victory} first={firstWin} />
 
       {/* ── NAVBAR desktop (top) ── */}

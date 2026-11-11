@@ -163,13 +163,25 @@
 }
 
 /* ── Victòria ── */
-@keyframes victoryPop {
-  0%   { opacity: 0; transform: scale(2); }
-  60%  { opacity: 1; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
+@keyframes victoryBg { from { opacity: 0; } to { opacity: 1; } }
+@keyframes victoryGlow { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes victoryRing {
+  0%   { opacity: 0.9; transform: scale(0.45); }
+  100% { opacity: 0;   transform: scale(3.2); }
 }
-.animate-victory-pop { opacity: 0; animation: victoryPop 0.7s cubic-bezier(0.2,0.9,0.3,1.2) 0.35s forwards; }
-@media (prefers-reduced-motion: reduce) { .animate-victory-pop { opacity: 1; animation: none; } }
+@keyframes victoryLetter {
+  0%   { opacity: 0; transform: translateY(26px) scale(0.6); }
+  65%  { opacity: 1; transform: translateY(-4px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-victory-bg     { animation: victoryBg 0.5s ease-out both; }
+.animate-victory-glow   { opacity: 0; animation: victoryGlow 1.2s cubic-bezier(0.2,0.8,0.2,1) 0.2s forwards; }
+.animate-victory-ring   { opacity: 0; animation: victoryRing 2.1s cubic-bezier(0.15,0.6,0.3,1) 0.55s both; }
+.animate-victory-letter { opacity: 0; animation: victoryLetter 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-victory-bg, .animate-victory-glow, .animate-victory-letter { opacity: 1; animation: none; }
+  .animate-victory-ring { display: none; }
+}
 
 /* ── Carta d'or de la plantilla ── */
 @keyframes cardShine { 0%, 55% { left: -40%; } 85%, 100% { left: 120%; } }
