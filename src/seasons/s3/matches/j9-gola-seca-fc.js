@@ -9,6 +9,7 @@ export default {
 
   vimeoId: null,
   idealMinutesPerPlayer: 26,
+  cut: { at: "25:48", secs: 60 },
   shots: { "Oriol Tomas": [{ time: "09:30", onTarget: true }], "Arnau Sentis": [{ time: "19:25", onTarget: true }, { time: "28:26", onTarget: true }, { time: "30:30", onTarget: true }, { time: "32:33", onTarget: true }], "Coro": [{ time: "25:48", onTarget: true }, { time: "46:31", onTarget: false }], "Roger Miro": [{ time: "30:12", onTarget: true }, { time: "45:53", onTarget: true }], "Chengzhi Li": [{ time: "38:35", onTarget: true }] },
   keyPasses: { "Ivan Mico": [{ time: "13:46" }], "Marc Farreras": [{ time: "19:25" }, { time: "46:31" }], "Roger Miro": [{ time: "25:48" }, { time: "28:26" }], "Arnau Sentis": [{ time: "32:33" }], "Coro": [{ time: "32:33" }], "Lluc": [{ time: "45:53" }] },
   dribbles: {},

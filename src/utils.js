@@ -6,6 +6,15 @@ export const parseTime = (timeStr) => {
   return m * 60 + (s || 0);
 };
 
+// Si el vídeo té un tall (cut: { at: "25:48", secs: 60 }), el temps que s'hi ha perdut
+// compta per a tots els que eren al camp en aquell moment
+export const cutBonus = (match, start, end) => {
+  const c = match.cut;
+  if (!c) return 0;
+  const at = parseTime(c.at);
+  return start <= at && at < end ? c.secs : 0;
+};
+
 // ── Calcula minuts de porter per un match ─────────────────────────
 export const calcGoalkeeperStints = (match, format = FORMATS.fs5) => {
   // Cas 1: minuts manuals (J1, J2)
@@ -29,14 +38,14 @@ export const calcGoalkeeperStints = (match, format = FORMATS.fs5) => {
     if (sub.goalkeeper !== prevGK) {
       if (prevGK) {
         if (!stints[prevGK]) stints[prevGK] = [];
-        stints[prevGK].push({ start: prevT, end: ts });
+        stints[prevGK].push({ start: prevT, end: ts + cutBonus(match, prevT, ts) });
       }
       prevGK = sub.goalkeeper; prevT = ts;
     }
   }
   if (prevGK) {
     if (!stints[prevGK]) stints[prevGK] = [];
-    stints[prevGK].push({ start: prevT, end: finalT });
+    stints[prevGK].push({ start: prevT, end: finalT + cutBonus(match, prevT, finalT) });
   }
   return stints;
 };
@@ -80,7 +89,7 @@ export const calcMatchStats = (match, format = FORMATS.fs5) => {
 
     Object.keys(active).forEach(p => {
       if (!fieldPlayers.includes(p)) {
-        totals[p] = (totals[p] || 0) + (timeSec - active[p]);
+        totals[p] = (totals[p] || 0) + (timeSec - active[p]) + cutBonus(match, active[p], timeSec);
         stints.push({ player: p, start: active[p], end: timeSec });
         delete active[p];
       }
@@ -90,7 +99,7 @@ export const calcMatchStats = (match, format = FORMATS.fs5) => {
 
   // Tanca els stints dels jugadors que queden al camp al final del partit
   Object.keys(active).forEach(p => {
-    totals[p] = (totals[p] || 0) + (finalTime - active[p]);
+    totals[p] = (totals[p] || 0) + (finalTime - active[p]) + cutBonus(match, active[p], finalTime);
     stints.push({ player: p, start: active[p], end: finalTime });
   });
 

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useSeason } from '../SeasonContext.jsx';
+import { cutBonus } from '../utils.js';
 
 const BASE = import.meta.env.BASE_URL;
 const MEDALS = ['🥇','🥈','🥉'];
@@ -67,15 +68,16 @@ function calcLineupStats(matches) {
         const next = subs[i + 1];
         const secs = parseSeconds(next.time) - parseSeconds(cur.time);
         if (secs <= 0) continue;
+        const secsTot = secs + cutBonus(match, parseSeconds(cur.time), parseSeconds(next.time));
 
         const players = (cur.onPitch || []).filter(p => p !== cur.goalkeeper);
 
         for (let a = 0; a < players.length; a++)
           for (let b = a + 1; b < players.length; b++)
-            getPair(players[a], players[b]).secs += secs;
+            getPair(players[a], players[b]).secs += secsTot;
 
         if (players.length >= 3)
-          combos(players, 3).forEach(c => { getTrio(c).secs += secs; });
+          combos(players, 3).forEach(c => { getTrio(c).secs += secsTot; });
       }
     }
 
