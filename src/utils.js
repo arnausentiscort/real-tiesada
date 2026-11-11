@@ -38,14 +38,14 @@ export const calcGoalkeeperStints = (match, format = FORMATS.fs5) => {
     if (sub.goalkeeper !== prevGK) {
       if (prevGK) {
         if (!stints[prevGK]) stints[prevGK] = [];
-        stints[prevGK].push({ start: prevT, end: ts + cutBonus(match, prevT, ts) });
+        stints[prevGK].push({ start: prevT, end: ts, bonus: cutBonus(match, prevT, ts) });
       }
       prevGK = sub.goalkeeper; prevT = ts;
     }
   }
   if (prevGK) {
     if (!stints[prevGK]) stints[prevGK] = [];
-    stints[prevGK].push({ start: prevT, end: finalT + cutBonus(match, prevT, finalT) });
+    stints[prevGK].push({ start: prevT, end: finalT, bonus: cutBonus(match, prevT, finalT) });
   }
   return stints;
 };
@@ -90,7 +90,7 @@ export const calcMatchStats = (match, format = FORMATS.fs5) => {
     Object.keys(active).forEach(p => {
       if (!fieldPlayers.includes(p)) {
         totals[p] = (totals[p] || 0) + (timeSec - active[p]) + cutBonus(match, active[p], timeSec);
-        stints.push({ player: p, start: active[p], end: timeSec });
+        stints.push({ player: p, start: active[p], end: timeSec, bonus: cutBonus(match, active[p], timeSec) });
         delete active[p];
       }
     });
@@ -100,7 +100,7 @@ export const calcMatchStats = (match, format = FORMATS.fs5) => {
   // Tanca els stints dels jugadors que queden al camp al final del partit
   Object.keys(active).forEach(p => {
     totals[p] = (totals[p] || 0) + (finalTime - active[p]) + cutBonus(match, active[p], finalTime);
-    stints.push({ player: p, start: active[p], end: finalTime });
+    stints.push({ player: p, start: active[p], end: finalTime, bonus: cutBonus(match, active[p], finalTime) });
   });
 
   const allGKs = [...new Set(subs.map(s => s.goalkeeper).filter(Boolean))];
@@ -193,7 +193,7 @@ export const calcGlobalStats = (database, format = FORMATS.fs5) => {
     const gkStints = calcGoalkeeperStints(match, format);
     Object.entries(gkStints).forEach(([name, stintArr]) => {
       if (minutesPorter[name] !== undefined) {
-        stintArr.forEach(s => { minutesPorter[name] += (s.end - s.start); });
+        stintArr.forEach(s => { minutesPorter[name] += (s.end - s.start + (s.bonus || 0)); });
       }
     });
   });

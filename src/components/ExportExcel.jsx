@@ -137,7 +137,7 @@ function sheetMinuts(matches, roster, format) {
       const {totals} = calcMatchStats(m, format);
       const gkS = calcGoalkeeperStints(m, format);
       const c = totals[name]||0;
-      const g = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+      const g = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0);
       row.push(c>0?formatTime(c):'-', g>0?formatTime(g):'-');
       tC+=c; tG+=g;
       if(c>0||g>0) pj++;
@@ -196,7 +196,7 @@ function sheetStatsGlobals(db, format) {
     const {totals} = calcMatchStats(m, format);
     const gkS = calcGoalkeeperStints(m, format);
     Object.entries(totals).forEach(([n,s]) => { if(minutesCampMap[n]!==undefined) minutesCampMap[n]+=s; });
-    Object.entries(gkS).forEach(([n,arr]) => { if(minutesPorterMap[n]!==undefined) minutesPorterMap[n]+=arr.reduce((a,s)=>a+(s.end-s.start),0); });
+    Object.entries(gkS).forEach(([n,arr]) => { if(minutesPorterMap[n]!==undefined) minutesPorterMap[n]+=arr.reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0); });
     const used = new Set();
     (m.events?.substitutions||[]).forEach(s => { if(s.goalkeeper) used.add(s.goalkeeper); (s.onPitch||[]).forEach(p=>used.add(p)); });
     used.forEach(n => { if(pjMap[n]!==undefined) pjMap[n]++; });
@@ -464,7 +464,7 @@ function sheetJornada(m, roster, format) {
   [...matchNames].sort().forEach(name => {
     const p = pl(roster, name);
     const mC = totals[name]||0;
-    const mP = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+    const mP = (gkS[name]||[]).reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0);
     if(mC===0&&mP===0) return;
     const tirs = (m.shots?.[name]||[]).length;
     const porta = (m.shots?.[name]||[]).filter(e=>e.onTarget).length;

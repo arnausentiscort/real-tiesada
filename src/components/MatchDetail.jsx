@@ -518,8 +518,8 @@ function TimelineChart({ match, matchStats, db }) {
   }
 
   // Tots els jugadors: camp + porter — ordenats per minuts de CAMP (no porter)
-  const campSecs = (name) => stints.filter(s=>s.player===name).reduce((a,s)=>a+(s.end-s.start),0);
-  const gkSecs   = (name) => (goalkeeperStints[name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+  const campSecs = (name) => stints.filter(s=>s.player===name).reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0);
+  const gkSecs   = (name) => (goalkeeperStints[name]||[]).reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0);
 
   const allPlayers = [...new Set([
     ...playerStats.map(p => p.player),

@@ -353,7 +353,7 @@ const GOLD = '#E5C07B', GK_GREEN = '#10B981';
 function PlayerTrend({ player, db, format }) {
   const rows = useMemo(() => db.matches.map(match => {
     const { totals, finalTime } = calcMatchStats(match, format);
-    const gk = (calcGoalkeeperStints(match, format)[player.name] || []).reduce((a, s) => a + (s.end - s.start), 0);
+    const gk = (calcGoalkeeperStints(match, format)[player.name] || []).reduce((a, s) => a + (s.end - s.start + (s.bonus || 0)), 0);
     const goals = match.events?.goals || [];
     const shots = match.shots?.[player.name] || [];
     return {
@@ -488,7 +488,7 @@ function PlayerProfile({ player, stats, onClose, db, format }) {
     const { totals } = calcMatchStats(match, format);
     const gkStints = calcGoalkeeperStints(match, format);
     const campSecsM = totals[player.name] || 0;
-    const gkSecsM   = (gkStints[player.name]||[]).reduce((a,s)=>a+(s.end-s.start),0);
+    const gkSecsM   = (gkStints[player.name]||[]).reduce((a,s)=>a+(s.end-s.start+(s.bonus||0)),0);
     return { match, campSecs: campSecsM, gkSecs: gkSecsM };
   }).filter(r => r.campSecs > 0 || r.gkSecs > 0);
 
