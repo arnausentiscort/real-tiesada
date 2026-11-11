@@ -25,7 +25,6 @@ export default {
       { time: "14:17", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Roger Miro","Oriol Tomas","Arnau Sentis","Chengzhi Li","Pau Ibañez"] },
       { time: "14:21", goalkeeper: "Joan Ribes", onPitch: ["Ivan Mico","Roger Miro","Oriol Tomas","Arnau Sentis","Pau Ibañez","Marc Farreras"] },
       { time: "15:04", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Oriol Tomas","Arnau Sentis","Pau Ibañez","Marc Farreras","Lluc"] },
-      { time: "15:08", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Oriol Tomas","Arnau Sentis","Chengzhi Li","Pau Ibañez","Lluc"] },
       { time: "16:49", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Arnau Sentis","Pau Ibañez","Lluc","Chengzhi Li","Marc Farreras"] },
       { time: "19:53", goalkeeper: "Joan Ribes", onPitch: ["Roger Miro","Pau Ibañez","Lluc","Chengzhi Li","Marc Farreras","Roi Seoane"] },
       { time: "19:58", goalkeeper: "Joan Ribes", onPitch: ["Pau Ibañez","Lluc","Chengzhi Li","Marc Farreras","Roi Seoane","Joan Medina"] },
