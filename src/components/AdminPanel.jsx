@@ -558,7 +558,7 @@ function goalToCode(g) {
   const cp  = g.conductPos ? `{ x: ${g.conductPos.x}, y: ${g.conductPos.y} }` : 'null';
   const gp  = g.goalPos    ? `{ x: ${g.goalPos.x}, y: ${g.goalPos.y} }` : 'null';
   const onP = g.onPitch?.length ? `["${g.onPitch.join('","')}"]` : '[]';
-  const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'")}"` : '';
+  const notes = g.notes ? `, notes: "${g.notes.replace(/"/g,"'").replace(/\s*[\r\n]+\s*/g,' ').trim()}"` : '';
   const gk = g.goalkeeper ? `"${g.goalkeeper}"` : 'null';
   if (g.type === 'favor') {
     const ass = g.assist ? `"${g.assist}"` : 'null';
@@ -616,7 +616,7 @@ function buildMatchCode(match, originalId) {
     .sort((x, y) => (toSec(x.time) ?? 0) - (toSec(y.time) ?? 0)).map(m => {
     const secs = Math.max(0, (toSec(m.time) ?? 0) + (match.videoOffset || 0) - 1);
     const ytUrl = ytId ? `"https://www.youtube.com/watch?v=${ytId}&t=${secs}s"` : 'null';
-    const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'");
+    const txt = (m.text||'').replace(/\\/g,'\\\\').replace(/"/g,"'").replace(/\s*[\r\n]+\s*/g,' ').trim();
     const pls = (m.players || []).map(n => `"${n}"`).join(', ');
     return `      { time:"${T(m.time)}", type:"${m.type || 'bona'}", text:"${txt}", players:[${pls}], videoUrl:${ytUrl} },`;
   }).join('\n');

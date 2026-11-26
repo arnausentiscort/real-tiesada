@@ -83,8 +83,7 @@ export default {
       { time:"36:08", type:"bona", text:"empeñen a pau i es falta", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2167s" },
       { time:"36:39", type:"bona", text:"Marc chuta una falta i es diu que sentis la para", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2198s" },
       { time:"37:04", type:"bona", text:"convinacio a larea que acaba en un intent de ramona de miro", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2223s" },
-      { time:"37:25", type:"bona", text:"larbit pita una falteta de medina al rival mes calentada de pau en de les entrades
-", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2244s" },
+      { time:"37:25", type:"bona", text:"larbit pita una falteta de medina al rival mes calentada de pau en de les entrades", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2244s" },
       { time:"38:42", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2321s" },
       { time:"38:56", type:"bona", text:"Aturada d'en Ribes", players:["Joan Ribes"], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2335s" },
       { time:"39:29", type:"bona", text:"falta clarisima a farreras a la frontal", players:[], videoUrl:"https://www.youtube.com/watch?v=8OQizrbTMmM&t=2368s" },
