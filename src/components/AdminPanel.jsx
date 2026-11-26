@@ -640,6 +640,7 @@ ${(match.altVideos || []).length ? `  altVideos: ${JSON.stringify(match.altVideo
 ` : ''}
   vimeoId: null,
 ${match.cut ? `  cut: ${JSON.stringify(match.cut)},
+` : ''}${(match.pauses || []).length ? `  pauses: ${JSON.stringify(match.pauses)},
 ` : ''}${match.videoOffset ? `  videoOffset: ${match.videoOffset},
 ` : ''}  idealMinutesPerPlayer: ${ideal},
 ${savesCode}${shotsCode}${keyPassCode}${dribblesCode2}  events: {
@@ -747,6 +748,7 @@ function matchToForm(m) {
     youtubeUrl: ytUrl,
     altVideos: m.altVideos || [],
     cut: m.cut || null,
+    pauses: m.pauses || [],
     videoOffset: m.videoOffset || 0,
     idealMinutesPerPlayer: m.idealMinutesPerPlayer ?? null,
     // Un gol desat amb una alineació diferent de la del canvi és una decisió

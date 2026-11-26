@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Pauses from './Pauses.jsx';
 import { normTime, toSec, lineupAt } from './matchTime.js';
 
 // ── Mode partit ───────────────────────────────────────────────────
@@ -802,6 +803,8 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
               ? <EditDialog key={dlg.id} dlg={dlg} ctx={ctx} subs={subs} now={now} onSave={saveEdit} onCancel={() => setDlg(null)}/>
               : <Dialog key={dlg.id} dlg={dlg} ctx={ctx} onSave={onSave} onCancel={() => close(true)}/>
             : <div className="space-y-3">
+                {(match._id === 's3-j11-star-warros-fc' || (match.pauses || []).length > 0) &&
+                  <Pauses match={match} setMatch={setMatch} now={now} mt={mt}/>}
                 <p className="text-[11px] text-gray-500">Cada botó agafa el minut del vídeo i l'atura mentre tries.</p>
                 <div className="grid grid-cols-2 gap-2">
                   {ACTIONS.map(a => (

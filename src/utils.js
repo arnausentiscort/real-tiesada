@@ -6,13 +6,17 @@ export const parseTime = (timeStr) => {
   return m * 60 + (s || 0);
 };
 
-// Si el vídeo té un tall (cut: { at: "25:48", secs: 60 }), el temps que s'hi ha perdut
-// compta per a tots els que eren al camp en aquell moment
+// Temps que no compta com a jugat dins [start, end): les pauses (pauses: [{ from, to }])
+export const pausedSecs = (match, start = 0, end = Infinity) =>
+  (match.pauses || []).reduce((acc, p) =>
+    acc + Math.max(0, Math.min(end, parseTime(p.to)) - Math.max(start, parseTime(p.from))), 0);
+
+// Ajust de temps d'un tram: si el vídeo té un tall (cut: { at: "25:48", secs: 60 }) el temps
+// perdut compta per a tots els del camp, i el temps de pausa es resta
 export const cutBonus = (match, start, end) => {
   const c = match.cut;
-  if (!c) return 0;
-  const at = parseTime(c.at);
-  return start <= at && at < end ? c.secs : 0;
+  const cut = c && start <= parseTime(c.at) && parseTime(c.at) < end ? c.secs : 0;
+  return cut - pausedSecs(match, start, end);
 };
 
 // ── Calcula minuts de porter per un match ─────────────────────────
@@ -105,7 +109,7 @@ export const calcMatchStats = (match, format = FORMATS.fs5) => {
 
   const allGKs = [...new Set(subs.map(s => s.goalkeeper).filter(Boolean))];
   const numPlayers = new Set([...Object.keys(totals), ...allGKs]).size || 1;
-  const idealSec = (finalTime * format.playersOnPitch) / numPlayers;
+  const idealSec = ((finalTime - pausedSecs(match, 0, finalTime)) * format.playersOnPitch) / numPlayers;
 
   const playerStats = Object.entries(totals)
     .map(([player, totalSec]) => ({ player, totalSec, deviation: totalSec - idealSec }))
