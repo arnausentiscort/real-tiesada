@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Star, XCircle, AlertCircle } from 'lucide-react';
-import { parseTime, formatTime, calcMatchStats, calcMatchRating } from '../utils.js';
+import { parseTime, formatTime, pausedSecs, calcMatchStats, calcMatchRating } from '../utils.js';
 import { useSeason } from '../SeasonContext.jsx';
 import MvpVoting from './MvpVoting.jsx';
 
@@ -81,6 +81,9 @@ function buildCronica(match) {
     items.push({ time: r.time, kind: 'moment', text: r.text, players: r.players,
       emoji: pickEmoji(r.text), photo: r.photo, photoHover: r.photoHover, jumpUrl: makeUrl(r.time) });
   });
+  (match.pauses || []).forEach(p => {
+    items.push({ time: p.from, kind: 'pause', secs: Math.max(0, parseTime(p.to) - parseTime(p.from)), jumpUrl: makeUrl(p.from) });
+  });
   items.sort((a, b) => parseTime(a.time) - parseTime(b.time));
   let home = 0, away = 0;
   items.forEach(item => {
@@ -88,6 +91,19 @@ function buildCronica(match) {
     if (item.kind === 'goal_contra') { away++; item.score = `${home}-${away}`; }
   });
   return items;
+}
+
+// ── Aturada del joc (temps no jugat) ──────────────────────────────
+function PauseRow({ item, onJump }) {
+  return (
+    <button type="button" onClick={() => onJump(item.time)}
+      className="w-full flex items-center gap-2 px-3 py-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors">
+      <span className="font-mono text-gray-600">{item.time}</span>
+      <span className="flex-1 border-t border-dashed border-white/10"/>
+      <span>⏸ Joc aturat · {formatTime(item.secs)}</span>
+      <span className="flex-1 border-t border-dashed border-white/10"/>
+    </button>
+  );
 }
 
 // ── Targeta gran de gol ───────────────────────────────────────────
@@ -900,10 +916,16 @@ export default function MatchDetail({ match, onBack, onNavigate }) {
           <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
             <span className="text-base">📋</span>
             <h3 className="text-base font-bold text-[#E5C07B]">Crònica del Partit</h3>
-            <span className="text-xs text-gray-600 ml-auto">{cronica.length} moments</span>
+            <span className="text-xs text-gray-600 ml-auto">{cronica.filter(i => i.kind !== 'pause').length} moments</span>
           </div>
+          {(match.pauses || []).length > 0 && (
+            <p className="px-5 py-2 text-xs text-gray-400 border-b border-white/5">
+              ⏸ Temps no jugat: <b className="text-[#E5C07B] font-mono">{formatTime(pausedSecs(match))}</b> en {match.pauses.length} aturades
+            </p>
+          )}
           <div className="p-4 space-y-3">
             {cronica.map((item, idx) => {
+              if (item.kind === 'pause') return <PauseRow key={idx} item={item} onJump={jumpToGoal}/>;
               if (item.kind === 'goal_favor' || item.kind === 'goal_contra')
                 return <GoalCard key={idx} item={item} onJump={jumpToGoal} db={DATABASE}/>;
               return <MomentCard key={idx} item={item} onJump={jumpToGoal} db={DATABASE}/>;
