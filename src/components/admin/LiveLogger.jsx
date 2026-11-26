@@ -447,6 +447,8 @@ function MatchStrip({ duration, vt, offset, goals, subs, onSeek, onEdit, sn }) {
 }
 
 // ── Pantalla ──────────────────────────────────────────────────────
+const draftsRevisats = new Set();
+
 export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, onReview }) {
   const ytId = ytIdOf(match.youtubeUrl);
   const offset = match.videoOffset || 0;
@@ -456,6 +458,9 @@ export default function LiveLogger({ match, setMatch, roster, fieldN, onExit, on
   // Esborrany: un partit sencer apuntat no es pot perdre per tancar la pestanya
   const draftKey = `rt:live:${match._id || 'nou'}`;
   useEffect(() => {
+    // Només es proposa recuperar a la primera entrada: en tornar del formulari manen els canvis fets allà
+    if (draftsRevisats.has(draftKey)) return;
+    draftsRevisats.add(draftKey);
     try {
       const d = JSON.parse(localStorage.getItem(draftKey) || 'null');
       if (d?.match && JSON.stringify(d.match) !== JSON.stringify(match) &&
